@@ -1,25 +1,12 @@
 #include <stdio.h>
+
 #include "include/bfibe.h"
 #include "include/bloomfilter.h"
 #include "include/bloomfilter_enc.h"
 #include "include/hibe.h"
 #include "include/tb_bloomfilter_enc.h"
 
-void test_ibe();
-void test_bloomfilter_enc();
-void test_bloom_filter();
-void test_hibe();
-void test_tb_bloomfilter_enc();
-
-int main () {
-    //test_ibe();
-    //test_bloom_filter();
-    test_bloomfilter_enc();
-    //test_hibe();
-    //test_tb_bloomfilter_enc();
-}
-
-void test_tb_bloomfilter_enc() {
+static void test_tb_bloomfilter_enc() {
     tb_bloomfilter_enc_setup_pair_t *setupPair;
     tb_bloomfilter_enc_ciphertext_t *ciphertext;
     tb_bloomfilter_enc_ciphertext_t *ciphertext2;
@@ -139,7 +126,7 @@ void test_tb_bloomfilter_enc() {
 
 }
 
-void test_hibe() {
+static void test_hibe() {
     uint8_t message[] = { 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x64, 0x64 };
     uint8_t decrypted[32];
     hibe_setup_pair_t *setupPair;
@@ -186,7 +173,7 @@ void test_hibe() {
     }
 }
 
-void test_ibe() {
+static void test_ibe() {
     uint8_t id[5];
     rand_bytes(id, sizeof(id));
     uint8_t message[] = { 0x41, 0x61, 0x22, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x64, 0x64 };
@@ -226,7 +213,7 @@ void test_ibe() {
     bn_free(systemParams.masterKey);
 }
 
-void test_bloomfilter_enc() {
+static void test_bloomfilter_enc() {
     err_t e;
     bloomfilter_enc_setup_pair_t setupPair;
     bloomfilter_enc_ciphertext_pair_t *ciphertextPair;
@@ -262,7 +249,7 @@ void test_bloomfilter_enc() {
     }
 }
 
-void test_bloom_filter() {
+static void test_bloom_filter() {
     uint8_t input1[2] = { 'P', 'a' };
     uint8_t input2[2] = { 'P', 'b' };
     uint8_t input3[2] = { 'P', 'c' };
@@ -279,3 +266,12 @@ void test_bloom_filter() {
     bloomfilter_clean(&bloom);
     printf("\nEND BLOOM FILTER TEST\n");
 }
+
+int main () {
+    test_ibe();
+    test_bloom_filter();
+    test_bloomfilter_enc();
+    test_hibe();
+    test_tb_bloomfilter_enc();
+}
+
