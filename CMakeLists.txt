@@ -20,7 +20,6 @@ add_library(bfe SHARED
         hibe.c
         logger.c
         tb_bloomfilter_enc.c
-        test.c
         util.c)
 
 set_target_properties(bfe PROPERTIES
@@ -46,5 +45,6 @@ install(EXPORT bfe-targets
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bfe)
 
 
-#add_executable(bfe bfibe.c bfibe.h util.c util.h murmurhash3.c murmurhash3.h bitset.c bitset.h bloomfilter_enc.c bloomfilter_enc.h bloomfilter.c bloomfilter.h test.c logger.c logger.h hibe.c hibe.h tb_bloomfilter_enc.c tb_bloomfilter_enc.h) # replace this with add_library()
+add_executable(test test.c)
+target_link_libraries(test bfe)
 
