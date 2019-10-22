@@ -1,11 +1,15 @@
-cmake_minimum_required(VERSION 3.9)
-project(bfe VERSION 0.9.1 DESCRIPTION "Bloom Filter Encryption Library")
-include(GNUInstallDirs)
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+project(bfe LANGUAGES C VERSION 0.9.1 DESCRIPTION "Bloom Filter Encryption Library")
 
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_FLAGS "-O0") #this should be 03 for highest optimization
 
+include(GNUInstallDirs)
 find_package(relic REQUIRED)
 
 add_library(bfe SHARED
@@ -21,9 +25,11 @@ add_library(bfe SHARED
         util.c)
 
 set_target_properties(bfe PROPERTIES
-        VERSION ${PROJECT_VERSION}
-        PUBLIC_HEADER include/bfe.h)
+        VERSION ${PROJECT_VERSION})
 configure_file(bfe.pc.in bfe.pc @ONLY)
+
+add_subdirectory(FIPS202-opt64)
+target_link_libraries(bfe ${RELIC_LIBRARY} m FIPS202-opt64)
 
 target_include_directories(bfe PRIVATE .)
 target_include_directories(bfe PRIVATE ${RELIC_INCLUDE_DIR})
@@ -32,9 +38,8 @@ install(TARGETS bfe
         EXPORT bfe-targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES ${CMAKE_BINARY_DIR}/bfe.pc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
+install(FILES ${CMAKE_BINARY_DIR}/bfe.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/bfe)
 install(EXPORT bfe-targets
         NAMESPACE bfe::
@@ -43,6 +48,4 @@ install(EXPORT bfe-targets
 
 
 #add_executable(bfe bfibe.c bfibe.h util.c util.h murmurhash3.c murmurhash3.h bitset.c bitset.h bloomfilter_enc.c bloomfilter_enc.h bloomfilter.c bloomfilter.h test.c logger.c logger.h hibe.c hibe.h tb_bloomfilter_enc.c tb_bloomfilter_enc.h) # replace this with add_library()
-add_subdirectory(FIPS202-opt64)
 
-target_link_libraries(bfe ${RELIC_LIBRARY} m FIPS202-opt64)
