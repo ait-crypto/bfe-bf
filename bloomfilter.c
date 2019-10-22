@@ -1,9 +1,10 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <endian.h>
 
 #include "include/bloomfilter.h"
-#include "murmurhash3.h"
+#include "FIPS202-opt64/KeccakHash.h"
 #include "logger.h"
 
 bloomfilter_t bloomfilter_init_fixed(int size, int hashCount) {
@@ -39,10 +40,20 @@ int bloomfilter_get_needed_size(int n, double falsePositiveProbability) {
 void bloomfilter_get_bit_positions(int *positions, const void *input, int inputLen, int hashCount, int filterSize) {
     uint32_t digest1[1];
     uint32_t digest2[1];
-    for (int i = 0; i < hashCount; i++) {
-        MurmurHash3_x86_32(input, inputLen, BITSET_HASH_SEED_1, digest1);
-        MurmurHash3_x86_32(input, inputLen, BITSET_HASH_SEED_2, digest2);
-        positions[i] = abs(digest1[0] + i * digest2[0]) % filterSize;
+    for (unsigned int i = 0; i < hashCount; i++) {
+        Keccak_HashInstance shake;
+        Keccak_HashInitialize_SHAKE256(&shake);
+
+        unsigned int ile = htole32(i);
+        Keccak_HashUpdate(&shake, (const uint8_t*) &ile, sizeof(ile) * 8);
+        Keccak_HashUpdate(&shake, input, inputLen * 8);
+        Keccak_HashFinal(&shake, NULL);
+
+        uint64_t pos = 0;
+        Keccak_HashSqueeze(&shake, (uint8_t*) &pos, sizeof(pos) * 8);
+        pos = le64toh(pos);
+
+        positions[i] = pos % filterSize;
     }
 }
 
@@ -65,7 +76,7 @@ int bloomfilter_maybe_contains(bloomfilter_t filter, const void *input, int inpu
     int contains = 1;
 
     for (int i = 0; i < filter.hashCount; i++) {
-        contains *= bitset_get(filter.bitSet, bitPositions[i]);
+        contains &= bitset_get(filter.bitSet, bitPositions[i]);
     }
 
     return contains;

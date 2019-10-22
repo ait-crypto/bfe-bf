@@ -19,7 +19,6 @@ add_library(bfe SHARED
         bloomfilter_enc.c
         hibe.c
         logger.c
-        murmurhash3.c
         tb_bloomfilter_enc.c
         test.c
         util.c)
