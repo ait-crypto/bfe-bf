@@ -3,19 +3,21 @@
 
 #include <relic/relic_epx.h>
 #include "bloomfilter.h"
+#include "bfibe.h"
 
 typedef struct _bloomfilter_enc_system_params_t {
-    int filterHashCount;
-    int filterSize;
-    int keyLength;
+    unsigned int filterHashCount;
+    unsigned int filterSize;
+    unsigned int keyLength;
     double falsePositiveProbability;
-    ep_t publicKey;
+    bf_ibe_public_key_t publicKey;
 } bloomfilter_enc_system_params_t;
+typedef bloomfilter_enc_system_params_t bloomfilter_enc_public_key_t;
 
 typedef struct _bloomfilter_enc_secret_key_t {
     bloomfilter_t filter;
-    int secretKeyLen;
-    ep2_t secretKey[];
+    unsigned int secretKeyLen;
+    bf_ibe_extracted_key_t* secretKey;
 } bloomfilter_enc_secret_key_t;
 
 typedef struct _bloomfilter_enc_setup_pair_t {
@@ -25,15 +27,21 @@ typedef struct _bloomfilter_enc_setup_pair_t {
 
 typedef struct _bloomfilter_enc_ciphertext_t {
     ep_t u;
-    int vLen;
+    unsigned int vLen;
     uint8_t v[];
 } bloomfilter_enc_ciphertext_t;
 
 typedef struct _bloomfilter_enc_ciphertext_pair_t {
     bloomfilter_enc_ciphertext_t *ciphertext;
-    int KLen;
+    unsigned int KLen;
     uint8_t K[];
 } bloomfilter_enc_ciphertext_pair_t;
+
+int bloomfilter_enc_init_secret_key(bloomfilter_enc_secret_key_t* secret_key);
+void bloomfilter_enc_clear_secret_key(bloomfilter_enc_secret_key_t* secret_key);
+
+int bloomfilter_enc_init_public_key(bloomfilter_enc_public_key_t* public_key);
+void bloomfilter_enc_clear_public_key(bloomfilter_enc_public_key_t* public_key);
 
 /**
  * Sets up the Bloom Filter Encryption (bfe) scheme.
@@ -41,7 +49,9 @@ typedef struct _bloomfilter_enc_ciphertext_pair_t {
  * @param setupPair[out]                - the bfe setup pair containing system parameters (with public key) and secret key.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bloomfilter_enc_setup(bloomfilter_enc_setup_pair_t *setupPair);
+int bloomfilter_enc_setup(bloomfilter_enc_system_params_t* systemParams,
+                          bloomfilter_enc_secret_key_t* secret_key, unsigned int keyLength,
+                          unsigned int filterElementNumber, double falsePositiveProbability);
 
 /**
  * Encrypts the key passed as a parameter.
@@ -50,7 +60,7 @@ int bloomfilter_enc_setup(bloomfilter_enc_setup_pair_t *setupPair);
  * @param systemParams[in]              - system parameters.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bloomfilter_enc_encrypt_key(bloomfilter_enc_ciphertext_pair_t *ciphertextPair, bloomfilter_enc_system_params_t systemParams, uint8_t *K);
+int bloomfilter_enc_encrypt_key(bloomfilter_enc_ciphertext_pair_t *ciphertextPair, bloomfilter_enc_system_params_t* systemParams, uint8_t *K);
 
 /**
  * Generates a random key K and encrypts it.
@@ -59,7 +69,7 @@ int bloomfilter_enc_encrypt_key(bloomfilter_enc_ciphertext_pair_t *ciphertextPai
  * @param systemParams[in]              - system parameters.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t *ciphertextPair, bloomfilter_enc_system_params_t systemParams);
+int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t *ciphertextPair, bloomfilter_enc_system_params_t* systemParams);
 
 /**
  * Punctures a secret key for the given ciphertext. After this action the secret key will not be usable for decrypting
@@ -88,7 +98,7 @@ int bloomfilter_enc_ciphertext_cmp(bloomfilter_enc_ciphertext_t *ciphertext1, bl
  * @param ciphertext[in]            - ciphertext.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bloomfilter_enc_decrypt(uint8_t *key, bloomfilter_enc_system_params_t systemParams, bloomfilter_enc_secret_key_t *secretKey, bloomfilter_enc_ciphertext_t *ciphertext);
+int bloomfilter_enc_decrypt(uint8_t *key, bloomfilter_enc_system_params_t* systemParams, bloomfilter_enc_secret_key_t *secretKey, bloomfilter_enc_ciphertext_t *ciphertext);
 
 /**
  * Frees the memory allocated by the bfe secret key. This method has to be called after the secret key is no longer
@@ -114,7 +124,7 @@ void bloomfilter_enc_free_system_params(bloomfilter_enc_system_params_t *systemP
  * @param falsePositiveProbability[in]  - target false positive probability of the scheme. Smaller probability means larger secret key.
  * @return The setup pair struct.
  */
-bloomfilter_enc_setup_pair_t *bloomfilter_enc_init_setup_pair(int keyLength, int filterElementNumber, double falsePositiveProbability);
+bloomfilter_enc_setup_pair_t *bloomfilter_enc_init_setup_pair(unsigned int keyLength, unsigned int filterElementNumber, double falsePositiveProbability);
 
 /**
  * Frees the memory allocated by the bfe setup pair. This method has to be called after the setup pair is no longer
@@ -138,7 +148,7 @@ void bloomfilter_enc_free_ciphertext(bloomfilter_enc_ciphertext_t *ciphertext);
  * @param systemParams              - system parameters.
  * @return The ciphertext pair struct.
  */
-bloomfilter_enc_ciphertext_pair_t *bloomfilter_enc_init_ciphertext_pair(bloomfilter_enc_system_params_t systemParams);
+bloomfilter_enc_ciphertext_pair_t *bloomfilter_enc_init_ciphertext_pair(bloomfilter_enc_system_params_t* systemParams);
 
 /**
  * Frees the memory allocated by the bfe ciphertext pair. This method has to be called after the ciphertext pair is no

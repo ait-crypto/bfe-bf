@@ -37,13 +37,14 @@ static void test_tb_bloomfilter_enc() {
 
         printf("\nDecrypted key:\n");
         for (int i = 0; i < 57; i++) {
-            printf("%c", K[i]);
+            printf("%02x", K[i]);
         }
 
         printf("\nDecrypted key:\n");
         for (int i = 0; i < 57; i++) {
-            printf("%c", K2[i]);
+            printf("%02x", K2[i]);
         }
+        printf("\n");
 
 //        tb_bloomfilter_enc_puncture_int(setupPair.secretKey, setupPair.systemParams);
 //        ciphertext2 = tb_bloomfilter_enc_encrypt(setupPair.systemParams, "001");
@@ -165,12 +166,13 @@ static void test_hibe() {
 
     printf("Original msg:\n");
     for (int i = 0; i < 32; i++) {
-        printf("%c", message[i]);
+        printf("%02x", message[i]);
     }
     printf("\nDecrypted msg:\n");
     for (int i = 0; i < 32; i++) {
-        printf("%c", decrypted[i]);
+        printf("%02x", decrypted[i]);
     }
+    printf("\n");
 }
 
 static void test_ibe() {
@@ -179,10 +181,17 @@ static void test_ibe() {
     uint8_t message[] = { 0x41, 0x61, 0x22, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x64, 0x64 };
     uint8_t decrypted[33];
 
-    bf_ibe_keys_t systemParams;
-    bf_ibe_setup(&systemParams);
-    ep2_t privateKey;
-    bf_ibe_extract(privateKey, systemParams.masterKey, id, sizeof(id));
+    bf_ibe_secret_key_t master_key;
+    bf_ibe_public_key_t public_key;
+    bf_ibe_extracted_key_t private_key;
+
+    bf_ibe_init_secret_key(&master_key);
+    bf_ibe_init_public_key(&public_key);
+    bf_ibe_init_extracted_key(&private_key);
+
+    bf_ibe_setup(&master_key, &public_key);
+
+    bf_ibe_extract(&private_key, &master_key, id, sizeof(id));
 
     bn_t r, order;
     bn_null(r)
@@ -193,58 +202,76 @@ static void test_ibe() {
     bn_rand_mod(r, order);
 
     bf_ibe_ciphertext_t *cipherText = bf_ibe_init_ciphertext(sizeof(message));
-    bf_ibe_encrypt(cipherText, systemParams.publicKey, id, sizeof(id), message, r);
-    bf_ibe_decrypt(decrypted, cipherText, privateKey);
+    bf_ibe_encrypt(cipherText, &public_key, id, sizeof(id), message, r);
+    bf_ibe_decrypt(decrypted, cipherText, &private_key);
     printf("RESULTS:\n");
     printf("Original msg:\n");
     for (int i = 0; i < 33; i++) {
-        printf("%c", message[i]);
+        printf("%02x", message[i]);
     }
     printf("\nDecrypted msg:\n");
     for (int i = 0; i < 33; i++) {
-        printf("%c", decrypted[i]);
+        printf("%02x", decrypted[i]);
     }
 
-    ep2_free(privateKey);
     bn_free(r);
     bn_free(order);
     bf_ibe_free_ciphertext(cipherText);
-    ep_free(systemParams.publicKey);
-    bn_free(systemParams.masterKey);
+
+    bf_ibe_clear_extracted_key(&private_key);
+    bf_ibe_clear_public_key(&public_key);
+    bf_ibe_clear_secret_key(&master_key);
 }
 
 static void test_bloomfilter_enc() {
     err_t e;
-    bloomfilter_enc_setup_pair_t setupPair;
-    bloomfilter_enc_ciphertext_pair_t *ciphertextPair;
+
+    bloomfilter_enc_secret_key_t sk;
+    bloomfilter_enc_public_key_t pk;
+
+    bloomfilter_enc_init_secret_key(&sk);
+    bloomfilter_enc_init_public_key(&pk);
+    bloomfilter_enc_setup(&pk, &sk, 57, 50, 0.001);
+
+    bloomfilter_enc_ciphertext_pair_t* ciphertextPair = NULL;
 
     TRY {
-//        bloomfilter_enc_setup(&setupPair, 57, 50, 0.001);
-        uint8_t decrypted[setupPair.systemParams.keyLength];
-        ciphertextPair = bloomfilter_enc_init_ciphertext_pair(setupPair.systemParams);
-        bloomfilter_enc_encrypt(ciphertextPair, setupPair.systemParams);
-        printf("Original key:\n");
-        for (int i = 0; i < ciphertextPair->KLen; i++) {
-            printf("%c", ciphertextPair->K[i]);
+        uint8_t decrypted[pk.keyLength];
+        memset(decrypted, 0, pk.keyLength);
+
+        ciphertextPair = bloomfilter_enc_init_ciphertext_pair(&pk);
+        bloomfilter_enc_encrypt(ciphertextPair, &pk);
+        printf("Original key %u %u:\n", pk.keyLength, ciphertextPair->KLen);
+        for (unsigned int i = 0; i < ciphertextPair->KLen; i++) {
+            printf("%02x", ciphertextPair->K[i]);
         }
-        bloomfilter_enc_decrypt(decrypted, setupPair.systemParams, setupPair.secretKey, ciphertextPair->ciphertext);
-        bloomfilter_enc_puncture(setupPair.secretKey, ciphertextPair->ciphertext);
-        bloomfilter_enc_write_setup_pair_to_file(&setupPair);
-        bloomfilter_enc_system_params_t systemParamsFromFile = bloomfilter_enc_read_system_params_from_file();
-        bloomfilter_enc_secret_key_t *secretKeyFromFile = bloomfilter_enc_read_secret_key_from_file();
-        bloomfilter_enc_decrypt(decrypted, systemParamsFromFile, secretKeyFromFile, ciphertextPair->ciphertext);
+        printf("\n");
+        bloomfilter_enc_decrypt(decrypted, &pk, &sk, ciphertextPair->ciphertext);
         printf("Decrypted key:\n");
-        for (int i = 0; i < setupPair.systemParams.keyLength; i++) {
-            printf("%c", decrypted[i]);
+        for (int i = 0; i < ciphertextPair->KLen; i++) {
+            printf("%02x", decrypted[i]);
         }
+        printf("\n");
+        memset(decrypted, 0, pk.keyLength);
+
+        bloomfilter_enc_puncture(&sk, ciphertextPair->ciphertext);
+        // bloomfilter_enc_write_setup_pair_to_file(setupPair);
+        // bloomfilter_enc_system_params_t systemParamsFromFile = bloomfilter_enc_read_system_params_from_file();
+        // bloomfilter_enc_secret_key_t *secretKeyFromFile = bloomfilter_enc_read_secret_key_from_file();
+        bloomfilter_enc_decrypt(decrypted, &pk, &sk, ciphertextPair->ciphertext);
+        printf("Decrypted key:\n");
+        for (unsigned int i = 0; i < ciphertextPair->KLen; i++) {
+            printf("%02x", decrypted[i]);
+        }
+        printf("\n");
     } CATCH(e) {
         switch (e) {
             case ERR_NO_VALID:
                 util_print("Key already punctured!\n");
         }
     } FINALLY {
-        bloomfilter_enc_free_secret_key(setupPair.secretKey);
-        bloomfilter_enc_free_system_params(&setupPair.systemParams);
+        bloomfilter_enc_clear_secret_key(&sk);
+        bloomfilter_enc_clear_public_key(&pk);
         bloomfilter_enc_free_ciphertext_pair(ciphertextPair);
     }
 }
@@ -271,7 +298,7 @@ int main () {
     test_ibe();
     test_bloom_filter();
     test_bloomfilter_enc();
-    test_hibe();
-    test_tb_bloomfilter_enc();
+    // test_hibe();
+    // test_tb_bloomfilter_enc();
 }
 
