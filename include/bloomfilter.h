@@ -3,11 +3,8 @@
 
 #include "bitset.h"
 
-#define BITSET_HASH_SEED_1 657635
-#define BITSET_HASH_SEED_2 423646
-
 typedef struct _bloomfilter_t {
-    int hashCount;
+    unsigned int hashCount;
     bitset_t bitSet;
 } bloomfilter_t;
 
@@ -19,7 +16,7 @@ typedef struct _bloomfilter_t {
  * @param falsePositiveProbability  - target false positive probability for the filter with the specified number of elements.
  * @return The size a bloom filter with the given parameters would have.
  */
-int bloomfilter_get_needed_size(int n, double falsePositiveProbability);
+unsigned int bloomfilter_get_needed_size(unsigned int n, double falsePositiveProbability);
 
 /**
  * Creates a new bloom filter with the explicit size and hash count parameters.
@@ -28,7 +25,7 @@ int bloomfilter_get_needed_size(int n, double falsePositiveProbability);
  * @param hashCount                 - number of hash functions to be used.
  * @return The initialized bloom filter.
  */
-bloomfilter_t bloomfilter_init_fixed(int size, int hashCount);
+bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount);
 
 /**
  * Creates a new bloom filter with the given parameters.
@@ -37,7 +34,7 @@ bloomfilter_t bloomfilter_init_fixed(int size, int hashCount);
  * @param falsePositiveProbability  - target false positive probability for the filter with the specified number of elements.
  * @return The initialized bloom filter.
  */
-bloomfilter_t bloomfilter_init(int n, double falsePositiveProbability);
+bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability);
 
 /**
  * Returns the total number of positions inside the filter.
@@ -45,7 +42,7 @@ bloomfilter_t bloomfilter_init(int n, double falsePositiveProbability);
  * @param filter                    - the corresponding filter.
  * @return The size of the filter.
  */
-int bloomfilter_get_size(bloomfilter_t filter);
+unsigned int bloomfilter_get_size(bloomfilter_t filter);
 
 /**
  * Returns the bit positions of the bloom filter that would be set for the given input. No bloom filter instance is
@@ -58,7 +55,7 @@ int bloomfilter_get_size(bloomfilter_t filter);
  * @param filterSize[in]            - size of the hypothetical bloom filter.
  * @return The size of the filter.
  */
-void bloomfilter_get_bit_positions(int *positions, const void *input, int inputLen, int hashCount, int filterSize);
+void bloomfilter_get_bit_positions(unsigned int *positions, const void *input, size_t inputLen, unsigned int hashCount, unsigned int filterSize);
 
 /**
  * Adds a given element to the bloom filter.
@@ -67,7 +64,7 @@ void bloomfilter_get_bit_positions(int *positions, const void *input, int inputL
  * @param input                     - input element for the filter.
  * @param inputLen                  - length of input in bytes.
  */
-void bloomfilter_add(bloomfilter_t *filter, const void *input, int inputLen);
+void bloomfilter_add(bloomfilter_t *filter, const void *input, size_t inputLen);
 
 /**
  * Sets all the bits of a bloom filter to FALSE.
@@ -85,7 +82,7 @@ void bloomfilter_reset(bloomfilter_t *filter);
  * @param inputLen                  - length of input in bytes.
  * @return 0 if element is definitely not in the filter, 1 if element is likely in the filter.
  */
-int bloomfilter_maybe_contains(bloomfilter_t filter, const void *input, int inputLen);
+int bloomfilter_maybe_contains(bloomfilter_t filter, const void *input, size_t inputLen);
 
 /**
  * Frees the memory allocated by the bloom filter. This method has to be called after the filter is no longer needed to

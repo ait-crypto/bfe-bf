@@ -7,7 +7,7 @@
 #include "FIPS202-opt64/KeccakHash.h"
 #include "logger.h"
 
-bloomfilter_t bloomfilter_init_fixed(int size, int hashCount) {
+bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount) {
     bloomfilter_t bloomFilter;
 
     bloomFilter.bitSet.size = size;
@@ -18,28 +18,26 @@ bloomfilter_t bloomfilter_init_fixed(int size, int hashCount) {
     return bloomFilter;
 }
 
-bloomfilter_t bloomfilter_init(int n, double falsePositiveProbability) {
+bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability) {
     bloomfilter_t bloomFilter;
 
     bloomFilter.bitSet.size = bloomfilter_get_needed_size(n, falsePositiveProbability);
-    bloomFilter.hashCount = (int) round((bloomFilter.bitSet.size / (double) n) * log(2));
+    bloomFilter.hashCount = round((bloomFilter.bitSet.size / (double) n) * log(2));
     bloomFilter.bitSet = bitset_init(bloomFilter.bitSet.size);
 
     logger_log(LOGGER_INFO, "Instantiated Bloom Filter");
     return bloomFilter;
 }
 
-int bloomfilter_get_size(bloomfilter_t filter) {
+unsigned int bloomfilter_get_size(bloomfilter_t filter) {
     return filter.bitSet.size;
 }
 
-int bloomfilter_get_needed_size(int n, double falsePositiveProbability) {
-    return (int) - floor((n * log(falsePositiveProbability)) / pow(log(2), 2));
+unsigned int bloomfilter_get_needed_size(unsigned int n, double falsePositiveProbability) {
+    return -floor((n * log(falsePositiveProbability)) / pow(log(2), 2));
 }
 
-void bloomfilter_get_bit_positions(int *positions, const void *input, int inputLen, int hashCount, int filterSize) {
-    uint32_t digest1[1];
-    uint32_t digest2[1];
+void bloomfilter_get_bit_positions(unsigned int *positions, const void *input, size_t inputLen, unsigned int hashCount, unsigned int filterSize) {
     for (unsigned int i = 0; i < hashCount; i++) {
         Keccak_HashInstance shake;
         Keccak_HashInitialize_SHAKE256(&shake);
@@ -57,11 +55,11 @@ void bloomfilter_get_bit_positions(int *positions, const void *input, int inputL
     }
 }
 
-void bloomfilter_add(bloomfilter_t *filter, const void *input, int inputLen) {
-    int bitPositions[filter->hashCount];
+void bloomfilter_add(bloomfilter_t *filter, const void *input, size_t inputLen) {
+    unsigned int bitPositions[filter->hashCount];
     bloomfilter_get_bit_positions(bitPositions, input, inputLen, filter->hashCount, filter->bitSet.size);
 
-    for (int i = 0; i < filter->hashCount; i++) {
+    for (unsigned int i = 0; i < filter->hashCount; i++) {
         bitset_set(&filter->bitSet, bitPositions[i]);
     }
 }
@@ -70,12 +68,12 @@ void bloomfilter_reset(bloomfilter_t *filter) {
     bitset_reset(&filter->bitSet);
 }
 
-int bloomfilter_maybe_contains(bloomfilter_t filter, const void *input, int inputLen) {
-    int bitPositions[filter.hashCount];
+int bloomfilter_maybe_contains(bloomfilter_t filter, const void *input, size_t inputLen) {
+    unsigned int bitPositions[filter.hashCount];
     bloomfilter_get_bit_positions(bitPositions, input, inputLen, filter.hashCount, filter.bitSet.size);
     int contains = 1;
 
-    for (int i = 0; i < filter.hashCount; i++) {
+    for (unsigned int i = 0; i < filter.hashCount; i++) {
         contains &= bitset_get(filter.bitSet, bitPositions[i]);
     }
 
