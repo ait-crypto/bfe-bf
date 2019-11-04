@@ -131,4 +131,3 @@ uint32_t read_u32(const uint8_t** src) {
   (*src) += sizeof(v);
   return le32toh(v);
 }
-

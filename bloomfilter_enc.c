@@ -399,7 +399,8 @@ void bloomfilter_enc_write_setup_pair_to_file(bloomfilter_enc_setup_pair_t* setu
           setupPair->secretKey->filter.hashCount,
           ep2_size_bin(setupPair->secretKey->secretKey[0].key, 0));
   for (unsigned int i = 0;
-       i < (setupPair->secretKey->filter.bitSet.size + BITSET_WORD_BITS - 1) / BITSET_WORD_BITS; i++) {
+       i < (setupPair->secretKey->filter.bitSet.size + BITSET_WORD_BITS - 1) / BITSET_WORD_BITS;
+       i++) {
     fprintf(fp_secret_key, "%u ", setupPair->secretKey->filter.bitSet.bitArray[i]);
   }
   fprintf(fp_secret_key, "\n");

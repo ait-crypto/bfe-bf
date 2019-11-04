@@ -36,13 +36,13 @@ add_subdirectory(zf_log)
 add_subdirectory(FIPS202-opt64)
 
 add_library(bfe SHARED
-        bfibe.c
-        bitset.c
-        bloomfilter.c
-        bloomfilter_enc.c
-        hibe.c
-        tb_bloomfilter_enc.c
-        util.c)
+            bfibe.c
+            bitset.c
+            bloomfilter.c
+            bloomfilter_enc.c
+            # hibe.c
+            # tb_bloomfilter_enc.c
+            util.c)
 
 set_target_properties(bfe PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(bfe PROPERTIES C_VISIBILITY_PRESET hidden)

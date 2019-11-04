@@ -22,7 +22,7 @@ bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability) 
   bloomfilter_t bloomFilter;
 
   bloomFilter.bitSet.size = bloomfilter_get_needed_size(n, falsePositiveProbability);
-  bloomFilter.hashCount   = round((bloomFilter.bitSet.size / (double)n) * log(2));
+  bloomFilter.hashCount   = ceil((bloomFilter.bitSet.size / (double)n) * log(2));
   bloomFilter.bitSet      = bitset_init(bloomFilter.bitSet.size);
 
   logger_log(LOGGER_INFO, "Instantiated Bloom Filter");
@@ -43,7 +43,7 @@ void bloomfilter_get_bit_positions(unsigned int* positions, const void* input, s
     Keccak_HashInstance shake;
     Keccak_HashInitialize_SHAKE256(&shake);
 
-    unsigned int ile = htole32(i);
+    const unsigned int ile = htole32(i);
     Keccak_HashUpdate(&shake, (const uint8_t*)&ile, sizeof(ile) * 8);
     Keccak_HashUpdate(&shake, input, inputLen * 8);
     Keccak_HashFinal(&shake, NULL);
