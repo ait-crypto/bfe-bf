@@ -8,26 +8,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-int bf_ibe_setup_pair(bf_ibe_keys_t* keys) {
-  int status = BFE_SUCCESS;
-
-  ep_null(keys->public_key.key);
-  bn_null(keys->secret_key.key);
-
-  TRY {
-    ep_new(keys->public_key.key);
-    bn_new(keys->secret_key.key);
-
-    status = bf_ibe_setup(&keys->secret_key, &keys->public_key);
-  }
-  CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in IBE setup function.");
-    status = BFE_ERR_GENERAL;
-  }
-
-  return status;
-}
-
 int bf_ibe_setup(bf_ibe_secret_key_t* secret_key, bf_ibe_public_key_t* public_key) {
   int status = BFE_SUCCESS;
 
@@ -49,13 +29,6 @@ int bf_ibe_setup(bf_ibe_secret_key_t* secret_key, bf_ibe_public_key_t* public_ke
   }
 
   return status;
-}
-
-void bf_ibe_free_keys(bf_ibe_keys_t* keys) {
-  if (keys) {
-    bn_free(keys->secret_key.key);
-    ep_free(keys->public_key.key);
-  }
 }
 
 int bf_ibe_extract(bf_ibe_extracted_key_t* privateKey, const bf_ibe_secret_key_t* masterKey,
@@ -115,7 +88,7 @@ int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* p
     uint8_t bin[binSize];
     fp12_write_bin(bin, binSize, gIDR, 0);
     SHAKE256(digest, ciphertext->vLen, bin, binSize);
-    byteArraysXOR(ciphertext->v, digest, message, ciphertext->vLen, ciphertext->vLen);
+    byteArraysXOR(ciphertext->v, digest, message, ciphertext->vLen);
     ep_copy(ciphertext->u, ciphertextLeft);
   }
   CATCH_ANY {
@@ -159,7 +132,7 @@ int bf_ibe_decrypt(uint8_t* message, const bf_ibe_ciphertext_t* ciphertext,
     fp12_write_bin(bin, binSize, dU, 0);
     md_map(digest, bin, binSize);
     SHAKE256(digest, ciphertext->vLen, bin, binSize);
-    byteArraysXOR(message, digest, ciphertext->v, ciphertext->vLen, ciphertext->vLen);
+    byteArraysXOR(message, digest, ciphertext->v, ciphertext->vLen);
   }
   CATCH_ANY {
     logger_log(LOGGER_ERROR, "Error occurred in IBE decrypt function.");

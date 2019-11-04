@@ -5,7 +5,7 @@
 
 #include <relic/relic.h>
 
-typedef struct _bf_ibe_ciphertext_t {
+typedef struct {
   ep_t u;
   size_t vLen;
   uint8_t v[];
@@ -24,18 +24,10 @@ typedef struct {
   ep_t key;
 } bf_ibe_public_key_t;
 
-typedef struct _bf_ibe_keys_t {
+typedef struct {
   bf_ibe_public_key_t public_key;
   bf_ibe_secret_key_t secret_key;
 } bf_ibe_keys_t;
-
-/**
- * Sets up the Boneh-Franklin Identity Based Encryption (ibe) scheme.
- *
- * @param keys[out]                 - the ibe key pair containing both public and master key.
- * @return BFE_SUCCESS or BFE_ERR_*.
- */
-BFE_VISIBLE int bf_ibe_setup_pair(bf_ibe_keys_t* keys);
 
 /**
  * Sets up the Boneh-Franklin Identity Based Encryption (ibe) scheme.
@@ -45,13 +37,6 @@ BFE_VISIBLE int bf_ibe_setup_pair(bf_ibe_keys_t* keys);
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
 BFE_VISIBLE int bf_ibe_setup(bf_ibe_secret_key_t* secret_key, bf_ibe_public_key_t* public_key);
-
-/**
- * Frees keys of the IBE.
- *
- * @param keys                      - keys of the IBE
- */
-BFE_VISIBLE void bf_ibe_free_keys(bf_ibe_keys_t* keys);
 
 /**
  * Extracts a private key for the given id.
