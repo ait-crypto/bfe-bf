@@ -5,9 +5,9 @@
 
 #define BITSET_WORD_BITS (8 * sizeof(unsigned int))
 
-typedef struct _bitset_t {
-  unsigned int size;
+typedef struct {
   unsigned int* bitArray;
+  unsigned int size;
 } bitset_t;
 
 /**
@@ -24,16 +24,20 @@ BFE_VISIBLE bitset_t bitset_init(unsigned int size);
  * @param bitset                    - the corresponding bitset.
  * @param index                     - the index of the bit supposed to be set to TRUE.
  */
-BFE_VISIBLE void bitset_set(bitset_t* bitset, unsigned int index);
+static inline void bitset_set(bitset_t* bitset, unsigned int index) {
+  bitset->bitArray[index / BITSET_WORD_BITS] |= (1 << (index & (BITSET_WORD_BITS - 1)));
+}
 
 /**
  * Retrieves a specific bit of a bitset.
  *
  * @param bitset                    - the corresponding bitset.
  * @param index                     - the index of the bit in question.
- * @return 0 if the bit is FALSE, 1 if the bit is TRUE.
+ * @return 0 if the bit is FALSE, non-0 if the bit is TRUE.
  */
-BFE_VISIBLE int bitset_get(bitset_t bitSet, unsigned int index);
+static inline int bitset_get(bitset_t bitSet, unsigned int index) {
+  return bitSet.bitArray[index / BITSET_WORD_BITS] & (1 << (index & (BITSET_WORD_BITS - 1)));
+}
 
 /**
  * Sets all bits of a bitset to FALSE.

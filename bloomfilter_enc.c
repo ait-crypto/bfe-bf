@@ -246,7 +246,7 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
         ep_copy(ibeCiphertext->u, ciphertext->u);
         memcpy(ibeCiphertext->v, &ciphertext->v[i * ibeCiphertext->vLen], ibeCiphertext->vLen);
         status = bf_ibe_decrypt(tempKey, ibeCiphertext, &secretKey->secretKey[affectedIndexes[i]]);
-        if (!status) {
+        if (status) {
           logger_log(LOGGER_INFO, "IBE decrypt failed.");
           THROW(ERR_NO_VALID);
           break;

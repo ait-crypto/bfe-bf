@@ -74,13 +74,13 @@ int bloomfilter_maybe_contains(bloomfilter_t filter, const void* input, size_t i
   unsigned int bitPositions[filter.hashCount];
   bloomfilter_get_bit_positions(bitPositions, input, inputLen, filter.hashCount,
                                 filter.bitSet.size);
-  int contains = 1;
-
   for (unsigned int i = 0; i < filter.hashCount; i++) {
-    contains &= bitset_get(filter.bitSet, bitPositions[i]);
+    if (!bitset_get(filter.bitSet, bitPositions[i])) {
+      return 0;
+    }
   }
 
-  return contains;
+  return 1;
 }
 
 void bloomfilter_clean(bloomfilter_t* filter) {
