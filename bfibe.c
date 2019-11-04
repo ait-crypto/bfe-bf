@@ -1,12 +1,12 @@
 #include "include/bfibe.h"
 
-#include <stdio.h>
-#include <stddef.h>
 #include "FIPS202-opt64/SimpleFIPS202.h"
-#include <relic/relic.h>
-#include "util.h"
-#include "logger.h"
 #include "include/err_codes.h"
+#include "logger.h"
+#include "util.h"
+#include <relic/relic.h>
+#include <stddef.h>
+#include <stdio.h>
 
 int bf_ibe_setup_pair(bf_ibe_keys_t* keys) {
   int status = BFE_SUCCESS;
@@ -58,73 +58,79 @@ void bf_ibe_free_keys(bf_ibe_keys_t* keys) {
   }
 }
 
-int bf_ibe_extract(bf_ibe_extracted_key_t* privateKey, const bf_ibe_secret_key_t* masterKey, const uint8_t *id, size_t idLen) {
-    int status = BFE_SUCCESS;
-    ep2_t qid;
+int bf_ibe_extract(bf_ibe_extracted_key_t* privateKey, const bf_ibe_secret_key_t* masterKey,
+                   const uint8_t* id, size_t idLen) {
+  int status = BFE_SUCCESS;
+  ep2_t qid;
 
-    ep2_null(qid);
-    TRY {
-        ep2_new(qid);
-        ep2_map(qid, id, idLen);
-        ep2_mul(privateKey->key, qid, masterKey->key);
-        privateKey->set = 1;
-    } CATCH_ANY {
-        logger_log(LOGGER_ERROR, "Error occurred in IBE extract function.");
-        status = BFE_ERR_GENERAL;
-    } FINALLY {
-        ep2_free(qid);
-    };
+  ep2_null(qid);
+  TRY {
+    ep2_new(qid);
+    ep2_map(qid, id, idLen);
+    ep2_mul(privateKey->key, qid, masterKey->key);
+    privateKey->set = 1;
+  }
+  CATCH_ANY {
+    logger_log(LOGGER_ERROR, "Error occurred in IBE extract function.");
+    status = BFE_ERR_GENERAL;
+  }
+  FINALLY {
+    ep2_free(qid);
+  };
 
-    return status;
+  return status;
 }
 
-int bf_ibe_encrypt(bf_ibe_ciphertext_t *ciphertext, const bf_ibe_public_key_t* publicKey, const uint8_t *id, size_t idLen, const uint8_t *message, bn_t r) {
-    int status = BFE_SUCCESS;
-    uint8_t digest[ciphertext->vLen];
-    ep_t publicKeyR;
-    ep2_t qid;
-    fp12_t gIDR;
-    bn_t group1Order;
-    ep_t ciphertextLeft;
+int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* publicKey,
+                   const uint8_t* id, size_t idLen, const uint8_t* message, bn_t r) {
+  int status = BFE_SUCCESS;
+  uint8_t digest[ciphertext->vLen];
+  ep_t publicKeyR;
+  ep2_t qid;
+  fp12_t gIDR;
+  bn_t group1Order;
+  ep_t ciphertextLeft;
 
-    ep_null(publicKeyR);
-    ep2_null(qid);
-    fp12_null(gIDR);
-    ep_null(ciphertextLeft);
-    ep_null(ciphertext->u);
+  ep_null(publicKeyR);
+  ep2_null(qid);
+  fp12_null(gIDR);
+  ep_null(ciphertextLeft);
+  ep_null(ciphertext->u);
 
-    TRY {
-        ep_new(publicKeyR);
-        ep2_new(qid);
-        fp12_new(gIDR);
-        bn_new(group1Order);
-        ep_new(ciphertextLeft);
-        ep_new(ciphertext->u);
+  TRY {
+    ep_new(publicKeyR);
+    ep2_new(qid);
+    fp12_new(gIDR);
+    bn_new(group1Order);
+    ep_new(ciphertextLeft);
+    ep_new(ciphertext->u);
 
-        ep_mul_gen(ciphertextLeft, r);
-        ep_mul(publicKeyR, publicKey->key, r);
+    ep_mul_gen(ciphertextLeft, r);
+    ep_mul(publicKeyR, publicKey->key, r);
 
-        ep2_map(qid, id, idLen);
-        pp_map_k12(gIDR, publicKeyR, qid);
+    ep2_map(qid, id, idLen);
+    pp_map_k12(gIDR, publicKeyR, qid);
 
-        int binSize = fp12_size_bin(gIDR, 0);
-        uint8_t bin[binSize];
-        fp12_write_bin(bin, binSize, gIDR, 0);
-        SHAKE256(digest, ciphertext->vLen, bin, binSize);
-        byteArraysXOR(ciphertext->v, digest, message, ciphertext->vLen, ciphertext->vLen);
-        ep_copy(ciphertext->u, ciphertextLeft);
-    } CATCH_ANY {
-        logger_log(LOGGER_ERROR, "Error occurred in IBE encrypt function.");
-        status = BFE_ERR_GENERAL;
-    } FINALLY {
-        ep2_free(qid);
-        fp12_free(gIDR);
-        bn_free(group1Order);
-        ep_free(ciphertextLeft);
-        ep_free(publicKeyR);
-    };
+    int binSize = fp12_size_bin(gIDR, 0);
+    uint8_t bin[binSize];
+    fp12_write_bin(bin, binSize, gIDR, 0);
+    SHAKE256(digest, ciphertext->vLen, bin, binSize);
+    byteArraysXOR(ciphertext->v, digest, message, ciphertext->vLen, ciphertext->vLen);
+    ep_copy(ciphertext->u, ciphertextLeft);
+  }
+  CATCH_ANY {
+    logger_log(LOGGER_ERROR, "Error occurred in IBE encrypt function.");
+    status = BFE_ERR_GENERAL;
+  }
+  FINALLY {
+    ep2_free(qid);
+    fp12_free(gIDR);
+    bn_free(group1Order);
+    ep_free(ciphertextLeft);
+    ep_free(publicKeyR);
+  };
 
-    return status;
+  return status;
 }
 
 int bf_ibe_decrypt(uint8_t* message, const bf_ibe_ciphertext_t* ciphertext,
@@ -189,7 +195,8 @@ int bf_ibe_init_secret_key(bf_ibe_secret_key_t* key) {
   bn_null(key->key);
   TRY {
     bn_new(key->key);
-  } CATCH_ANY {
+  }
+  CATCH_ANY {
     status = BFE_ERR_GENERAL;
   }
 
@@ -220,7 +227,8 @@ int bf_ibe_init_public_key(bf_ibe_public_key_t* key) {
   TRY {
     ep_new(key->key);
     ep_set_infty(key->key);
-  } CATCH_ANY {
+  }
+  CATCH_ANY {
     status = BFE_ERR_GENERAL;
   }
 
@@ -242,7 +250,8 @@ int bf_ibe_init_extracted_key(bf_ibe_extracted_key_t* key) {
   TRY {
     ep2_new(key->key);
     ep2_set_infty(key->key);
-  } CATCH_ANY {
+  }
+  CATCH_ANY {
     status = BFE_ERR_GENERAL;
   }
 
