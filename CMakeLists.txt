@@ -7,7 +7,7 @@ endif()
 
 project(bfe LANGUAGES C VERSION 0.9.1 DESCRIPTION "Bloom Filter Encryption Library")
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 
 include(GNUInstallDirs)
 find_package(relic REQUIRED)
