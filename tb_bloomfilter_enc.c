@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stddef.h>
-#include <FIPS202-opt64/SimpleFIPS202.h>
 
+#include "FIPS202-opt64/SimpleFIPS202.h"
 #include "include/tb_bloomfilter_enc.h"
 #include "include/bloomfilter.h"
 #include "include/hibe.h"

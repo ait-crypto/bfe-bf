@@ -43,7 +43,6 @@ configure_file(bfe.pc.in bfe.pc @ONLY)
 add_subdirectory(FIPS202-opt64)
 target_link_libraries(bfe ${RELIC_LIBRARY} m FIPS202-opt64)
 
-target_include_directories(bfe PRIVATE .)
 target_include_directories(bfe PRIVATE ${RELIC_INCLUDE_DIR})
 
 install(TARGETS bfe

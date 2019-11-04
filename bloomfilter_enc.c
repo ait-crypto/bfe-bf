@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <math.h>
-#include <FIPS202-opt64/SimpleFIPS202.h>
+#include "FIPS202-opt64/SimpleFIPS202.h"
 #include "include/bloomfilter_enc.h"
 #include "include/bloomfilter.h"
 #include "include/bfibe.h"

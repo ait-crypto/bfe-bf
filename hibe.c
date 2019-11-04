@@ -1,6 +1,6 @@
 #include <relic/relic.h>
 #include <stddef.h>
-#include <FIPS202-opt64/SimpleFIPS202.h>
+#include "FIPS202-opt64/SimpleFIPS202.h"
 #include "include/hibe.h"
 #include "logger.h"
 #include "util.h"
