@@ -8,6 +8,9 @@ endif()
 project(bfe LANGUAGES C VERSION 0.9.1 DESCRIPTION "Bloom Filter Encryption Library")
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+# force it for zf_log
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(GNUInstallDirs)
 include(CheckCCompilerFlag)
@@ -25,6 +28,7 @@ check_c_compiler_flag_and_add(-Wshadow CC_SUPPORTS_WSHADOW)
 check_c_compiler_flag_and_add(-Werror=implicit-function-declaration CC_SUPPORTS_WERROR_IMPLICIT_FUNCTION_DECLARATION)
 
 find_package(relic REQUIRED)
+add_subdirectory(zf_log)
 
 add_library(bfe SHARED
         bfibe.c
@@ -32,7 +36,6 @@ add_library(bfe SHARED
         bloomfilter.c
         bloomfilter_enc.c
         hibe.c
-        logger.c
         tb_bloomfilter_enc.c
         util.c)
 
@@ -41,7 +44,7 @@ set_target_properties(bfe PROPERTIES
 configure_file(bfe.pc.in bfe.pc @ONLY)
 
 add_subdirectory(FIPS202-opt64)
-target_link_libraries(bfe ${RELIC_LIBRARY} FIPS202-opt64 m)
+target_link_libraries(bfe ${RELIC_LIBRARY} zf_log FIPS202-opt64 m)
 
 target_include_directories(bfe PRIVATE ${RELIC_INCLUDE_DIR})
 

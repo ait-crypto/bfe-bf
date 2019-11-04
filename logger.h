@@ -1,11 +1,13 @@
-#ifndef MASTER_PROJECT_LOGGER_H
-#define MASTER_PROJECT_LOGGER_H
+#ifndef LOGGER_H
+#define LOGGER_H
 
-extern const char LOGGER_DEBUG[];
-extern const char LOGGER_INFO[];
-extern const char LOGGER_WARNING[];
-extern const char LOGGER_ERROR[];
+#include "zf_log/zf_log/zf_log.h"
 
-void logger_log(const char* level, const char* message);
+#define LOGGER_DEBUG ZF_LOG_DEBUG
+#define LOGGER_INFO ZF_LOG_INFO
+#define LOGGER_WARNING ZF_LOG_WARN
+#define LOGGER_ERROR ZF_LOG_ERROR
 
-#endif //MASTER_PROJECT_LOGGER_H
+#define logger_log(lvl, ...) ZF_LOG_WRITE(lvl, "bfe", __VA_ARGS__)
+
+#endif
