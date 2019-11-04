@@ -18,11 +18,12 @@ void byteArraysXOR(uint8_t* out, const uint8_t* array1, const uint8_t* array2, s
 #if defined __GLIBC__ && defined __linux__
 #if __GLIBC__ > 2 || __GLIBC_MINOR__ > 24
 #include <sys/random.h>
+#include <errno.h>
 
 void generateRandomBytes(uint8_t* dst, unsigned int binSize) {
   const int ret = getrandom(dst, binSize, GRND_NONBLOCK);
-  if (ret) {
-    logger_log(LOGGER_ERROR, "Failed to get random data: %d", ret);
+  if (ret == -1) {
+    logger_log(LOGGER_ERROR, "Failed to get random data: %d", errno);
   }
 }
 #else /* older glibc */
