@@ -40,8 +40,6 @@ add_library(bfe SHARED
             bitset.c
             bloomfilter.c
             bloomfilter_enc.c
-            # hibe.c
-            # tb_bloomfilter_enc.c
             util.c)
 
 set_target_properties(bfe PROPERTIES VERSION ${PROJECT_VERSION})

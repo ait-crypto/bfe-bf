@@ -3,182 +3,6 @@
 #include "include/bfibe.h"
 #include "include/bloomfilter.h"
 #include "include/bloomfilter_enc.h"
-#include "include/hibe.h"
-#include "include/tb_bloomfilter_enc.h"
-
-static void test_tb_bloomfilter_enc() {
-  tb_bloomfilter_enc_setup_pair_t* setupPair;
-  tb_bloomfilter_enc_ciphertext_t* ciphertext;
-  tb_bloomfilter_enc_ciphertext_t* ciphertext2;
-  tb_bloomfilter_enc_ciphertext_t* ciphertext3;
-  tb_bloomfilter_enc_ciphertext_t* ciphertext4;
-  tb_bloomfilter_enc_ciphertext_t* ciphertext5;
-  tb_bloomfilter_enc_ciphertext_t* ciphertext6;
-  tb_bloomfilter_enc_ciphertext_t* ciphertext7;
-  tb_bloomfilter_enc_ciphertext_t* ciphertext8;
-  uint8_t K[57];  // todo this should be dynamic
-  uint8_t K2[57]; // todo this should be dynamic
-  uint8_t K3[57]; // todo this should be dynamic
-  uint8_t K4[57]; // todo this should be dynamic
-  uint8_t K5[57]; // todo this should be dynamic
-  uint8_t K6[57]; // todo this should be dynamic
-  uint8_t K7[57]; // todo this should be dynamic
-  uint8_t K8[57]; // todo this should be dynamic
-
-  TRY {
-    setupPair = tb_bloomfilter_enc_init_setup_pair(100, 0.001, 3);
-    tb_bloomfilter_enc_setup(setupPair, 57);
-    ciphertext = tb_bloomfilter_enc_init_ciphertext(setupPair->systemParams);
-    tb_bloomfilter_enc_encrypt(ciphertext, setupPair->systemParams, "000");
-    tb_bloomfilter_enc_decrypt(K, setupPair->systemParams, setupPair->secretKey, ciphertext);
-    tb_bloomfilter_enc_puncture_key(setupPair->secretKey, setupPair->systemParams, ciphertext);
-    tb_bloomfilter_enc_decrypt(K2, setupPair->systemParams, setupPair->secretKey, ciphertext);
-
-    printf("\nDecrypted key:\n");
-    for (int i = 0; i < 57; i++) {
-      printf("%02x", K[i]);
-    }
-
-    printf("\nDecrypted key:\n");
-    for (int i = 0; i < 57; i++) {
-      printf("%02x", K2[i]);
-    }
-    printf("\n");
-
-    //        tb_bloomfilter_enc_puncture_int(setupPair.secretKey, setupPair.systemParams);
-    //        ciphertext2 = tb_bloomfilter_enc_encrypt(setupPair.systemParams, "001");
-    //        tb_bloomfilter_enc_decrypt(K2, setupPair.systemParams, setupPair.secretKey,
-    //        ciphertext2);
-    //
-    //        printf("\nDecrypted key:\n");
-    //        for (int i = 0; i < 57; i++) {
-    //            printf("%c", K2[i]);
-    //        }
-    //
-    //        tb_bloomfilter_enc_puncture_int(setupPair.secretKey, setupPair.systemParams);
-    //        ciphertext3 = tb_bloomfilter_enc_encrypt(setupPair.systemParams, "010");
-    //        tb_bloomfilter_enc_decrypt(K3, setupPair.systemParams, setupPair.secretKey,
-    //        ciphertext3);
-    //
-    //        printf("\nDecrypted key:\n");
-    //        for (int i = 0; i < 57; i++) {
-    //            printf("%c", K3[i]);
-    //        }
-    //
-    //        tb_bloomfilter_enc_puncture_int(setupPair.secretKey, setupPair.systemParams);
-    //        ciphertext4 = tb_bloomfilter_enc_encrypt(setupPair.systemParams, "011");
-    //        tb_bloomfilter_enc_decrypt(K4, setupPair.systemParams, setupPair.secretKey,
-    //        ciphertext4);
-    //
-    //        printf("\nDecrypted key:\n");
-    //        for (int i = 0; i < 57; i++) {
-    //            printf("%c", K4[i]);
-    //        }
-    //
-    //        tb_bloomfilter_enc_puncture_int(setupPair.secretKey, setupPair.systemParams);
-    //        ciphertext5 = tb_bloomfilter_enc_encrypt(setupPair.systemParams, "100");
-    //        tb_bloomfilter_enc_decrypt(K5, setupPair.systemParams, setupPair.secretKey,
-    //        ciphertext5);
-    //
-    //        printf("\nDecrypted key:\n");
-    //        for (int i = 0; i < 57; i++) {
-    //            printf("%c", K5[i]);
-    //        }
-    //
-    //        tb_bloomfilter_enc_puncture_int(setupPair.secretKey, setupPair.systemParams);
-    //        ciphertext6 = tb_bloomfilter_enc_encrypt(setupPair.systemParams, "101");
-    //        tb_bloomfilter_enc_decrypt(K6, setupPair.systemParams, setupPair.secretKey,
-    //        ciphertext6);
-    //
-    //        printf("\nDecrypted key:\n");
-    //        for (int i = 0; i < 57; i++) {
-    //            printf("%c", K6[i]);
-    //        }
-    //
-    //        tb_bloomfilter_enc_puncture_int(setupPair.secretKey, setupPair.systemParams);
-    //        ciphertext7 = tb_bloomfilter_enc_encrypt(setupPair.systemParams, "110");
-    //        tb_bloomfilter_enc_decrypt(K7, setupPair.systemParams, setupPair.secretKey,
-    //        ciphertext7);
-    //
-    //        printf("\nDecrypted key:\n");
-    //        for (int i = 0; i < 57; i++) {
-    //            printf("%c", K7[i]);
-    //        }
-    //
-    //        tb_bloomfilter_enc_puncture_int(setupPair.secretKey, setupPair.systemParams);
-    //        ciphertext8 = tb_bloomfilter_enc_encrypt(setupPair.systemParams, "111");
-    //        tb_bloomfilter_enc_decrypt(K8, setupPair.systemParams, setupPair.secretKey,
-    //        ciphertext8);
-    //
-    //        printf("\nDecrypted key:\n");
-    //        for (int i = 0; i < 57; i++) {
-    //            printf("%c", K8[i]);
-    //        }
-    //
-    //        tb_bloomfilter_enc_puncture_int(setupPair.secretKey, setupPair.systemParams);
-  }
-  CATCH_ANY {}
-  FINALLY {
-    tb_bloomfilter_enc_free_ciphertext(ciphertext);
-    //        tb_bloomfilter_enc_free_ciphertext(ciphertext2);
-    //        tb_bloomfilter_enc_free_ciphertext(ciphertext3);
-    //        tb_bloomfilter_enc_free_ciphertext(ciphertext4);
-    //        tb_bloomfilter_enc_free_ciphertext(ciphertext5);
-    //        tb_bloomfilter_enc_free_ciphertext(ciphertext6);
-    //        tb_bloomfilter_enc_free_ciphertext(ciphertext7);
-    //        tb_bloomfilter_enc_free_ciphertext(ciphertext8);
-    tb_bloomfilter_enc_free_setup_pair(setupPair);
-  }
-}
-
-static void test_hibe() {
-  uint8_t message[] = {0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41,
-                       0x61, 0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x41, 0x61,
-                       0x62, 0x63, 0x64, 0x41, 0x61, 0x62, 0x63, 0x64, 0x64, 0x64};
-  uint8_t decrypted[32];
-  hibe_setup_pair_t* setupPair;
-  hibe_private_key_t* privateKey;
-  hibe_private_key_t* newPrivateKey;
-  hibe_private_key_t* newPrivateKey2;
-  hibe_private_key_t* newPrivateKey3;
-  hibe_ciphertext_t* ciphertext;
-
-  setupPair = hibe_init_setup_pair(6);
-
-  TRY {
-    hibe_setup(setupPair);
-    privateKey = hibe_init_private_key(setupPair->systemParams, "11");
-    hibe_extract(privateKey, setupPair->systemParams, setupPair->masterKey, "11");
-    newPrivateKey = hibe_init_private_key(setupPair->systemParams, "11");
-    hibe_derive(newPrivateKey, setupPair->systemParams, privateKey, "110");
-    newPrivateKey2 = hibe_init_private_key(setupPair->systemParams, "11");
-    hibe_derive(newPrivateKey2, setupPair->systemParams, newPrivateKey, "1100");
-    newPrivateKey3 = hibe_init_private_key(setupPair->systemParams, "11");
-    hibe_derive(newPrivateKey3, setupPair->systemParams, newPrivateKey, "1101");
-    ciphertext = hibe_init_ciphertext(sizeof(message));
-    hibe_encrypt(ciphertext, setupPair->systemParams, "1101", message);
-    hibe_decrypt(decrypted, ciphertext, newPrivateKey3);
-  }
-  CATCH_ANY {}
-  FINALLY {
-    hibe_free_setup_pair(setupPair);
-    hibe_free_private_key(privateKey);
-    hibe_free_private_key(newPrivateKey);
-    hibe_free_private_key(newPrivateKey2);
-    hibe_free_private_key(newPrivateKey3);
-    hibe_free_ciphertext(ciphertext);
-  }
-
-  printf("Original msg:\n");
-  for (int i = 0; i < 32; i++) {
-    printf("%02x", message[i]);
-  }
-  printf("\nDecrypted msg:\n");
-  for (int i = 0; i < 32; i++) {
-    printf("%02x", decrypted[i]);
-  }
-  printf("\n");
-}
 
 static void test_ibe() {
   uint8_t id[5];
@@ -251,7 +75,7 @@ static void test_bloomfilter_enc() {
     printf("\n");
     bloomfilter_enc_decrypt(decrypted, &pk, &sk, &ciphertextPair.ciphertext);
     printf("Decrypted key:\n");
-    for (int i = 0; i < ciphertextPair.KLen; i++) {
+    for (unsigned int i = 0; i < ciphertextPair.KLen; i++) {
       printf("%02x", decrypted[i]);
     }
     printf("\n");
@@ -307,6 +131,4 @@ int main() {
   test_ibe();
   test_bloom_filter();
   test_bloomfilter_enc();
-  // test_hibe();
-  // test_tb_bloomfilter_enc();
 }
