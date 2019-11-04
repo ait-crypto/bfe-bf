@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
+# honor visibility properties
+cmake_policy(SET CMP0063 NEW)
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build." FORCE)
@@ -29,6 +32,7 @@ check_c_compiler_flag_and_add(-Werror=implicit-function-declaration CC_SUPPORTS_
 
 find_package(relic REQUIRED)
 add_subdirectory(zf_log)
+add_subdirectory(FIPS202-opt64)
 
 add_library(bfe SHARED
         bfibe.c
@@ -39,14 +43,13 @@ add_library(bfe SHARED
         tb_bloomfilter_enc.c
         util.c)
 
-set_target_properties(bfe PROPERTIES
-        VERSION ${PROJECT_VERSION})
+set_target_properties(bfe PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(bfe PROPERTIES C_VISIBILITY_PRESET hidden)
 configure_file(bfe.pc.in bfe.pc @ONLY)
 
-add_subdirectory(FIPS202-opt64)
-target_link_libraries(bfe ${RELIC_LIBRARY} zf_log FIPS202-opt64 m)
-
-target_include_directories(bfe PRIVATE ${RELIC_INCLUDE_DIR})
+target_link_libraries(bfe PUBLIC ${RELIC_LIBRARY})
+target_link_libraries(bfe PRIVATE zf_log FIPS202-opt64 m "-Wl,--exclude-libs,ALL")
+target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
 
 install(TARGETS bfe
         EXPORT bfe-targets

@@ -3,6 +3,7 @@
 
 #include "bloomfilter.h"
 #include "hibe.h"
+#include "macros.h"
 
 typedef struct _tb_bloomfilter_enc_system_params_t {
   int filterHashCount;
@@ -44,9 +45,9 @@ typedef struct _tb_bloomfilter_enc_ciphertext_t {
  * @param systemParams[in]          - system parameters.
  * @param ciphertext[in]            - ciphertext for which the secret key is being punctured.
  */
-void tb_bloomfilter_enc_puncture_key(tb_bloomfilter_enc_secret_key_t* secretKey,
-                                     tb_bloomfilter_enc_system_params_t systemParams,
-                                     tb_bloomfilter_enc_ciphertext_t* ciphertext);
+BFE_VISIBLE void tb_bloomfilter_enc_puncture_key(tb_bloomfilter_enc_secret_key_t* secretKey,
+                                                 tb_bloomfilter_enc_system_params_t systemParams,
+                                                 tb_bloomfilter_enc_ciphertext_t* ciphertext);
 
 /**
  * Punctures a time interval by modifying a secret key so it becomes useless for encrypting the
@@ -58,8 +59,8 @@ void tb_bloomfilter_enc_puncture_key(tb_bloomfilter_enc_secret_key_t* secretKey,
  * @param systemParams[in]          - system parameters.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int tb_bloomfilter_enc_puncture_int(tb_bloomfilter_enc_secret_key_t* secretKey,
-                                    tb_bloomfilter_enc_system_params_t systemParams);
+BFE_VISIBLE int tb_bloomfilter_enc_puncture_int(tb_bloomfilter_enc_secret_key_t* secretKey,
+                                                tb_bloomfilter_enc_system_params_t systemParams);
 
 /**
  * Sets up the Time-Based Bloom Filter Encryption (tb-bfe) scheme.
@@ -70,7 +71,7 @@ int tb_bloomfilter_enc_puncture_int(tb_bloomfilter_enc_secret_key_t* secretKey,
  * tb_bloomfilter_enc_encrypt() function, in bytes.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int tb_bloomfilter_enc_setup(tb_bloomfilter_enc_setup_pair_t* setupPair, int keyLength);
+BFE_VISIBLE int tb_bloomfilter_enc_setup(tb_bloomfilter_enc_setup_pair_t* setupPair, int keyLength);
 
 /**
  * Generates a random key K and encrypts it.
@@ -83,9 +84,9 @@ int tb_bloomfilter_enc_setup(tb_bloomfilter_enc_setup_pair_t* setupPair, int key
  * "000" to "111").
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int tb_bloomfilter_enc_encrypt(tb_bloomfilter_enc_ciphertext_t* ciphertext,
-                               tb_bloomfilter_enc_system_params_t systemParams,
-                               const char* intervalId);
+BFE_VISIBLE int tb_bloomfilter_enc_encrypt(tb_bloomfilter_enc_ciphertext_t* ciphertext,
+                                           tb_bloomfilter_enc_system_params_t systemParams,
+                                           const char* intervalId);
 
 /**
  * Decrypts a given ciphertext. The secret key should not be already punctured with the same
@@ -97,9 +98,10 @@ int tb_bloomfilter_enc_encrypt(tb_bloomfilter_enc_ciphertext_t* ciphertext,
  * @param ciphertext[in]            - ciphertext.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int tb_bloomfilter_enc_decrypt(uint8_t* key, tb_bloomfilter_enc_system_params_t systemParams,
-                               tb_bloomfilter_enc_secret_key_t* secretKey,
-                               tb_bloomfilter_enc_ciphertext_t* ciphertext);
+BFE_VISIBLE int tb_bloomfilter_enc_decrypt(uint8_t* key,
+                                           tb_bloomfilter_enc_system_params_t systemParams,
+                                           tb_bloomfilter_enc_secret_key_t* secretKey,
+                                           tb_bloomfilter_enc_ciphertext_t* ciphertext);
 
 /**
  * Allocates the memory for the tb-bfe ciphertext.
@@ -107,7 +109,7 @@ int tb_bloomfilter_enc_decrypt(uint8_t* key, tb_bloomfilter_enc_system_params_t 
  * @param systemParams              - system parameters.
  * @return The ciphertext struct.
  */
-tb_bloomfilter_enc_ciphertext_t*
+BFE_VISIBLE tb_bloomfilter_enc_ciphertext_t*
 tb_bloomfilter_enc_init_ciphertext(tb_bloomfilter_enc_system_params_t systemParams);
 
 /**
@@ -116,7 +118,7 @@ tb_bloomfilter_enc_init_ciphertext(tb_bloomfilter_enc_system_params_t systemPara
  *
  * @param ciphertext                - the corresponding ciphertext.
  */
-void tb_bloomfilter_enc_free_ciphertext(tb_bloomfilter_enc_ciphertext_t* ciphertext);
+BFE_VISIBLE void tb_bloomfilter_enc_free_ciphertext(tb_bloomfilter_enc_ciphertext_t* ciphertext);
 
 /**
  * Frees the memory allocated by the tb-bfe system parameters. This method has to be called after
@@ -124,7 +126,8 @@ void tb_bloomfilter_enc_free_ciphertext(tb_bloomfilter_enc_ciphertext_t* ciphert
  *
  * @param systemParams              - the corresponding system parameters.
  */
-void tb_bloomfilter_enc_free_system_params(tb_bloomfilter_enc_system_params_t* systemParams);
+BFE_VISIBLE void
+tb_bloomfilter_enc_free_system_params(tb_bloomfilter_enc_system_params_t* systemParams);
 
 /**
  * Frees the memory allocated by the tb-bfe secret key. This method has to be called after the
@@ -132,7 +135,7 @@ void tb_bloomfilter_enc_free_system_params(tb_bloomfilter_enc_system_params_t* s
  *
  * @param secretkey                 - the corresponding secret key.
  */
-void tb_bloomfilter_enc_free_secret_key(tb_bloomfilter_enc_secret_key_t* secretkey);
+BFE_VISIBLE void tb_bloomfilter_enc_free_secret_key(tb_bloomfilter_enc_secret_key_t* secretkey);
 
 /**
  * Allocates the memory for the tb-bfe setup pair.
@@ -145,9 +148,9 @@ void tb_bloomfilter_enc_free_secret_key(tb_bloomfilter_enc_secret_key_t* secretk
  * two format
  * @return The setup pair struct.
  */
-tb_bloomfilter_enc_setup_pair_t* tb_bloomfilter_enc_init_setup_pair(int filterElementNumber,
-                                                                    double falsePositiveProbability,
-                                                                    int timeSlotsExponent);
+BFE_VISIBLE tb_bloomfilter_enc_setup_pair_t*
+tb_bloomfilter_enc_init_setup_pair(int filterElementNumber, double falsePositiveProbability,
+                                   int timeSlotsExponent);
 
 /**
  * Frees the memory allocated by the tb-bfe setup pair. This method has to be called after the setup
@@ -155,6 +158,6 @@ tb_bloomfilter_enc_setup_pair_t* tb_bloomfilter_enc_init_setup_pair(int filterEl
  *
  * @param setupPair                 - the corresponding setup pair.
  */
-void tb_bloomfilter_enc_free_setup_pair(tb_bloomfilter_enc_setup_pair_t* setupPair);
+BFE_VISIBLE void tb_bloomfilter_enc_free_setup_pair(tb_bloomfilter_enc_setup_pair_t* setupPair);
 
 #endif // MASTER_PROJECT_TB_BLOOMFILTER_ENC_H

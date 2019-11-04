@@ -1,5 +1,7 @@
-#ifndef MASTER_PROJECT_BITSET_H
-#define MASTER_PROJECT_BITSET_H
+#ifndef BFE_BITSET_H
+#define BFE_BITSET_H
+
+#include "macros.h"
 
 #define BITSET_WORD_BITS (8 * sizeof(unsigned int))
 
@@ -14,7 +16,7 @@ typedef struct _bitset_t {
  * @param size                      - the number of bits.
  * @return The initialized bitset with all bits set to FALSE.
  */
-bitset_t bitset_init(unsigned int size);
+BFE_VISIBLE bitset_t bitset_init(unsigned int size);
 
 /**
  * Sets a specific bit of a bitset.
@@ -22,7 +24,7 @@ bitset_t bitset_init(unsigned int size);
  * @param bitset                    - the corresponding bitset.
  * @param index                     - the index of the bit supposed to be set to TRUE.
  */
-void bitset_set(bitset_t* bitset, unsigned int index);
+BFE_VISIBLE void bitset_set(bitset_t* bitset, unsigned int index);
 
 /**
  * Retrieves a specific bit of a bitset.
@@ -31,14 +33,14 @@ void bitset_set(bitset_t* bitset, unsigned int index);
  * @param index                     - the index of the bit in question.
  * @return 0 if the bit is FALSE, 1 if the bit is TRUE.
  */
-int bitset_get(bitset_t bitSet, unsigned int index);
+BFE_VISIBLE int bitset_get(bitset_t bitSet, unsigned int index);
 
 /**
  * Sets all bits of a bitset to FALSE.
  *
  * @param bitset                    - the corresponding bitset.
  */
-void bitset_reset(bitset_t* bitSet);
+BFE_VISIBLE void bitset_reset(bitset_t* bitSet);
 
 /**
  * Frees the memory allocated by the bitset. This method has to be called after the bitset is no
@@ -46,6 +48,6 @@ void bitset_reset(bitset_t* bitSet);
  *
  * @param bitset                    - the corresponding bitset.
  */
-void bitset_clean(bitset_t* bitset);
+BFE_VISIBLE void bitset_clean(bitset_t* bitset);
 
 #endif // MASTER_PROJECT_BITSET_H

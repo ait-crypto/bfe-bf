@@ -18,7 +18,8 @@ typedef struct _bloomfilter_t {
  * specified number of elements.
  * @return The size a bloom filter with the given parameters would have.
  */
-unsigned int bloomfilter_get_needed_size(unsigned int n, double falsePositiveProbability);
+BFE_VISIBLE unsigned int bloomfilter_get_needed_size(unsigned int n,
+                                                     double falsePositiveProbability);
 
 /**
  * Creates a new bloom filter with the explicit size and hash count parameters.
@@ -27,7 +28,7 @@ unsigned int bloomfilter_get_needed_size(unsigned int n, double falsePositivePro
  * @param hashCount                 - number of hash functions to be used.
  * @return The initialized bloom filter.
  */
-bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount);
+BFE_VISIBLE bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount);
 
 /**
  * Creates a new bloom filter with the given parameters.
@@ -37,7 +38,7 @@ bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount);
  * specified number of elements.
  * @return The initialized bloom filter.
  */
-bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability);
+BFE_VISIBLE bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability);
 
 /**
  * Returns the total number of positions inside the filter.
@@ -45,7 +46,7 @@ bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability);
  * @param filter                    - the corresponding filter.
  * @return The size of the filter.
  */
-unsigned int bloomfilter_get_size(bloomfilter_t filter);
+BFE_VISIBLE unsigned int bloomfilter_get_size(bloomfilter_t filter);
 
 /**
  * Returns the bit positions of the bloom filter that would be set for the given input. No bloom
@@ -59,8 +60,9 @@ unsigned int bloomfilter_get_size(bloomfilter_t filter);
  * @param filterSize[in]            - size of the hypothetical bloom filter.
  * @return The size of the filter.
  */
-void bloomfilter_get_bit_positions(unsigned int* positions, const void* input, size_t inputLen,
-                                   unsigned int hashCount, unsigned int filterSize);
+BFE_VISIBLE void bloomfilter_get_bit_positions(unsigned int* positions, const void* input,
+                                               size_t inputLen, unsigned int hashCount,
+                                               unsigned int filterSize);
 
 /**
  * Adds a given element to the bloom filter.
@@ -69,14 +71,14 @@ void bloomfilter_get_bit_positions(unsigned int* positions, const void* input, s
  * @param input                     - input element for the filter.
  * @param inputLen                  - length of input in bytes.
  */
-void bloomfilter_add(bloomfilter_t* filter, const void* input, size_t inputLen);
+BFE_VISIBLE void bloomfilter_add(bloomfilter_t* filter, const void* input, size_t inputLen);
 
 /**
  * Sets all the bits of a bloom filter to FALSE.
  *
  * @param filter                    - the filter to reset.
  */
-void bloomfilter_reset(bloomfilter_t* filter);
+BFE_VISIBLE void bloomfilter_reset(bloomfilter_t* filter);
 
 /**
  * Checks whether the given element is possibly in the filter. Due to possibility of false positives
@@ -87,7 +89,8 @@ void bloomfilter_reset(bloomfilter_t* filter);
  * @param inputLen                  - length of input in bytes.
  * @return 0 if element is definitely not in the filter, 1 if element is likely in the filter.
  */
-int bloomfilter_maybe_contains(bloomfilter_t filter, const void* input, size_t inputLen);
+BFE_VISIBLE int bloomfilter_maybe_contains(bloomfilter_t filter, const void* input,
+                                           size_t inputLen);
 
 /**
  * Frees the memory allocated by the bloom filter. This method has to be called after the filter is
@@ -95,6 +98,6 @@ int bloomfilter_maybe_contains(bloomfilter_t filter, const void* input, size_t i
  *
  * @param filter                    - the corresponding filter.
  */
-void bloomfilter_clean(bloomfilter_t* filter);
+BFE_VISIBLE void bloomfilter_clean(bloomfilter_t* filter);
 
 #endif // MASTER_PROJECT_BLOOMFILTER_H

@@ -1,5 +1,7 @@
-#ifndef MASTER_PROJECT_LIBRARY_H
-#define MASTER_PROJECT_LIBRARY_H
+#ifndef BFE_BFIBE_H
+#define BFE_BFIBE_H
+
+#include "macros.h"
 
 #include <relic/relic.h>
 
@@ -33,7 +35,7 @@ typedef struct _bf_ibe_keys_t {
  * @param keys[out]                 - the ibe key pair containing both public and master key.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bf_ibe_setup_pair(bf_ibe_keys_t* keys);
+BFE_VISIBLE int bf_ibe_setup_pair(bf_ibe_keys_t* keys);
 
 /**
  * Sets up the Boneh-Franklin Identity Based Encryption (ibe) scheme.
@@ -42,14 +44,14 @@ int bf_ibe_setup_pair(bf_ibe_keys_t* keys);
  * @param public_key[out]                 - the ibe public key
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bf_ibe_setup(bf_ibe_secret_key_t* secret_key, bf_ibe_public_key_t* public_key);
+BFE_VISIBLE int bf_ibe_setup(bf_ibe_secret_key_t* secret_key, bf_ibe_public_key_t* public_key);
 
 /**
  * Frees keys of the IBE.
  *
  * @param keys                      - keys of the IBE
  */
-void bf_ibe_free_keys(bf_ibe_keys_t* keys);
+BFE_VISIBLE void bf_ibe_free_keys(bf_ibe_keys_t* keys);
 
 /**
  * Extracts a private key for the given id.
@@ -60,8 +62,9 @@ void bf_ibe_free_keys(bf_ibe_keys_t* keys);
  * @param idLen[in]                 - length of id in bytes.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bf_ibe_extract(bf_ibe_extracted_key_t* privateKey, const bf_ibe_secret_key_t* masterKey,
-                   const uint8_t* id, size_t idLen);
+BFE_VISIBLE int bf_ibe_extract(bf_ibe_extracted_key_t* privateKey,
+                               const bf_ibe_secret_key_t* masterKey, const uint8_t* id,
+                               size_t idLen);
 
 /**
  * Encrypts a given message under the specific id.
@@ -74,8 +77,9 @@ int bf_ibe_extract(bf_ibe_extracted_key_t* privateKey, const bf_ibe_secret_key_t
  * @param r[in]                     - random value.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* publicKey,
-                   const uint8_t* id, size_t idLen, const uint8_t* message, bn_t r);
+BFE_VISIBLE int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext,
+                               const bf_ibe_public_key_t* publicKey, const uint8_t* id,
+                               size_t idLen, const uint8_t* message, bn_t r);
 
 /**
  * Decrypts a given ciphertext.
@@ -85,8 +89,8 @@ int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* p
  * @param privateKey[in]            - private key for the id under which the message was encrypted.
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bf_ibe_decrypt(uint8_t* message, const bf_ibe_ciphertext_t* ciphertext,
-                   const bf_ibe_extracted_key_t* privateKey);
+BFE_VISIBLE int bf_ibe_decrypt(uint8_t* message, const bf_ibe_ciphertext_t* ciphertext,
+                               const bf_ibe_extracted_key_t* privateKey);
 
 /**
  * Allocates the memory for the ibe ciphertext.
@@ -94,7 +98,7 @@ int bf_ibe_decrypt(uint8_t* message, const bf_ibe_ciphertext_t* ciphertext,
  * @param messageLen                - length of message in bytes.
  * @return The ciphertext struct.
  */
-bf_ibe_ciphertext_t* bf_ibe_init_ciphertext(size_t messageLen);
+BFE_VISIBLE bf_ibe_ciphertext_t* bf_ibe_init_ciphertext(size_t messageLen);
 
 /**
  * Frees the memory allocated by the ibe ciphertext. This method has to be called after the
@@ -102,48 +106,48 @@ bf_ibe_ciphertext_t* bf_ibe_init_ciphertext(size_t messageLen);
  *
  * @param ciphertext                - the corresponding ciphertext.
  */
-void bf_ibe_free_ciphertext(bf_ibe_ciphertext_t* ciphertext);
+BFE_VISIBLE void bf_ibe_free_ciphertext(bf_ibe_ciphertext_t* ciphertext);
 
 /**
  * Initializes secret key.
  *
  * @param key the key to initialize
  */
-int bf_ibe_init_secret_key(bf_ibe_secret_key_t* key);
+BFE_VISIBLE int bf_ibe_init_secret_key(bf_ibe_secret_key_t* key);
 
 /**
  * Clear secret key.
  *
  * @param key the key to clear
  */
-void bf_ibe_clear_secret_key(bf_ibe_secret_key_t* key);
+BFE_VISIBLE void bf_ibe_clear_secret_key(bf_ibe_secret_key_t* key);
 
 /**
  * Initializes public key.
  *
  * @param key the key to initialize
  */
-int bf_ibe_init_public_key(bf_ibe_public_key_t* key);
+BFE_VISIBLE int bf_ibe_init_public_key(bf_ibe_public_key_t* key);
 
 /**
  * Clear public key.
  *
  * @param key the key to clear
  */
-void bf_ibe_clear_public_key(bf_ibe_public_key_t* key);
+BFE_VISIBLE void bf_ibe_clear_public_key(bf_ibe_public_key_t* key);
 
 /**
  * Initializes extracted key.
  *
  * @param key the key to initialize
  */
-int bf_ibe_init_extracted_key(bf_ibe_extracted_key_t* key);
+BFE_VISIBLE int bf_ibe_init_extracted_key(bf_ibe_extracted_key_t* key);
 
 /**
  * Clear extracted key.
  *
  * @param key the key to clear
  */
-void bf_ibe_clear_extracted_key(bf_ibe_extracted_key_t* key);
+BFE_VISIBLE void bf_ibe_clear_extracted_key(bf_ibe_extracted_key_t* key);
 
 #endif
