@@ -50,6 +50,10 @@ target_link_libraries(bfe PUBLIC ${RELIC_LIBRARY})
 target_link_libraries(bfe PRIVATE zf_log FIPS202-opt64 m "-Wl,--exclude-libs,ALL")
 target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
 
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
+  target_link_options(bfe PRIVATE LINKER:-z,relro LINKER:-z,now)
+endif()
+
 install(TARGETS bfe
         EXPORT bfe-targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
