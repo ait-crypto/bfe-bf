@@ -224,56 +224,59 @@ static void test_ibe() {
 }
 
 static void test_bloomfilter_enc() {
-    err_t e;
+  err_t e;
 
-    bloomfilter_enc_secret_key_t sk;
-    bloomfilter_enc_public_key_t pk;
+  bloomfilter_enc_secret_key_t sk;
+  bloomfilter_enc_public_key_t pk;
 
-    bloomfilter_enc_init_secret_key(&sk);
-    bloomfilter_enc_init_public_key(&pk);
-    bloomfilter_enc_setup(&pk, &sk, 57, 50, 0.001);
+  bloomfilter_enc_init_secret_key(&sk);
+  bloomfilter_enc_init_public_key(&pk);
+  bloomfilter_enc_setup(&pk, &sk, 57, 50, 0.001);
 
-    bloomfilter_enc_ciphertext_pair_t* ciphertextPair = NULL;
+  bloomfilter_enc_ciphertext_pair_t ciphertextPair;
 
-    TRY {
-        uint8_t decrypted[pk.keyLength];
-        memset(decrypted, 0, pk.keyLength);
+  TRY {
+    uint8_t decrypted[pk.keyLength];
+    memset(decrypted, 0, pk.keyLength);
 
-        ciphertextPair = bloomfilter_enc_init_ciphertext_pair(&pk);
-        bloomfilter_enc_encrypt(ciphertextPair, &pk);
-        printf("Original key %u %u:\n", pk.keyLength, ciphertextPair->KLen);
-        for (unsigned int i = 0; i < ciphertextPair->KLen; i++) {
-            printf("%02x", ciphertextPair->K[i]);
-        }
-        printf("\n");
-        bloomfilter_enc_decrypt(decrypted, &pk, &sk, ciphertextPair->ciphertext);
-        printf("Decrypted key:\n");
-        for (int i = 0; i < ciphertextPair->KLen; i++) {
-            printf("%02x", decrypted[i]);
-        }
-        printf("\n");
-        memset(decrypted, 0, pk.keyLength);
-
-        bloomfilter_enc_puncture(&sk, ciphertextPair->ciphertext);
-        // bloomfilter_enc_write_setup_pair_to_file(setupPair);
-        // bloomfilter_enc_system_params_t systemParamsFromFile = bloomfilter_enc_read_system_params_from_file();
-        // bloomfilter_enc_secret_key_t *secretKeyFromFile = bloomfilter_enc_read_secret_key_from_file();
-        bloomfilter_enc_decrypt(decrypted, &pk, &sk, ciphertextPair->ciphertext);
-        printf("Decrypted key:\n");
-        for (unsigned int i = 0; i < ciphertextPair->KLen; i++) {
-            printf("%02x", decrypted[i]);
-        }
-        printf("\n");
-    } CATCH(e) {
-        switch (e) {
-            case ERR_NO_VALID:
-                util_print("Key already punctured!\n");
-        }
-    } FINALLY {
-        bloomfilter_enc_clear_secret_key(&sk);
-        bloomfilter_enc_clear_public_key(&pk);
-        bloomfilter_enc_free_ciphertext_pair(ciphertextPair);
+    bloomfilter_enc_init_ciphertext_pair(&ciphertextPair, &pk);
+    bloomfilter_enc_encrypt(&ciphertextPair, &pk);
+    printf("Original key %u %u:\n", pk.keyLength, ciphertextPair.KLen);
+    for (unsigned int i = 0; i < ciphertextPair.KLen; i++) {
+      printf("%02x", ciphertextPair.K[i]);
     }
+    printf("\n");
+    bloomfilter_enc_decrypt(decrypted, &pk, &sk, &ciphertextPair.ciphertext);
+    printf("Decrypted key:\n");
+    for (int i = 0; i < ciphertextPair.KLen; i++) {
+      printf("%02x", decrypted[i]);
+    }
+    printf("\n");
+    memset(decrypted, 0, pk.keyLength);
+
+    bloomfilter_enc_puncture(&sk, &ciphertextPair.ciphertext);
+    // bloomfilter_enc_write_setup_pair_to_file(setupPair);
+    // bloomfilter_enc_system_params_t systemParamsFromFile =
+    // bloomfilter_enc_read_system_params_from_file(); bloomfilter_enc_secret_key_t
+    // *secretKeyFromFile = bloomfilter_enc_read_secret_key_from_file();
+    bloomfilter_enc_decrypt(decrypted, &pk, &sk, &ciphertextPair.ciphertext);
+    printf("Decrypted key:\n");
+    for (unsigned int i = 0; i < ciphertextPair.KLen; i++) {
+      printf("%02x", decrypted[i]);
+    }
+    printf("\n");
+  }
+  CATCH(e) {
+    switch (e) {
+    case ERR_NO_VALID:
+      util_print("Key already punctured!\n");
+    }
+  }
+  FINALLY {
+    bloomfilter_enc_clear_secret_key(&sk);
+    bloomfilter_enc_clear_public_key(&pk);
+    bloomfilter_enc_clear_ciphertext_pair(&ciphertextPair);
+  }
 }
 
 static void test_bloom_filter() {

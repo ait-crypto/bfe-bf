@@ -1,170 +1,179 @@
 #ifndef MASTER_PROJECT_BLOOMFILTER_ENC_H
 #define MASTER_PROJECT_BLOOMFILTER_ENC_H
 
-#include <relic/relic_epx.h>
-#include "bloomfilter.h"
 #include "bfibe.h"
+#include "bloomfilter.h"
+#include <relic/relic_epx.h>
 
-typedef struct _bloomfilter_enc_system_params_t {
-    unsigned int filterHashCount;
-    unsigned int filterSize;
-    unsigned int keyLength;
-    double falsePositiveProbability;
-    bf_ibe_public_key_t publicKey;
-} bloomfilter_enc_system_params_t;
-typedef bloomfilter_enc_system_params_t bloomfilter_enc_public_key_t;
+typedef struct {
+  unsigned int filterHashCount;
+  unsigned int filterSize;
+  unsigned int keyLength;
+  double falsePositiveProbability;
+  bf_ibe_public_key_t publicKey;
+} bloomfilter_enc_public_key_t;
 
-typedef struct _bloomfilter_enc_secret_key_t {
-    bloomfilter_t filter;
-    unsigned int secretKeyLen;
-    bf_ibe_extracted_key_t* secretKey;
+typedef struct {
+  bloomfilter_t filter;
+  unsigned int secretKeyLen;
+  bf_ibe_extracted_key_t* secretKey;
 } bloomfilter_enc_secret_key_t;
 
-typedef struct _bloomfilter_enc_setup_pair_t {
-    bloomfilter_enc_system_params_t systemParams;
-    bloomfilter_enc_secret_key_t *secretKey;
+typedef struct {
+  bloomfilter_enc_public_key_t public_key;
+  bloomfilter_enc_secret_key_t* secretKey;
 } bloomfilter_enc_setup_pair_t;
 
-typedef struct _bloomfilter_enc_ciphertext_t {
-    ep_t u;
-    unsigned int vLen;
-    uint8_t v[];
+typedef struct {
+  ep_t u;
+  unsigned int vLen;
+  uint8_t* v;
 } bloomfilter_enc_ciphertext_t;
 
-typedef struct _bloomfilter_enc_ciphertext_pair_t {
-    bloomfilter_enc_ciphertext_t *ciphertext;
-    unsigned int KLen;
-    uint8_t K[];
+typedef struct {
+  bloomfilter_enc_ciphertext_t ciphertext;
+  unsigned int KLen;
+  uint8_t* K;
 } bloomfilter_enc_ciphertext_pair_t;
 
+/**
+ * Initialize secret key.
+ *
+ * @param secret_key[out] the secret key
+ * @return BFE_SUCCESS or BFE_ERR_*
+ */
 int bloomfilter_enc_init_secret_key(bloomfilter_enc_secret_key_t* secret_key);
+/**
+ * Clear secret key.
+ *
+ * @param secret_key[out] the secret key
+ */
 void bloomfilter_enc_clear_secret_key(bloomfilter_enc_secret_key_t* secret_key);
 
+/**
+ * Initialize public key.
+ *
+ * @param public_key[out] the public key
+ * @return BFE_SUCCESS or BFE_ERR_*
+ */
 int bloomfilter_enc_init_public_key(bloomfilter_enc_public_key_t* public_key);
+/**
+ * Clear public key.
+ *
+ * @param public_key[out] the public key
+ */
 void bloomfilter_enc_clear_public_key(bloomfilter_enc_public_key_t* public_key);
 
 /**
- * Sets up the Bloom Filter Encryption (bfe) scheme.
+ * Sets up the Bloom Filter Encryption (bfe) scheme and create public and secret keys.
  *
- * @param setupPair[out]                - the bfe setup pair containing system parameters (with public key) and secret key.
+ * @param public_key[out] the public key
+ * @param secret_key[out] the secret key
+ * @param key_length[in] length of the encapsulated keys
+ * @param filter_element_number[in] desired number of elements in the bloom filter
+ * @param false_positive_probability[in] desired false positive probability of the bloom filter
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bloomfilter_enc_setup(bloomfilter_enc_system_params_t* systemParams,
-                          bloomfilter_enc_secret_key_t* secret_key, unsigned int keyLength,
-                          unsigned int filterElementNumber, double falsePositiveProbability);
+int bloomfilter_enc_setup(bloomfilter_enc_public_key_t* public_key,
+                          bloomfilter_enc_secret_key_t* secret_key, unsigned int key_length,
+                          unsigned int filter_element_number, double false_positive_probability);
 
 /**
  * Encrypts the key passed as a parameter.
  *
- * @param ciphertextPair[out]           - pair in form of (C, K), C being the ciphertext and K being the given key.
- * @param systemParams[in]              - system parameters.
+ * @param ciphertextPair[out] pair in form of (C, K), C being the ciphertext and K being the given key
+ * @param public_key[in] the public key
+ * @param K[in] key to encapsulate
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bloomfilter_enc_encrypt_key(bloomfilter_enc_ciphertext_pair_t *ciphertextPair, bloomfilter_enc_system_params_t* systemParams, uint8_t *K);
+int bloomfilter_enc_encrypt_key(bloomfilter_enc_ciphertext_pair_t* ciphertextPair,
+                                bloomfilter_enc_public_key_t* public_key, const uint8_t* K);
 
 /**
- * Generates a random key K and encrypts it.
+ * Generates a random key K and encapsulates it.
  *
- * @param ciphertextPair[out]           - pair in form of (C, K), C being the ciphertext and K being the random generated key.
- * @param systemParams[in]              - system parameters.
+ * @param ciphertext_pair[out]  pair in form of (C, K), C being the ciphertext and K being the randomly generated key
+ * @param public_key[in] the public key
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t *ciphertextPair, bloomfilter_enc_system_params_t* systemParams);
+int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertext_pair,
+                            bloomfilter_enc_public_key_t* public_key);
 
 /**
- * Punctures a secret key for the given ciphertext. After this action the secret key will not be usable for decrypting
- * the same ciphertext again. This function runs in place which means a passed secret key will be modified.
+ * Punctures a secret key for the given ciphertext. After this action the secret key will not be
+ * usable for decrypting the same ciphertext again. This function runs in place which means a passed
+ * secret key will be modified.
  *
- * @param secretKey[out]            - secret key to be punctured.
- * @param ciphertext[in]            - ciphertext for which the secret key is being punctured.
+ * @param secret_key[out] the secret key to be punctured
+ * @param ciphertext[in] ciphertext for which the secret key is being punctured
  */
-void bloomfilter_enc_puncture(bloomfilter_enc_secret_key_t *secretKey, bloomfilter_enc_ciphertext_t *ciphertext);
+void bloomfilter_enc_puncture(bloomfilter_enc_secret_key_t* secret_key,
+                              bloomfilter_enc_ciphertext_t* ciphertext);
 
 /**
- * Compares two bfe ciphertexts.
+ * Compares two BFE ciphertexts.
  *
- * @param ciphertext1               - First ciphertext.
- * @param ciphertext2               - Second ciphertext.
+ * @param ciphertext1[in] First ciphertext
+ * @param ciphertext2[in] Second ciphertext
  * @return 0 if equal, 1 if not equal.
  */
-int bloomfilter_enc_ciphertext_cmp(bloomfilter_enc_ciphertext_t *ciphertext1, bloomfilter_enc_ciphertext_t *ciphertext2);
+int bloomfilter_enc_ciphertext_cmp(const bloomfilter_enc_ciphertext_t* ciphertext1,
+                                   const bloomfilter_enc_ciphertext_t* ciphertext2);
 
 /**
- * Decrypts a given ciphertext. The secret key should not be already punctured with the same ciphertext.
+ * Decapsulates a given ciphertext. The secret key should not be already punctured with the same
+ * ciphertext.
  *
- * @param key[out]                  - the returned decrypted key.
- * @param systemParams[in]          - system parameters.
- * @param secretKey[in]             - secret key to be used for decrypting.
- * @param ciphertext[in]            - ciphertext.
+ * @param key[out] the returned decrypted key
+ * @param public_key[in] the public key
+ * @param secret_Key[in] the secret key to be used for decrypting
+ * @param ciphertext[in] the ciphertext
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-int bloomfilter_enc_decrypt(uint8_t *key, bloomfilter_enc_system_params_t* systemParams, bloomfilter_enc_secret_key_t *secretKey, bloomfilter_enc_ciphertext_t *ciphertext);
+int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_key,
+                            bloomfilter_enc_secret_key_t* secret_key,
+                            bloomfilter_enc_ciphertext_t* ciphertext);
 
 /**
- * Frees the memory allocated by the bfe secret key. This method has to be called after the secret key is no longer
- * needed to avoid memory leaks.
+ * Init the ciphertext.
  *
- * @param secretKey                 - the corresponding secret key.
+ * @param ciphertext[out] the ciphertext
+ * @param public_key[in] the pulic key
+ * @return BFE_SUCCESS or BFE_ERR_*.
  */
-void bloomfilter_enc_free_secret_key(bloomfilter_enc_secret_key_t *secretKey);
+int bloomfilter_enc_init_ciphertext(bloomfilter_enc_ciphertext_t* ciphertext,
+                                    const bloomfilter_enc_public_key_t* public_key);
+/**
+ * Clear the ciphertext.
+ *
+ * @param ciphertext[out] the ciphertext
+ */
+void bloomfilter_enc_clear_ciphertext(bloomfilter_enc_ciphertext_t* ciphertext);
 
 /**
- * Frees the memory allocated by the bfe system parameters. This method has to be called after the system parameters are
- * no longer needed to avoid memory leaks.
+ * Initialize a ciphertext pair.
  *
- * @param systemParams              - the corresponding system parameters.
+ * @param pair[out] ciphertext pair to initialize
+ * @param public_key[in] the public key
+ * @return BFE_SUCCESS or BFE_ERR_*.
  */
-void bloomfilter_enc_free_system_params(bloomfilter_enc_system_params_t *systemParams);
+int bloomfilter_enc_init_ciphertext_pair(bloomfilter_enc_ciphertext_pair_t* pair,
+                                         const bloomfilter_enc_public_key_t* public_key);
 
 /**
- * Allocates the memory for the bfe setup pair.
+ * Clear ciphertext pair.
  *
- * @param keyLength[in]                 - size of the random generated keys when calling the bloomfilter_enc_encrypt() function, in bytes.
- * @param filterElementNumber[in]       - expected number of keys to be encrypted before the secret key is fully punctured.
- * @param falsePositiveProbability[in]  - target false positive probability of the scheme. Smaller probability means larger secret key.
- * @return The setup pair struct.
+ * @param ciphertextPair[out] the corresponding ciphertext pair.
  */
-bloomfilter_enc_setup_pair_t *bloomfilter_enc_init_setup_pair(unsigned int keyLength, unsigned int filterElementNumber, double falsePositiveProbability);
-
-/**
- * Frees the memory allocated by the bfe setup pair. This method has to be called after the setup pair is no longer
- * needed to avoid memory leaks.
- *
- * @param setupPair                 - the corresponding setup pair.
- */
-void bloomfilter_enc_free_setup_pair(bloomfilter_enc_setup_pair_t *setupPair);
-
-/**
- * Frees the memory allocated by the bfe ciphertext. This method has to be called after the ciphertext is no longer
- * needed to avoid memory leaks.
- *
- * @param ciphertext                - the corresponding ciphertext.
- */
-void bloomfilter_enc_free_ciphertext(bloomfilter_enc_ciphertext_t *ciphertext);
-
-/**
- * Allocates the memory allocated for the bfe ciphertext pair.
- *
- * @param systemParams              - system parameters.
- * @return The ciphertext pair struct.
- */
-bloomfilter_enc_ciphertext_pair_t *bloomfilter_enc_init_ciphertext_pair(bloomfilter_enc_system_params_t* systemParams);
-
-/**
- * Frees the memory allocated by the bfe ciphertext pair. This method has to be called after the ciphertext pair is no
- * longer needed to avoid memory leaks.
- *
- * @param ciphertextPair            - the corresponding ciphertext pair.
- */
-void bloomfilter_enc_free_ciphertext_pair(bloomfilter_enc_ciphertext_pair_t *ciphertextPair);
+void bloomfilter_enc_clear_ciphertext_pair(bloomfilter_enc_ciphertext_pair_t* ciphertextPair);
 
 /**
  * Calculates number of bytes needed to store a given ciphertext.
  *
- * @param ciphertext                - the ciphertext.
+ * @param ciphertext[in] the ciphertext.
  * @return Number of bytes needed to store the ciphertext.
  */
-int bloomfilter_enc_ciphertext_size_bin(bloomfilter_enc_ciphertext_t *ciphertext);
+unsigned int bloomfilter_enc_ciphertext_size_bin(const bloomfilter_enc_ciphertext_t* ciphertext);
 
 /**
  * Writes a given ciphertext to a byte array.
@@ -172,7 +181,7 @@ int bloomfilter_enc_ciphertext_size_bin(bloomfilter_enc_ciphertext_t *ciphertext
  * @param bin[out]                  - the ciphertext byte array.
  * @param ciphertext[in]            - the ciphertext.
  */
-void bloomfilter_enc_ciphertext_write_bin(uint8_t *bin, bloomfilter_enc_ciphertext_t *ciphertext);
+void bloomfilter_enc_ciphertext_write_bin(uint8_t* bin, bloomfilter_enc_ciphertext_t* ciphertext);
 
 /**
  * Reads a given ciphertext stored as a byte array.
@@ -180,27 +189,27 @@ void bloomfilter_enc_ciphertext_write_bin(uint8_t *bin, bloomfilter_enc_cipherte
  * @param bin                       - the ciphertext byte array.
  * @return Ciphertext.
  */
-bloomfilter_enc_ciphertext_t *bloomfilter_enc_ciphertext_read_bin(const uint8_t *bin);
+bloomfilter_enc_ciphertext_t* bloomfilter_enc_ciphertext_read_bin(const uint8_t* bin);
 
 /**
  * Writes a given setup pair to files params.txt, public_key.txt, and secret_key.txt.
  *
  * @param setupPair                 - the setup pair.
  */
-void bloomfilter_enc_write_setup_pair_to_file(bloomfilter_enc_setup_pair_t *setupPair);
+void bloomfilter_enc_write_setup_pair_to_file(bloomfilter_enc_setup_pair_t* setupPair);
 
 /**
  * Reads system parameters from params.txt and public_key.txt files.
  *
  * @return System parameters.
  */
-bloomfilter_enc_system_params_t bloomfilter_enc_read_system_params_from_file();
+bloomfilter_enc_public_key_t bloomfilter_enc_read_system_params_from_file();
 
 /**
  * Reads secret key from secret_key.txt file.
  *
  * @return Secret key.
  */
-bloomfilter_enc_secret_key_t *bloomfilter_enc_read_secret_key_from_file();
+bloomfilter_enc_secret_key_t* bloomfilter_enc_read_secret_key_from_file();
 
-#endif //MASTER_PROJECT_BLOOMFILTER_ENC_H
+#endif // MASTER_PROJECT_BLOOMFILTER_ENC_H

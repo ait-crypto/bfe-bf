@@ -118,3 +118,17 @@ void generateRandomBytes(uint8_t* dst, unsigned int binSize) {
 #endif
 
 #endif
+
+void write_u32(uint8_t** dst, uint32_t v) {
+  v = htole32(v);
+  memcpy(*dst, &v, sizeof(v));
+  (*dst) += sizeof(v);
+}
+
+uint32_t read_u32(const uint8_t** src) {
+  uint32_t v;
+  memcpy(&v, *src, sizeof(v));
+  (*src) += sizeof(v);
+  return le32toh(v);
+}
+
