@@ -10,6 +10,20 @@ project(bfe LANGUAGES C VERSION 0.9.1 DESCRIPTION "Bloom Filter Encryption Libra
 set(CMAKE_C_STANDARD 11)
 
 include(GNUInstallDirs)
+include(CheckCCompilerFlag)
+
+function(check_c_compiler_flag_and_add flag result)
+  check_c_compiler_flag("${flag}" ${result})
+  if(${result})
+    add_compile_options("${flag}")
+  endif()
+endfunction()
+
+check_c_compiler_flag_and_add(-Wall CC_SUPPORTS_WALL)
+check_c_compiler_flag_and_add(-Wextra CC_SUPPORTS_WEXTRA)
+check_c_compiler_flag_and_add(-Wshadow CC_SUPPORTS_WSHADOW)
+check_c_compiler_flag_and_add(-Werror=implicit-function-declaration CC_SUPPORTS_WERROR_IMPLICIT_FUNCTION_DECLARATION)
+
 find_package(relic REQUIRED)
 
 add_library(bfe SHARED
