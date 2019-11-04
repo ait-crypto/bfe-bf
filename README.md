@@ -27,4 +27,5 @@ make
 License
 -------
 
-The code is licensed under the CC0-1.0 license.
+The code is licensed under the CC0-1.0 license. It was originally written by Marin Krmpotić and
+modified and improved by Sebastian Ramacher (Graz University of Technology).
