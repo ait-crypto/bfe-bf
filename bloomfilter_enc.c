@@ -7,7 +7,6 @@
 #include "logger.h"
 #include "util.h"
 
-#include <math.h>
 #include <stddef.h>
 
 int bloomfilter_enc_init_secret_key(bloomfilter_enc_secret_key_t* secret_key) {
@@ -400,7 +399,7 @@ void bloomfilter_enc_write_setup_pair_to_file(bloomfilter_enc_setup_pair_t* setu
           setupPair->secretKey->filter.hashCount,
           ep2_size_bin(setupPair->secretKey->secretKey[0].key, 0));
   for (unsigned int i = 0;
-       i < ceil(setupPair->secretKey->filter.bitSet.size * 1.0 / BITSET_WORD_BITS); i++) {
+       i < (setupPair->secretKey->filter.bitSet.size + BITSET_WORD_BITS - 1) / BITSET_WORD_BITS; i++) {
     fprintf(fp_secret_key, "%u ", setupPair->secretKey->filter.bitSet.bitArray[i]);
   }
   fprintf(fp_secret_key, "\n");
@@ -472,7 +471,7 @@ bloomfilter_enc_secret_key_t* bloomfilter_enc_read_secret_key_from_file() {
 
   uint8_t secretKeyUnitBin[secretKeyUnitBinLen];
 
-  for (int i = 0; i < ceil(filterSize * 1.0 / BITSET_WORD_BITS); i++) {
+  for (unsigned int i = 0; i < (filterSize + BITSET_WORD_BITS - 1) / BITSET_WORD_BITS; i++) {
     if (fscanf(fp_secret_key, "%u ", &filter.bitSet.bitArray[i]) != 1) {
       logger_log(LOGGER_ERROR, "Error occurred while reading bloom filter bits from a file.");
     }
