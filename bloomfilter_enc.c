@@ -48,12 +48,12 @@ int bloomfilter_enc_setup(bloomfilter_enc_system_params_t* systemParams,
                           unsigned int filterElementNumber, double falsePositiveProbability) {
   bf_ibe_secret_key_t sk;
   int status = bf_ibe_init_secret_key(&sk);
-  if (status != BFE_SUCCESS) {
+  if (status) {
     return BFE_ERR_GENERAL;
   }
 
   status = bf_ibe_setup(&sk, &systemParams->publicKey);
-  if (status != BFE_SUCCESS) {
+  if (status) {
     goto end;
   }
 
@@ -67,11 +67,11 @@ int bloomfilter_enc_setup(bloomfilter_enc_system_params_t* systemParams,
   }
 
   systemParams->keyLength                = keyLength;
-  secret_key->secretKeyLen               = bloomSize;
   systemParams->filterSize               = bloomSize;
   systemParams->filterHashCount          = filter.hashCount;
-  secret_key->filter                     = filter;
   systemParams->falsePositiveProbability = falsePositiveProbability;
+  secret_key->secretKeyLen               = bloomSize;
+  secret_key->filter                     = filter;
 
   for (unsigned int i = 0; i < bloomSize; i++) {
     status = bf_ibe_extract(&secret_key->secretKey[i], &sk, (uint8_t*)&i, sizeof(i));
@@ -231,6 +231,8 @@ int bloomfilter_enc_decrypt(uint8_t *key, bloomfilter_enc_system_params_t* syste
                   memcpy(ibeCiphertext->v, &ciphertext->v[i * ibeCiphertext->vLen], ibeCiphertext->vLen);
                   status = bf_ibe_decrypt(tempKey, ibeCiphertext, &secretKey->secretKey[affectedIndexes[i]]);
                   if (!status) {
+                      logger_log(LOGGER_INFO, "IBE decrypt failed.");
+                      THROW(ERR_NO_VALID);
                       break;
                   }
             }
@@ -248,7 +250,7 @@ int bloomfilter_enc_decrypt(uint8_t *key, bloomfilter_enc_system_params_t* syste
 
         if (!status && bloomfilter_enc_ciphertext_cmp(genCiphertextPair->ciphertext, ciphertext) == 0) {
             memcpy(key, tempKey, systemParams->keyLength);
-            logger_log(LOGGER_INFO, "Secret key successfully decrypted.");
+            logger_log(LOGGER_INFO, "Ciphertext successfully decrypted.");
         }
     } CATCH_ANY {
         logger_log(LOGGER_ERROR, "Error occurred in Bloom Filter Encryption decrypt function.");

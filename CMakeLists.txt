@@ -41,7 +41,7 @@ set_target_properties(bfe PROPERTIES
 configure_file(bfe.pc.in bfe.pc @ONLY)
 
 add_subdirectory(FIPS202-opt64)
-target_link_libraries(bfe ${RELIC_LIBRARY} m FIPS202-opt64)
+target_link_libraries(bfe ${RELIC_LIBRARY} FIPS202-opt64 m)
 
 target_include_directories(bfe PRIVATE ${RELIC_INCLUDE_DIR})
 
@@ -57,7 +57,5 @@ install(EXPORT bfe-targets
         FILE bfe-config.cmake
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bfe)
 
-
 add_executable(test test.c)
 target_link_libraries(test bfe)
-

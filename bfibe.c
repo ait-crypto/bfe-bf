@@ -148,7 +148,7 @@ int bf_ibe_decrypt(uint8_t* message, const bf_ibe_ciphertext_t* ciphertext,
     ep2_copy(p2, privateKey->key);
 
     pp_map_k12(dU, p1, p2);
-    int binSize = fp12_size_bin(dU, 0);
+    const unsigned int binSize = fp12_size_bin(dU, 0);
     uint8_t bin[binSize];
     fp12_write_bin(bin, binSize, dU, 0);
     md_map(digest, bin, binSize);
