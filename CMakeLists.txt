@@ -31,6 +31,7 @@ check_c_compiler_flag_and_add(-Wshadow CC_SUPPORTS_WSHADOW)
 check_c_compiler_flag_and_add(-Werror=implicit-function-declaration CC_SUPPORTS_WERROR_IMPLICIT_FUNCTION_DECLARATION)
 
 find_package(relic REQUIRED)
+find_package(Doxygen)
 add_subdirectory(zf_log)
 add_subdirectory(FIPS202-opt64)
 
@@ -62,6 +63,15 @@ install(EXPORT bfe-targets
         NAMESPACE bfe::
         FILE bfe-config.cmake
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bfe)
+
+if(DOXYGEN_FOUND)
+  set(DOXYGEN_RECURSIVE NO)
+  set(DOXYGEN_EXTRACT_ALL YES)
+  set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
+  set(DOXYGEN_TYPEDEF_HIDES_STRUCT YES)
+  set(DOXYGEN_SOURCE_BROWSER YES)
+  doxygen_add_docs(doxygen ${CMAKE_CURRENT_SOURCE_DIR}/include COMMENT "Generate doxygen documentation")
+endif()
 
 add_executable(test test.c)
 target_link_libraries(test bfe)
