@@ -10,18 +10,10 @@ static void bench_bfe(void) {
   bloomfilter_enc_secret_key_t sk;
   bloomfilter_enc_public_key_t pk;
 
-  BENCH_BEGIN("keygen") {
-    bloomfilter_enc_init_secret_key(&sk);
-    bloomfilter_enc_init_public_key(&pk);
-    BENCH_ADD(bloomfilter_enc_setup(&pk, &sk, 57, 50, 0.001));
-    bloomfilter_enc_clear_secret_key(&sk);
-    bloomfilter_enc_clear_public_key(&pk);
-  }
-  BENCH_END;
-
   bloomfilter_enc_init_secret_key(&sk);
   bloomfilter_enc_init_public_key(&pk);
-  bloomfilter_enc_setup(&pk, &sk, 57, 50, 0.001);
+  /* n=2^19 >= 2^12 per day for 3 months, correctness error ~ 2^-10 */
+  BENCH_ONCE("keygen", bloomfilter_enc_setup(&pk, &sk, 32, 1 << 19, 0.0009765625));
 
   bloomfilter_enc_ciphertext_pair_t ciphertextPair;
   bloomfilter_enc_init_ciphertext_pair(&ciphertextPair, &pk);
