@@ -196,10 +196,12 @@ BFE_VISIBLE void bloomfilter_enc_ciphertext_write_bin(uint8_t* bin,
 /**
  * Reads a given ciphertext stored as a byte array.
  *
- * @param bin                       - the ciphertext byte array.
- * @return Ciphertext.
+ * @param ciphertext                - the ciphertext
+ * @param bin                       - the destination byte array.
+ * @return BFE_SUCCESS or BFE_ERR_*.
  */
-bloomfilter_enc_ciphertext_t* bloomfilter_enc_ciphertext_read_bin(const uint8_t* bin);
+BFE_VISIBLE int bloomfilter_enc_ciphertext_read_bin(bloomfilter_enc_ciphertext_t* ciphertext,
+                                                    const uint8_t* bin);
 
 /**
  * Writes a given setup pair to files params.txt, public_key.txt, and secret_key.txt.

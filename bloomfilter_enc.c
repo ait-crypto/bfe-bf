@@ -352,27 +352,29 @@ void bloomfilter_enc_ciphertext_write_bin(uint8_t* bin, bloomfilter_enc_cipherte
   memcpy(&bin[uLen], ciphertext->v, ciphertext->vLen);
 }
 
-// TODO this should be refactored to return error code
-bloomfilter_enc_ciphertext_t* bloomfilter_enc_ciphertext_read_bin(const uint8_t* bin) {
+int bloomfilter_enc_ciphertext_read_bin(bloomfilter_enc_ciphertext_t* ciphertext, const uint8_t* bin) {
   const uint32_t totalLen = read_u32(&bin);
   const uint32_t uLen     = read_u32(&bin);
   const unsigned int vLen = totalLen - uLen - 2 * sizeof(uint32_t);
-  bloomfilter_enc_ciphertext_t* ciphertext =
-      malloc(offsetof(bloomfilter_enc_ciphertext_t, v) + vLen * sizeof(ciphertext->v[0]));
 
-  ep_null(ciphertext->u);
+  if (init_ciphertext(ciphertext, 1, vLen)) {
+    logger_log(LOGGER_ERROR, "Failed to init ciphertext");
+    return BFE_ERR_GENERAL;
+  }
+
+  int status = BFE_SUCCESS;
   TRY {
-    ep_new(ciphertext->u);
-    ep_read_bin(ciphertext->u, &bin[2 * sizeof(int)], uLen);
+    ep_read_bin(ciphertext->u, bin, uLen);
+    ciphertext->vLen = vLen;
+    memcpy(ciphertext->v, &bin[uLen], vLen);
   }
   CATCH_ANY {
     logger_log(LOGGER_ERROR, "Error occurred in bloomfilter_enc_ciphertext_read_bin function.");
-    THROW(ERR_CAUGHT);
+    status = BFE_ERR_GENERAL;
   }
   FINALLY {}
-  ciphertext->vLen = vLen;
-  memcpy(ciphertext->v, &bin[totalLen - vLen], vLen);
-  return ciphertext;
+
+  return status;
 }
 
 void bloomfilter_enc_write_setup_pair_to_file(bloomfilter_enc_setup_pair_t* setupPair) {
