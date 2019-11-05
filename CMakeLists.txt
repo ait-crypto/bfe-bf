@@ -47,11 +47,12 @@ set_target_properties(bfe PROPERTIES C_VISIBILITY_PRESET hidden)
 configure_file(bfe.pc.in bfe.pc @ONLY)
 
 target_link_libraries(bfe PUBLIC ${RELIC_LIBRARY})
-target_link_libraries(bfe PRIVATE zf_log FIPS202-opt64 m "-Wl,--exclude-libs,ALL")
+target_link_libraries(bfe PRIVATE zf_log FIPS202-opt64 m)
 target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
   target_link_options(bfe PRIVATE LINKER:-z,relro LINKER:-z,now)
+  target_link_options(bfe PRIVATE LINKER:--exclude-libs,ALL)
 endif()
 
 install(TARGETS bfe
@@ -75,5 +76,10 @@ if(DOXYGEN_FOUND)
   doxygen_add_docs(doxygen ${CMAKE_CURRENT_SOURCE_DIR}/include COMMENT "Generate doxygen documentation")
 endif()
 
+# benchmarks
+add_executable(bench bench.c)
+target_link_libraries(bench PRIVATE bfe ${RELIC_LIBRARY})
+
+# testing
 enable_testing()
 add_subdirectory(tests)
