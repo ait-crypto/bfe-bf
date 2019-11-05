@@ -9,9 +9,8 @@
 bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount) {
   bloomfilter_t bloomFilter;
 
-  bloomFilter.bitSet.size = size;
   bloomFilter.hashCount   = hashCount;
-  bloomFilter.bitSet      = bitset_init(bloomFilter.bitSet.size);
+  bloomFilter.bitSet      = bitset_init(size);
 
   return bloomFilter;
 }
@@ -19,9 +18,9 @@ bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount) 
 bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability) {
   bloomfilter_t bloomFilter;
 
-  bloomFilter.bitSet.size = bloomfilter_get_needed_size(n, falsePositiveProbability);
-  bloomFilter.hashCount   = ceil((bloomFilter.bitSet.size / (double)n) * log(2));
-  bloomFilter.bitSet      = bitset_init(bloomFilter.bitSet.size);
+  const unsigned int bitset_size = bloomfilter_get_needed_size(n, falsePositiveProbability);
+  bloomFilter.hashCount          = ceil((bitset_size / (double)n) * log(2));
+  bloomFilter.bitSet             = bitset_init(bitset_size);
 
   return bloomFilter;
 }
@@ -38,7 +37,7 @@ void bloomfilter_get_bit_positions(unsigned int* positions, const void* input, s
                                    unsigned int hashCount, unsigned int filterSize) {
   for (unsigned int i = 0; i < hashCount; i++) {
     Keccak_HashInstance shake;
-    Keccak_HashInitialize_SHAKE256(&shake);
+    Keccak_HashInitialize_SHAKE128(&shake);
 
     const unsigned int ile = htole32(i);
     Keccak_HashUpdate(&shake, (const uint8_t*)&ile, sizeof(ile) * 8);

@@ -3,10 +3,13 @@
 
 #include "macros.h"
 
-#define BITSET_WORD_BITS (8 * sizeof(unsigned int))
+#include <stdint.h>
+
+#define BITSET_WORD_BITS (8 * sizeof(uint64_t))
+#define BITSET_SIZE(size) (((size) + BITSET_WORD_BITS - 1) / BITSET_WORD_BITS)
 
 typedef struct {
-  unsigned int* bitArray;
+  uint64_t* bitArray;
   unsigned int size;
 } bitset_t;
 
@@ -25,7 +28,7 @@ BFE_VISIBLE bitset_t bitset_init(unsigned int size);
  * @param index                     - the index of the bit supposed to be set to TRUE.
  */
 static inline void bitset_set(bitset_t* bitset, unsigned int index) {
-  bitset->bitArray[index / BITSET_WORD_BITS] |= (1 << (index & (BITSET_WORD_BITS - 1)));
+  bitset->bitArray[index / BITSET_WORD_BITS] |= (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
 }
 
 /**
@@ -35,8 +38,8 @@ static inline void bitset_set(bitset_t* bitset, unsigned int index) {
  * @param index                     - the index of the bit in question.
  * @return 0 if the bit is FALSE, non-0 if the bit is TRUE.
  */
-static inline int bitset_get(bitset_t bitSet, unsigned int index) {
-  return bitSet.bitArray[index / BITSET_WORD_BITS] & (1 << (index & (BITSET_WORD_BITS - 1)));
+static inline uint64_t bitset_get(bitset_t bitSet, unsigned int index) {
+  return bitSet.bitArray[index / BITSET_WORD_BITS] & (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
 }
 
 /**

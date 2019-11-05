@@ -29,7 +29,6 @@ void bloomfilter_enc_clear_secret_key(bloomfilter_enc_secret_key_t* secret_key) 
 
 int bloomfilter_enc_init_public_key(bloomfilter_enc_public_key_t* public_key) {
   public_key->filterHashCount = public_key->filterSize = public_key->keyLength = 0;
-  public_key->falsePositiveProbability                                         = 0;
 
   return bf_ibe_init_public_key(&public_key->publicKey);
 }
@@ -37,7 +36,6 @@ int bloomfilter_enc_init_public_key(bloomfilter_enc_public_key_t* public_key) {
 void bloomfilter_enc_clear_public_key(bloomfilter_enc_public_key_t* public_key) {
   if (public_key) {
     public_key->filterHashCount = public_key->filterSize = public_key->keyLength = 0;
-    public_key->falsePositiveProbability                                         = 0;
 
     bf_ibe_clear_public_key(&public_key->publicKey);
   }
@@ -60,7 +58,7 @@ int bloomfilter_enc_setup(bloomfilter_enc_public_key_t* public_key,
   bloomfilter_t filter         = bloomfilter_init(filterElementNumber, falsePositiveProbability);
   const unsigned int bloomSize = bloomfilter_get_size(filter);
 
-  secret_key->secretKey = malloc(bloomSize * sizeof(bf_ibe_extracted_key_t));
+  secret_key->secretKey = calloc(bloomSize, sizeof(bf_ibe_extracted_key_t));
   if (!secret_key->secretKey) {
     status = BFE_ERR_GENERAL;
     goto end;
@@ -69,7 +67,6 @@ int bloomfilter_enc_setup(bloomfilter_enc_public_key_t* public_key,
   public_key->keyLength                = keyLength;
   public_key->filterSize               = bloomSize;
   public_key->filterHashCount          = filter.hashCount;
-  public_key->falsePositiveProbability = falsePositiveProbability;
   secret_key->secretKeyLen             = bloomSize;
   secret_key->filter                   = filter;
 
@@ -377,128 +374,98 @@ int bloomfilter_enc_ciphertext_read_bin(bloomfilter_enc_ciphertext_t* ciphertext
   return status;
 }
 
-void bloomfilter_enc_write_setup_pair_to_file(bloomfilter_enc_setup_pair_t* setupPair) {
-  unsigned int publicKeyBinLen = ep_size_bin(setupPair->public_key.publicKey.key, 0);
-  uint8_t publicKeyBin[publicKeyBinLen];
-  ep_write_bin(publicKeyBin, publicKeyBinLen, setupPair->public_key.publicKey.key, 0);
-
-  unsigned int secretKeybinLen = ep2_size_bin(setupPair->secretKey->secretKey[0].key, 0);
-  uint8_t secretKeyUnitBin[secretKeybinLen];
-
-  FILE *fp_params, *fp_public_key, *fp_secret_key;
-  fp_params     = fopen("params.txt", "w+");
-  fp_public_key = fopen("public_key.txt", "w+");
-  fp_secret_key = fopen("secret_key.txt", "w+");
-  fprintf(fp_params, "%d %d %d", setupPair->public_key.filterHashCount,
-          setupPair->public_key.filterSize, setupPair->public_key.keyLength);
-  fprintf(fp_public_key, "%d ", publicKeyBinLen);
-  for (unsigned int i = 0; i < secretKeybinLen; i++) {
-    fprintf(fp_public_key, "%c", publicKeyBin[i]);
-  }
-  fprintf(fp_secret_key, "%d %d %d\n", setupPair->secretKey->filter.bitSet.size,
-          setupPair->secretKey->filter.hashCount,
-          ep2_size_bin(setupPair->secretKey->secretKey[0].key, 0));
-  for (unsigned int i = 0;
-       i < (setupPair->secretKey->filter.bitSet.size + BITSET_WORD_BITS - 1) / BITSET_WORD_BITS;
-       i++) {
-    fprintf(fp_secret_key, "%u ", setupPair->secretKey->filter.bitSet.bitArray[i]);
-  }
-  fprintf(fp_secret_key, "\n");
-  for (unsigned int i = 0; i < setupPair->secretKey->filter.bitSet.size; i++) {
-    if (bitset_get(setupPair->secretKey->filter.bitSet, i) == 0) {
-      ep2_write_bin(secretKeyUnitBin, secretKeybinLen, setupPair->secretKey->secretKey[i].key, 0);
-      for (unsigned int j = 0; j < secretKeybinLen; j++) {
-        fprintf(fp_secret_key, "%c", secretKeyUnitBin[j]);
-      }
-    }
-  }
-  fclose(fp_params);
-  fclose(fp_public_key);
-  fclose(fp_secret_key);
+unsigned int bloomfilter_enc_public_key_size_bin(const bloomfilter_enc_public_key_t* public_key) {
+  return 4 * sizeof(uint32_t) + ep_size_bin(public_key->publicKey.key, 0);
 }
 
-bloomfilter_enc_public_key_t bloomfilter_enc_read_system_params_from_file() {
-  bloomfilter_enc_public_key_t public_key;
-  int publicKeyBinLen;
+void bloomfilter_enc_public_key_write_bin(uint8_t* bin, bloomfilter_enc_public_key_t* public_key) {
+  const unsigned int keyLen     = ep_size_bin(public_key->publicKey.key, 0);
 
-  FILE *fp_params, *fp_public_key;
-  fp_params     = fopen("params.txt", "r");
-  fp_public_key = fopen("public_key.txt", "r");
-  if (fscanf(fp_params, "%d %d %d", &public_key.filterHashCount, &public_key.filterSize,
-             &public_key.keyLength) != 3) {
-    logger_log(LOGGER_ERROR, "Error occurred while reading system params from a file.");
-  }
+  write_u32(&bin, public_key->filterHashCount);
+  write_u32(&bin, public_key->filterSize);
+  write_u32(&bin, public_key->keyLength);
+  write_u32(&bin, keyLen);
+  ep_write_bin(bin, keyLen, public_key->publicKey.key, 0);
+}
 
-  if (fscanf(fp_public_key, "%d ", &publicKeyBinLen) != 1) {
-    logger_log(LOGGER_ERROR, "Error occurred while reading public key length from a file.");
-  }
-  uint8_t publicKeyBin[publicKeyBinLen];
-  if (fread(publicKeyBin, sizeof(uint8_t), publicKeyBinLen, fp_public_key) != publicKeyBinLen) {
-    logger_log(LOGGER_ERROR, "Error occurred while reading public key from a file.");
-  }
+int bloomfilter_enc_public_key_read_bin(bloomfilter_enc_public_key_t* public_key, const uint8_t* bin) {
+  public_key->filterHashCount = read_u32(&bin);
+  public_key->filterSize      = read_u32(&bin);
+  public_key->keyLength       = read_u32(&bin);
 
-  ep_null(public_key.publicKey);
+  const unsigned int keyLen = read_u32(&bin);
+
+  int status = BFE_SUCCESS;
+  ep_null(public_key->publicKey.key);
   TRY {
-    ep_new(public_key.publicKey);
-    ep_read_bin(public_key.publicKey.key, publicKeyBin, publicKeyBinLen);
+    ep_new(public_key->publicKey.key);
+    ep_read_bin(public_key->publicKey.key, bin, keyLen);
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred while setting public key.");
-    THROW(ERR_CAUGHT);
+    logger_log(LOGGER_ERROR, "Error occurred in bloomfilter_enc_public_key_read_bin function.");
+    status = BFE_ERR_GENERAL;
   }
   FINALLY {}
 
-  fclose(fp_params);
-  fclose(fp_public_key);
-
-  return public_key;
+  return status;
 }
 
-bloomfilter_enc_secret_key_t* bloomfilter_enc_read_secret_key_from_file() {
-  int filterSize, filterHashCount, secretKeyUnitBinLen;
-
-  FILE* fp_secret_key;
-  fp_secret_key = fopen("secret_key.txt", "r");
-
-  if (fscanf(fp_secret_key, "%d %d %d\n", &filterSize, &filterHashCount, &secretKeyUnitBinLen) !=
-      3) {
-    logger_log(LOGGER_ERROR, "Error occurred while reading secret key attributes from a file.");
-  }
-  bloomfilter_enc_secret_key_t* secretKey =
-      malloc(offsetof(bloomfilter_enc_secret_key_t, secretKey) +
-             filterSize * sizeof(secretKey->secretKey[0]));
-  bloomfilter_t filter    = bloomfilter_init_fixed(filterSize, filterHashCount);
-  secretKey->secretKeyLen = filterSize;
-
-  uint8_t secretKeyUnitBin[secretKeyUnitBinLen];
-
-  for (unsigned int i = 0; i < (filterSize + BITSET_WORD_BITS - 1) / BITSET_WORD_BITS; i++) {
-    if (fscanf(fp_secret_key, "%u ", &filter.bitSet.bitArray[i]) != 1) {
-      logger_log(LOGGER_ERROR, "Error occurred while reading bloom filter bits from a file.");
+unsigned int bloomfilter_enc_secret_key_size_bin(const bloomfilter_enc_secret_key_t* secret_key) {
+  unsigned int num_keys = 0;
+  for (unsigned int i = 0; i < secret_key->filter.bitSet.size; i++) {
+    if (bitset_get(secret_key->filter.bitSet, i) == 0) {
+      ++num_keys;
     }
   }
 
+  return 3 * sizeof(uint32_t) + BITSET_SIZE(secret_key->filter.bitSet.size) * sizeof(uint64_t) + num_keys * ep2_size_bin(secret_key->secretKey->key, 0);
+}
+
+void bloomfilter_enc_secret_key_write_bin(uint8_t* bin, bloomfilter_enc_secret_key_t* secret_key) {
+  write_u32(&bin, secret_key->filter.hashCount);
+  write_u32(&bin, secret_key->filter.bitSet.size);
+  for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitSet.size); ++i) {
+    write_u64(&bin, secret_key->filter.bitSet.bitArray[i]);
+  }
+
+  const unsigned int secret_key_len = ep2_size_bin(secret_key->secretKey->key, 0);
+  write_u32(&bin, secret_key_len);
+  for (unsigned int i = 0; i < secret_key->filter.bitSet.size; i++) {
+    if (bitset_get(secret_key->filter.bitSet, i) == 0) {
+      ep2_write_bin(bin, secret_key_len, secret_key->secretKey[i].key, 0);
+      bin += secret_key_len;
+    }
+  }
+}
+
+int bloomfilter_enc_secret_key_read_bin(bloomfilter_enc_secret_key_t* secret_key, const uint8_t* bin) {
+  const unsigned int hash_count = read_u32(&bin);
+  const unsigned int filter_size = read_u32(&bin);
+
+  secret_key->filter = bloomfilter_init_fixed(filter_size, hash_count);
+  for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitSet.size); ++i) {
+    secret_key->filter.bitSet.bitArray[i] = read_u64(&bin);
+  }
+  secret_key->secretKeyLen = filter_size;
+  secret_key->secretKey = calloc(filter_size, sizeof(bf_ibe_extracted_key_t));
+
+  int status = BFE_SUCCESS;
+  const unsigned int secret_key_len = read_u32(&bin);
   TRY {
-    for (int i = 0; i < filterSize; i++) {
-      if (bitset_get(filter.bitSet, i) == 0) {
-        if (fread(secretKeyUnitBin, sizeof(uint8_t), secretKeyUnitBinLen, fp_secret_key) !=
-            secretKeyUnitBinLen) {
-          logger_log(LOGGER_ERROR, "Error occurred while reading secret key from a file.");
-        }
-        ep2_null(secretKey->secretKey[i]);
-        ep2_new(secretKey->secretKey[i]);
-        ep2_read_bin(secretKey->secretKey[i].key, secretKeyUnitBin, secretKeyUnitBinLen);
+    for (unsigned int i = 0; i < filter_size; i++) {
+      if (bitset_get(secret_key->filter.bitSet, i) == 0) {
+        status |= bf_ibe_init_extracted_key(&secret_key->secretKey[i]);
+        ep2_read_bin(secret_key->secretKey[i].key, bin, secret_key_len);
+        bin += secret_key_len;
+        secret_key->secretKey[i].set = 1;
       }
     }
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in Bloom Filter Encryption setup function.");
-    THROW(ERR_CAUGHT);
+    logger_log(LOGGER_ERROR, "Error occurred in bloomfilter_enc_secret_key_read_bin function.");
+    status = BFE_ERR_GENERAL;
   }
   FINALLY {}
 
-  fclose(fp_secret_key);
-
-  secretKey->filter = filter;
-  return secretKey;
+  return status;
 }

@@ -5,15 +5,14 @@
 
 bitset_t bitset_init(unsigned int size) {
   bitset_t bitSet;
-  bitSet.bitArray = calloc((size + BITSET_WORD_BITS - 1) / BITSET_WORD_BITS, sizeof(unsigned int));
+  bitSet.bitArray = calloc(BITSET_SIZE(size), sizeof(uint64_t));
   bitSet.size     = size;
 
   return bitSet;
 }
 
 void bitset_reset(bitset_t* bitSet) {
-  memset(bitSet->bitArray, 0,
-         (bitSet->size + BITSET_WORD_BITS - 1) / BITSET_WORD_BITS * sizeof(unsigned int));
+  memset(bitSet->bitArray, 0, BITSET_SIZE(bitSet->size) * sizeof(uint64_t));
 }
 
 void bitset_clean(bitset_t* bitset) {

@@ -11,7 +11,6 @@ typedef struct {
   unsigned int filterHashCount;
   unsigned int filterSize;
   unsigned int keyLength;
-  double falsePositiveProbability;
   bf_ibe_public_key_t publicKey;
 } bloomfilter_enc_public_key_t;
 
@@ -20,11 +19,6 @@ typedef struct {
   unsigned int secretKeyLen;
   bf_ibe_extracted_key_t* secretKey;
 } bloomfilter_enc_secret_key_t;
-
-typedef struct {
-  bloomfilter_enc_public_key_t public_key;
-  bloomfilter_enc_secret_key_t* secretKey;
-} bloomfilter_enc_setup_pair_t;
 
 typedef struct {
   ep_t u;
@@ -204,24 +198,61 @@ BFE_VISIBLE int bloomfilter_enc_ciphertext_read_bin(bloomfilter_enc_ciphertext_t
                                                     const uint8_t* bin);
 
 /**
- * Writes a given setup pair to files params.txt, public_key.txt, and secret_key.txt.
+ * Calculates number of bytes needed to store a given secret key.
  *
- * @param setupPair                 - the setup pair.
+ * @param secret_key[in] the secret key.
+ * @return Number of bytes needed to store the secret key.
  */
-BFE_VISIBLE void bloomfilter_enc_write_setup_pair_to_file(bloomfilter_enc_setup_pair_t* setupPair);
+BFE_VISIBLE unsigned int
+bloomfilter_enc_secret_key_size_bin(const bloomfilter_enc_secret_key_t* secret_key);
 
 /**
- * Reads system parameters from params.txt and public_key.txt files.
+ * Writes a given secret key to a byte array.
  *
- * @return System parameters.
+ * @param bin[out]                  - the secret key byte array.
+ * @param secret_key[in]            - the secret key.
  */
-bloomfilter_enc_public_key_t bloomfilter_enc_read_system_params_from_file();
+BFE_VISIBLE void bloomfilter_enc_secret_key_write_bin(uint8_t* bin,
+                                                      bloomfilter_enc_secret_key_t* secret_key);
 
 /**
- * Reads secret key from secret_key.txt file.
+ * Reads a given secret key stored as a byte array.
  *
- * @return Secret key.
+ * @param secret_key                - the secret key
+ * @param bin                       - the destination byte array.
+ * @return BFE_SUCCESS or BFE_ERR_*.
  */
-bloomfilter_enc_secret_key_t* bloomfilter_enc_read_secret_key_from_file();
+BFE_VISIBLE int bloomfilter_enc_secret_key_read_bin(bloomfilter_enc_secret_key_t* secret_key,
+                                                    const uint8_t* bin);
+
+/**
+ * Calculates number of bytes needed to store a given public key.
+ *
+ * @param public_key[in] the public key.
+ * @return Number of bytes needed to store the public key.
+ */
+BFE_VISIBLE unsigned int
+bloomfilter_enc_public_key_size_bin(const bloomfilter_enc_public_key_t* public_key);
+
+/**
+ * Writes a given public key to a byte array.
+ *
+ * @param bin[out]                  - the public key byte array.
+ * @param public_key[in]            - the public key.
+ */
+BFE_VISIBLE void bloomfilter_enc_public_key_write_bin(uint8_t* bin,
+                                                      bloomfilter_enc_public_key_t* public_key);
+
+/**
+ * Reads a given public key stored as a byte array.
+ *
+ * @param public_key                - the public key
+ * @param bin                       - the destination byte array.
+ * @return BFE_SUCCESS or BFE_ERR_*.
+ */
+BFE_VISIBLE int bloomfilter_enc_public_key_read_bin(bloomfilter_enc_public_key_t* public_key,
+                                                    const uint8_t* bin);
+
+
 
 #endif // MASTER_PROJECT_BLOOMFILTER_ENC_H
