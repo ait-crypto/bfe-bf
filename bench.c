@@ -19,7 +19,6 @@ static void bench_bfe(void) {
   bloomfilter_enc_init_ciphertext_pair(&ciphertextPair, &pk);
 
   uint8_t decrypted[pk.keyLength];
-
   BENCH_BEGIN("encrypt") {
     BENCH_ADD(bloomfilter_enc_encrypt(&ciphertextPair, &pk));
   }

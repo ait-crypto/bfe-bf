@@ -458,6 +458,8 @@ int bloomfilter_enc_secret_key_read_bin(bloomfilter_enc_secret_key_t* secret_key
         ep2_read_bin(secret_key->secretKey[i].key, bin, secret_key_len);
         bin += secret_key_len;
         secret_key->secretKey[i].set = 1;
+      } else {
+        bf_ibe_init_extracted_key(&secret_key->secretKey[i]);
       }
     }
   }
