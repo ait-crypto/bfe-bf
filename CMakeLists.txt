@@ -32,6 +32,7 @@ check_c_compiler_flag_and_add(-Werror=implicit-function-declaration CC_SUPPORTS_
 
 find_package(relic REQUIRED)
 find_package(Doxygen)
+find_package(OpenMP)
 add_subdirectory(zf_log)
 add_subdirectory(FIPS202-opt64)
 
@@ -53,6 +54,9 @@ target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
   target_link_options(bfe PRIVATE LINKER:-z,relro LINKER:-z,now)
   target_link_options(bfe PRIVATE LINKER:--exclude-libs,ALL)
+endif()
+if(OpenMP_C_FOUND)
+  target_link_libraries(bfe PRIVATE OpenMP::OpenMP_C)
 endif()
 
 install(TARGETS bfe

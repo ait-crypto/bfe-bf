@@ -73,11 +73,10 @@ int bloomfilter_enc_setup(bloomfilter_enc_public_key_t* public_key,
   secret_key->secretKeyLen             = bloomSize;
   secret_key->filter                   = filter;
 
+  #pragma omp parallel for reduction(|:status)
   for (unsigned int i = 0; i < bloomSize; i++) {
-    status = bf_ibe_extract(&secret_key->secretKey[i], &sk, (uint8_t*)&i, sizeof(i));
-    if (status != BFE_SUCCESS) {
-      break;
-    }
+    const uint32_t id = htole32(i);
+    status |= bf_ibe_extract(&secret_key->secretKey[i], &sk, (const uint8_t*) &id, sizeof(id));
   }
 
 end:
