@@ -1,0 +1,17 @@
+find_package(cgreen)
+if(cgreen_FOUND)
+  add_executable(ibe ibe.c)
+  target_link_libraries(ibe PRIVATE bfe ${CGREEN_LIBRARIES})
+  target_include_directories(ibe PRIVATE ${CGREEN_INCLUDE_DIRS})
+  add_test(NAME IBE COMMAND ibe)
+
+  add_executable(bf bloomfilter.c)
+  target_link_libraries(bf PRIVATE bfe ${CGREEN_LIBRARIES})
+  target_include_directories(bf PRIVATE ${CGREEN_INCLUDE_DIRS})
+  add_test(NAME BF COMMAND bf)
+
+  add_executable(bfenc bfenc.c)
+  target_link_libraries(bfenc PRIVATE bfe ${CGREEN_LIBRARIES})
+  target_include_directories(bfenc PRIVATE ${CGREEN_INCLUDE_DIRS})
+  add_test(NAME BFE COMMAND bfenc)
+endif()

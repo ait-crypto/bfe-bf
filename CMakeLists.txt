@@ -75,5 +75,5 @@ if(DOXYGEN_FOUND)
   doxygen_add_docs(doxygen ${CMAKE_CURRENT_SOURCE_DIR}/include COMMENT "Generate doxygen documentation")
 endif()
 
-add_executable(test test.c)
-target_link_libraries(test bfe)
+enable_testing()
+add_subdirectory(tests)

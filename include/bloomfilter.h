@@ -3,6 +3,8 @@
 
 #include "bitset.h"
 
+#include <stddef.h>
+
 typedef struct _bloomfilter_t {
   unsigned int hashCount;
   bitset_t bitSet;
