@@ -5,7 +5,6 @@
 
 #include "FIPS202-opt64/KeccakHash.h"
 #include "include/bloomfilter.h"
-#include "logger.h"
 
 bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount) {
   bloomfilter_t bloomFilter;
@@ -14,7 +13,6 @@ bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount) 
   bloomFilter.hashCount   = hashCount;
   bloomFilter.bitSet      = bitset_init(bloomFilter.bitSet.size);
 
-  logger_log(LOGGER_INFO, "Instantiated Bloom Filter");
   return bloomFilter;
 }
 
@@ -25,7 +23,6 @@ bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability) 
   bloomFilter.hashCount   = ceil((bloomFilter.bitSet.size / (double)n) * log(2));
   bloomFilter.bitSet      = bitset_init(bloomFilter.bitSet.size);
 
-  logger_log(LOGGER_INFO, "Instantiated Bloom Filter");
   return bloomFilter;
 }
 

@@ -191,7 +191,6 @@ void bloomfilter_enc_puncture(bloomfilter_enc_secret_key_t* secretKey,
   for (unsigned int i = 0; i < secretKey->filter.hashCount; i++) {
     bf_ibe_clear_extracted_key(&secretKey->secretKey[affectedIndexes[i]]);
   }
-  logger_log(LOGGER_INFO, "The key has been punctured");
 }
 
 int bloomfilter_enc_ciphertext_cmp(const bloomfilter_enc_ciphertext_t* ciphertext1,
@@ -207,7 +206,6 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
                             bloomfilter_enc_secret_key_t* secretKey,
                             bloomfilter_enc_ciphertext_t* ciphertext) {
   int status = BFE_SUCCESS;
-  logger_log(LOGGER_INFO, "Decrypting the secret key.");
 
   unsigned int binLen = ep_size_bin(ciphertext->u, 0);
   uint8_t bin[binLen];
@@ -246,12 +244,14 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
         ep_copy(ibeCiphertext->u, ciphertext->u);
         memcpy(ibeCiphertext->v, &ciphertext->v[i * ibeCiphertext->vLen], ibeCiphertext->vLen);
         status = bf_ibe_decrypt(tempKey, ibeCiphertext, &secretKey->secretKey[affectedIndexes[i]]);
-        if (status) {
-          logger_log(LOGGER_INFO, "IBE decrypt failed.");
-          THROW(ERR_NO_VALID);
+        if (status == BFE_SUCCESS) {
+          break;
         }
-        break;
       }
+    }
+
+    if (status != BFE_SUCCESS) {
+      THROW(ERR_NO_VALID);
     }
 
     ep_curve_get_ord(group1Order);
@@ -265,7 +265,6 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
 
     if (!status && bloomfilter_enc_ciphertext_cmp(&genCiphertextPair.ciphertext, ciphertext) == 0) {
       memcpy(key, tempKey, public_key->keyLength);
-      logger_log(LOGGER_INFO, "Ciphertext successfully decrypted.");
     }
   }
   CATCH_ANY {
