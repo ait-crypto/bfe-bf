@@ -3,7 +3,7 @@
 #include "FIPS202-opt64/KeccakHash.h"
 #include "include/err_codes.h"
 #include "logger.h"
-#include "util.h"
+
 #include <relic/relic.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -81,8 +81,6 @@ int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* p
   ep_t publicKeyR;
   ep2_t qid;
   fp12_t gIDR;
-  bn_t group1Order;
-  ep_t ciphertextLeft;
 
   ep_null(publicKeyR);
   ep2_null(qid);
@@ -94,12 +92,10 @@ int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* p
     ep_new(publicKeyR);
     ep2_new(qid);
     fp12_new(gIDR);
-    bn_new(group1Order);
-    ep_new(ciphertextLeft);
     ep_new(ciphertext->u);
 
     // g_1^r
-    ep_mul_gen(ciphertextLeft, r);
+    ep_mul_gen(ciphertext->u, r);
     // pk^r
     ep_mul(publicKeyR, publicKey->key, r);
 
@@ -108,7 +104,6 @@ int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* p
     // e(pk^r, G(i_j))
     pp_map_k12(gIDR, publicKeyR, qid);
 
-    ep_copy(ciphertext->u, ciphertextLeft);
     hash_and_xor(ciphertext->v, ciphertext->vLen, message, gIDR);
   }
   CATCH_ANY {
@@ -118,8 +113,6 @@ int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* p
   FINALLY {
     ep2_free(qid);
     fp12_free(gIDR);
-    bn_free(group1Order);
-    ep_free(ciphertextLeft);
     ep_free(publicKeyR);
   };
 
