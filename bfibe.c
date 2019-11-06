@@ -1,6 +1,6 @@
 #include "include/bfibe.h"
 
-#include "FIPS202-opt64/SimpleFIPS202.h"
+#include "FIPS202-opt64/KeccakHash.h"
 #include "include/err_codes.h"
 #include "logger.h"
 #include "util.h"
@@ -41,7 +41,6 @@ int bf_ibe_extract(bf_ibe_extracted_key_t* privateKey, const bf_ibe_secret_key_t
     ep2_new(qid);
     ep2_map(qid, id, idLen);
     ep2_mul(privateKey->key, qid, masterKey->key);
-    privateKey->set = 1;
   }
   CATCH_ANY {
     logger_log(LOGGER_ERROR, "Error occurred in IBE extract function.");
@@ -54,10 +53,31 @@ int bf_ibe_extract(bf_ibe_extracted_key_t* privateKey, const bf_ibe_secret_key_t
   return status;
 }
 
+// G(y) \xor K
+static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t y) {
+  const unsigned int size = fp12_size_bin(y, 0);
+  uint8_t bin[12 * RLC_FP_BYTES] = { 0 };
+  fp12_write_bin(bin, size, y, 0);
+
+  Keccak_HashInstance shake;
+  Keccak_HashInitialize_SHAKE256(&shake);
+  Keccak_HashUpdate(&shake, bin, size * 8);
+  Keccak_HashFinal(&shake, NULL);
+
+  for (; len; len -= MIN(len, 64), dst += 64, input += 64) {
+    uint8_t buf[64];
+    const size_t l = MIN(len, 64);
+
+    Keccak_HashSqueeze(&shake, buf, l * 8);
+    for (size_t i = 0; i < l; ++i) {
+      dst[i] = input[i] ^ buf[i];
+    }
+  }
+}
+
 int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* publicKey,
                    const uint8_t* id, size_t idLen, const uint8_t* message, bn_t r) {
   int status = BFE_SUCCESS;
-  uint8_t digest[ciphertext->vLen];
   ep_t publicKeyR;
   ep2_t qid;
   fp12_t gIDR;
@@ -78,18 +98,18 @@ int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* p
     ep_new(ciphertextLeft);
     ep_new(ciphertext->u);
 
+    // g_1^r
     ep_mul_gen(ciphertextLeft, r);
+    // pk^r
     ep_mul(publicKeyR, publicKey->key, r);
 
+    // G(i_j)
     ep2_map(qid, id, idLen);
+    // e(pk^r, G(i_j))
     pp_map_k12(gIDR, publicKeyR, qid);
 
-    int binSize = fp12_size_bin(gIDR, 0);
-    uint8_t bin[binSize];
-    fp12_write_bin(bin, binSize, gIDR, 0);
-    SHAKE256(digest, ciphertext->vLen, bin, binSize);
-    byteArraysXOR(ciphertext->v, digest, message, ciphertext->vLen);
     ep_copy(ciphertext->u, ciphertextLeft);
+    hash_and_xor(ciphertext->v, ciphertext->vLen, message, gIDR);
   }
   CATCH_ANY {
     logger_log(LOGGER_ERROR, "Error occurred in IBE encrypt function.");
@@ -109,7 +129,6 @@ int bf_ibe_encrypt(bf_ibe_ciphertext_t* ciphertext, const bf_ibe_public_key_t* p
 int bf_ibe_decrypt(uint8_t* message, const bf_ibe_ciphertext_t* ciphertext,
                    const bf_ibe_extracted_key_t* privateKey) {
   int status = BFE_SUCCESS;
-  uint8_t digest[ciphertext->vLen];
   fp12_t dU;
   ep_t p1;
   ep2_t p2;
@@ -125,14 +144,9 @@ int bf_ibe_decrypt(uint8_t* message, const bf_ibe_ciphertext_t* ciphertext,
 
     ep_copy(p1, ciphertext->u);
     ep2_copy(p2, privateKey->key);
-
     pp_map_k12(dU, p1, p2);
-    const unsigned int binSize = fp12_size_bin(dU, 0);
-    uint8_t bin[binSize];
-    fp12_write_bin(bin, binSize, dU, 0);
-    md_map(digest, bin, binSize);
-    SHAKE256(digest, ciphertext->vLen, bin, binSize);
-    byteArraysXOR(message, digest, ciphertext->v, ciphertext->vLen);
+
+    hash_and_xor(message, ciphertext->vLen, ciphertext->v, dU);
   }
   CATCH_ANY {
     logger_log(LOGGER_ERROR, "Error occurred in IBE decrypt function.");
@@ -219,7 +233,6 @@ int bf_ibe_init_extracted_key(bf_ibe_extracted_key_t* key) {
   int status = BFE_SUCCESS;
 
   ep2_null(key->key);
-  key->set = 0;
   TRY {
     ep2_new(key->key);
     ep2_set_infty(key->key);
@@ -236,17 +249,16 @@ void bf_ibe_clear_extracted_key(bf_ibe_extracted_key_t* key) {
     ep2_set_infty(key->key);
     ep2_free(key->key);
     ep2_null(key->key);
-    key->set = 0;
   }
 }
 
-__attribute__((constructor)) void coreInit(void) {
+__attribute__((constructor)) static void init_relic(void) {
   if (core_init() != RLC_OK) {
     core_clean();
   }
   ep_param_set_any_pairf();
 }
 
-__attribute__((destructor)) void coreClean(void) {
+__attribute__((destructor)) static void clean_relic(void) {
   core_clean();
 }

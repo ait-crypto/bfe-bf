@@ -7,8 +7,6 @@
 #include "logger.h"
 #include "util.h"
 
-#include <stddef.h>
-
 int bloomfilter_enc_init_secret_key(bloomfilter_enc_secret_key_t* secret_key) {
   memset(secret_key, 0, sizeof(bloomfilter_enc_secret_key_t));
   return BFE_SUCCESS;
@@ -236,7 +234,7 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
 
     status = BFE_ERR_GENERAL;
     for (unsigned int i = 0; i < secretKey->filter.hashCount; i++) {
-      if (secretKey->secretKey[affectedIndexes[i]].set) {
+      if (bitset_get(secretKey->filter.bitSet, affectedIndexes[i]) == 0) {
         ep_copy(ibeCiphertext->u, ciphertext->u);
         memcpy(ibeCiphertext->v, &ciphertext->v[i * ibeCiphertext->vLen], ibeCiphertext->vLen);
         status = bf_ibe_decrypt(tempKey, ibeCiphertext, &secretKey->secretKey[affectedIndexes[i]]);
@@ -457,7 +455,6 @@ int bloomfilter_enc_secret_key_read_bin(bloomfilter_enc_secret_key_t* secret_key
         status |= bf_ibe_init_extracted_key(&secret_key->secretKey[i]);
         ep2_read_bin(secret_key->secretKey[i].key, bin, secret_key_len);
         bin += secret_key_len;
-        secret_key->secretKey[i].set = 1;
       } else {
         bf_ibe_init_extracted_key(&secret_key->secretKey[i]);
       }

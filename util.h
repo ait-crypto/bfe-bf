@@ -6,7 +6,6 @@
 #include <endian.h>
 #include <string.h>
 
-void byteArraysXOR(uint8_t* out, const uint8_t* array1, const uint8_t* array2, size_t len);
 void generateRandomBytes(uint8_t* bin, unsigned int binSize);
 
 static inline void write_u32(uint8_t** dst, uint32_t v) {

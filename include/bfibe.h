@@ -17,7 +17,6 @@ typedef struct {
 
 typedef struct {
   ep2_t key;
-  unsigned int set;
 } bf_ibe_extracted_key_t;
 
 typedef struct {
