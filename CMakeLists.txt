@@ -12,8 +12,6 @@ project(bfe LANGUAGES C VERSION 1.0 DESCRIPTION "Bloom Filter Encryption Library
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-# force PIC for zf_log
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(GNUInstallDirs)
 include(CheckCCompilerFlag)
@@ -38,34 +36,41 @@ find_package(relic REQUIRED)
 find_package(Doxygen)
 find_package(OpenMP)
 if(HAVE_ZFLOG)
+  # force PIC for zf_log
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
   add_subdirectory(zf_log)
 endif()
-add_subdirectory(FIPS202-opt64)
 
 add_library(bfe SHARED
             bitset.c
             bloomfilter.c
             bloomfilter_enc.c
-            util.c)
+            util.c
+            FIPS202-opt64/KeccakHash.c
+            FIPS202-opt64/KeccakP-1600-opt64.c
+            FIPS202-opt64/KeccakSpongeWidth1600.c
+            FIPS202-opt64/SimpleFIPS202.c)
 
 set_target_properties(bfe PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(bfe PROPERTIES C_VISIBILITY_PRESET hidden)
 configure_file(bfe.pc.in bfe.pc @ONLY)
 
 target_link_libraries(bfe PUBLIC ${RELIC_LIBRARY})
-target_link_libraries(bfe PRIVATE FIPS202-opt64 m)
+target_link_libraries(bfe PRIVATE m)
 if(HAVE_ZFLOG)
   target_link_libraries(bfe PRIVATE zf_log)
   target_compile_definitions(bfe PRIVATE HAVE_ZFLOG)
 endif()
 target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
+if(OpenMP_C_FOUND)
+  target_link_libraries(bfe PRIVATE OpenMP::OpenMP_C)
+endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
   target_link_options(bfe PRIVATE LINKER:-z,relro LINKER:-z,now)
-  target_link_options(bfe PRIVATE LINKER:--exclude-libs,ALL)
-endif()
-if(OpenMP_C_FOUND)
-  target_link_libraries(bfe PRIVATE OpenMP::OpenMP_C)
+  if(HAVE_ZFLOG)
+    target_link_options(bfe PRIVATE LINKER:--exclude-libs,ALL)
+  endif()
 endif()
 
 install(TARGETS bfe
