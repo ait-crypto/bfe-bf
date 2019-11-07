@@ -30,10 +30,16 @@ check_c_compiler_flag_and_add(-Wextra CC_SUPPORTS_WEXTRA)
 check_c_compiler_flag_and_add(-Wshadow CC_SUPPORTS_WSHADOW)
 check_c_compiler_flag_and_add(-Werror=implicit-function-declaration CC_SUPPORTS_WERROR_IMPLICIT_FUNCTION_DECLARATION)
 
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/zf_log/CMakeLists.txt)
+  set(HAVE_ZFLOG 1)
+endif()
+
 find_package(relic REQUIRED)
 find_package(Doxygen)
 find_package(OpenMP)
-add_subdirectory(zf_log)
+if(HAVE_ZFLOG)
+  add_subdirectory(zf_log)
+endif()
 add_subdirectory(FIPS202-opt64)
 
 add_library(bfe SHARED
@@ -47,7 +53,11 @@ set_target_properties(bfe PROPERTIES C_VISIBILITY_PRESET hidden)
 configure_file(bfe.pc.in bfe.pc @ONLY)
 
 target_link_libraries(bfe PUBLIC ${RELIC_LIBRARY})
-target_link_libraries(bfe PRIVATE zf_log FIPS202-opt64 m)
+target_link_libraries(bfe PRIVATE FIPS202-opt64 m)
+if(HAVE_ZFLOG)
+  target_link_libraries(bfe PRIVATE zf_log)
+  target_compile_definitions(bfe PRIVATE HAVE_ZFLOG)
+endif()
 target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
