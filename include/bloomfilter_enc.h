@@ -26,12 +26,6 @@ typedef struct {
   uint8_t* v;
 } bloomfilter_enc_ciphertext_t;
 
-typedef struct {
-  bloomfilter_enc_ciphertext_t ciphertext;
-  unsigned int KLen;
-  uint8_t* K;
-} bloomfilter_enc_ciphertext_pair_t;
-
 /**
  * Initialize secret key.
  *
@@ -78,13 +72,13 @@ BFE_VISIBLE int bloomfilter_enc_setup(bloomfilter_enc_public_key_t* public_key,
 /**
  * Generates a random key K and encapsulates it.
  *
- * @param ciphertext_pair[out]  pair in form of (C, K), C being the ciphertext and K being the
- * randomly generated key
+ * @param ciphertext[out] the ciphertext
+ * @param K[out] the randomly generated key
  * @param public_key[in] the public key
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-BFE_VISIBLE int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertext_pair,
-                                        bloomfilter_enc_public_key_t* public_key);
+BFE_VISIBLE int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_t* ciphertext, uint8_t* K,
+                                        const bloomfilter_enc_public_key_t* public_key);
 
 /**
  * Punctures a secret key for the given ciphertext. After this action the secret key will not be
@@ -96,16 +90,6 @@ BFE_VISIBLE int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphe
  */
 BFE_VISIBLE void bloomfilter_enc_puncture(bloomfilter_enc_secret_key_t* secret_key,
                                           bloomfilter_enc_ciphertext_t* ciphertext);
-
-/**
- * Compares two BFE ciphertexts.
- *
- * @param ciphertext1[in] First ciphertext
- * @param ciphertext2[in] Second ciphertext
- * @return 0 if equal, 1 if not equal.
- */
-BFE_VISIBLE int bloomfilter_enc_ciphertext_cmp(const bloomfilter_enc_ciphertext_t* ciphertext1,
-                                               const bloomfilter_enc_ciphertext_t* ciphertext2);
 
 /**
  * Decapsulates a given ciphertext. The secret key should not be already punctured with the same
@@ -136,25 +120,6 @@ BFE_VISIBLE int bloomfilter_enc_init_ciphertext(bloomfilter_enc_ciphertext_t* ci
  * @param ciphertext[out] the ciphertext
  */
 BFE_VISIBLE void bloomfilter_enc_clear_ciphertext(bloomfilter_enc_ciphertext_t* ciphertext);
-
-/**
- * Initialize a ciphertext pair.
- *
- * @param pair[out] ciphertext pair to initialize
- * @param public_key[in] the public key
- * @return BFE_SUCCESS or BFE_ERR_*.
- */
-BFE_VISIBLE int
-bloomfilter_enc_init_ciphertext_pair(bloomfilter_enc_ciphertext_pair_t* pair,
-                                     const bloomfilter_enc_public_key_t* public_key);
-
-/**
- * Clear ciphertext pair.
- *
- * @param ciphertextPair[out] the corresponding ciphertext pair.
- */
-BFE_VISIBLE void
-bloomfilter_enc_clear_ciphertext_pair(bloomfilter_enc_ciphertext_pair_t* ciphertextPair);
 
 /**
  * Calculates number of bytes needed to store a given ciphertext.

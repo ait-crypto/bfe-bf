@@ -226,7 +226,7 @@ end:
   return status;
 }
 
-static int _bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertextPair,
+static int _bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_t* ciphertext,
                                     bloomfilter_enc_public_key_t* public_key, bn_t r,
                                     const uint8_t* K) {
   int status = BFE_SUCCESS;
@@ -237,16 +237,16 @@ static int _bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertex
 
   TRY {
     // g_1^r
-    ep_mul_gen(ciphertextPair->ciphertext.u, r);
+    ep_mul_gen(ciphertext->u, r);
     // pk^r
     ep_new(pkr);
     ep_mul(pkr, public_key->public_key, r);
 
-    bloomfilter_get_bit_positions(bitPositions, ciphertextPair->ciphertext.u, public_key->filterHashCount,
+    bloomfilter_get_bit_positions(bitPositions, ciphertext->u, public_key->filterHashCount,
                                   public_key->filterSize);
 
     for (unsigned int i = 0; i < public_key->filterHashCount; i++) {
-      status = bf_ibe_encrypt(&ciphertextPair->ciphertext.v[i * public_key->keyLength], pkr, (const uint8_t*)&bitPositions[i], sizeof(i), K, ciphertextPair->KLen);
+      status = bf_ibe_encrypt(&ciphertext->v[i * public_key->keyLength], pkr, (const uint8_t*)&bitPositions[i], sizeof(i), K, public_key->keyLength);
       if (status) {
         break;
       }
@@ -263,8 +263,9 @@ static int _bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertex
   return status;
 }
 
-int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertextPair,
-                            bloomfilter_enc_public_key_t* public_key) {
+int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_t* ciphertext,
+                            uint8_t* Kout,
+                            const bloomfilter_enc_public_key_t* public_key) {
   uint8_t K[public_key->keyLength];
   generateRandomBytes(K, public_key->keyLength);
 
@@ -280,16 +281,16 @@ int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertextPair,
     bn_new(r);
 
     ep_curve_get_ord(order);
-
-    unsigned int exponentLength  = bn_size_bin(order);
-    unsigned int totalRandLength = public_key->keyLength + exponentLength;
+    const unsigned int exponentLength  = bn_size_bin(order);
+    const unsigned int totalRandLength = public_key->keyLength + exponentLength;
     uint8_t randDigest[totalRandLength];
+    // (r, K') = R(K)
     SHAKE256(randDigest, totalRandLength, K, public_key->keyLength);
     bn_read_bin(r, randDigest, exponentLength);
 
-    status = _bloomfilter_enc_encrypt(ciphertextPair, public_key, r, K);
+    status = _bloomfilter_enc_encrypt(ciphertext, public_key, r, K);
     if (status == BFE_SUCCESS) {
-      memcpy(ciphertextPair->K, randDigest + exponentLength, public_key->keyLength);
+      memcpy(Kout, randDigest + exponentLength, public_key->keyLength);
     }
   }
   CATCH_ANY {
@@ -317,8 +318,8 @@ void bloomfilter_enc_puncture(bloomfilter_enc_secret_key_t* secret_key,
   }
 }
 
-int bloomfilter_enc_ciphertext_cmp(const bloomfilter_enc_ciphertext_t* ciphertext1,
-                                   const bloomfilter_enc_ciphertext_t* ciphertext2) {
+static int bloomfilter_enc_ciphertext_cmp(const bloomfilter_enc_ciphertext_t* ciphertext1,
+                                          const bloomfilter_enc_ciphertext_t* ciphertext2) {
   return (ep_cmp(ciphertext1->u, ciphertext2->u) == RLC_EQ &&
           ciphertext1->vLen == ciphertext2->vLen &&
           memcmp(ciphertext1->v, ciphertext2->v, ciphertext1->vLen) == 0)
@@ -353,8 +354,8 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
     return BFE_ERR_KEY_PUNCTURED;
   }
 
-  bloomfilter_enc_ciphertext_pair_t genCiphertextPair;
-  bloomfilter_enc_init_ciphertext_pair(&genCiphertextPair, public_key);
+  bloomfilter_enc_ciphertext_t check_ciphertext;
+  bloomfilter_enc_init_ciphertext(&check_ciphertext, public_key);
 
   bn_t r, order;
   bn_null(r);
@@ -372,9 +373,9 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
     SHAKE256(randDigest, totalRandLength, tempKey, public_key->keyLength);
     bn_read_bin(r, randDigest, exponentLength);
 
-    status = _bloomfilter_enc_encrypt(&genCiphertextPair, public_key, r, tempKey);
+    status = _bloomfilter_enc_encrypt(&check_ciphertext, public_key, r, tempKey);
 
-    if (!status && bloomfilter_enc_ciphertext_cmp(&genCiphertextPair.ciphertext, ciphertext) == 0) {
+    if (!status && bloomfilter_enc_ciphertext_cmp(&check_ciphertext, ciphertext) == 0) {
       memcpy(key, randDigest + exponentLength, public_key->keyLength);
     } else {
       logger_log(LOGGER_INFO, "Encryption failed or ciphertexts did not match");
@@ -387,7 +388,7 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
   FINALLY {
     bn_free(r);
     bn_free(order);
-    bloomfilter_enc_clear_ciphertext_pair(&genCiphertextPair);
+    bloomfilter_enc_clear_ciphertext(&check_ciphertext);
   }
 
   return status;
@@ -423,30 +424,10 @@ int bloomfilter_enc_init_ciphertext(bloomfilter_enc_ciphertext_t* ciphertext,
 
 void bloomfilter_enc_clear_ciphertext(bloomfilter_enc_ciphertext_t* ciphertext) {
   if (ciphertext) {
+    free(ciphertext->v);
     ep_free(ciphertext->u);
     ciphertext->vLen = 0;
-    free(ciphertext->v);
     ciphertext->v = NULL;
-  }
-}
-
-int bloomfilter_enc_init_ciphertext_pair(bloomfilter_enc_ciphertext_pair_t* pair,
-                                         const bloomfilter_enc_public_key_t* public_key) {
-  pair->KLen = public_key->keyLength;
-  pair->K    = calloc(sizeof(uint8_t), public_key->keyLength);
-  if (!pair->K) {
-    return BFE_ERR_GENERAL;
-  }
-
-  return bloomfilter_enc_init_ciphertext(&pair->ciphertext, public_key);
-}
-
-void bloomfilter_enc_clear_ciphertext_pair(bloomfilter_enc_ciphertext_pair_t* ciphertextPair) {
-  if (ciphertextPair) {
-    bloomfilter_enc_clear_ciphertext(&ciphertextPair->ciphertext);
-    ciphertextPair->KLen = 0;
-    free(ciphertextPair->K);
-    ciphertextPair->K = NULL;
   }
 }
 

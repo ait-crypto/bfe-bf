@@ -17,29 +17,29 @@ static void bench_bfe(void) {
   /* n=2^19 >= 2^12 per day for 3 months, correctness error ~ 2^-10 */
   BENCH_ONCE("keygen", bloomfilter_enc_setup(&pk, &sk, 32, 1 << 19, 0.0009765625));
 
-  bloomfilter_enc_ciphertext_pair_t ciphertextPair;
-  bloomfilter_enc_init_ciphertext_pair(&ciphertextPair, &pk);
+  bloomfilter_enc_ciphertext_t ciphertext;
+  bloomfilter_enc_init_ciphertext(&ciphertext, &pk);
 
-  uint8_t decrypted[pk.keyLength];
+  uint8_t K[pk.keyLength], decrypted[pk.keyLength];
   BENCH_BEGIN("encrypt") {
-    BENCH_ADD(bloomfilter_enc_encrypt(&ciphertextPair, &pk));
+    BENCH_ADD(bloomfilter_enc_encrypt(&ciphertext, K, &pk));
   }
   BENCH_END;
   BENCH_BEGIN("decrypt") {
-    bloomfilter_enc_encrypt(&ciphertextPair, &pk);
+    bloomfilter_enc_encrypt(&ciphertext, K, &pk);
     memset(decrypted, 0, pk.keyLength);
-    BENCH_ADD(bloomfilter_enc_decrypt(decrypted, &pk, &sk, &ciphertextPair.ciphertext));
+    BENCH_ADD(bloomfilter_enc_decrypt(decrypted, &pk, &sk, &ciphertext));
   }
   BENCH_END;
   BENCH_BEGIN("puncture") {
-    bloomfilter_enc_encrypt(&ciphertextPair, &pk);
-    BENCH_ADD(bloomfilter_enc_puncture(&sk, &ciphertextPair.ciphertext););
+    bloomfilter_enc_encrypt(&ciphertext, K, &pk);
+    BENCH_ADD(bloomfilter_enc_puncture(&sk, &ciphertext));
   }
   BENCH_END;
 
   bloomfilter_enc_clear_secret_key(&sk);
   bloomfilter_enc_clear_public_key(&pk);
-  bloomfilter_enc_clear_ciphertext_pair(&ciphertextPair);
+  bloomfilter_enc_clear_ciphertext(&ciphertext);
 }
 
 int main() {
