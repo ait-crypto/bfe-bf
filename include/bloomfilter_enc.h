@@ -76,19 +76,6 @@ BFE_VISIBLE int bloomfilter_enc_setup(bloomfilter_enc_public_key_t* public_key,
                                       double false_positive_probability);
 
 /**
- * Encrypts the key passed as a parameter.
- *
- * @param ciphertextPair[out] pair in form of (C, K), C being the ciphertext and K being the given
- * key
- * @param public_key[in] the public key
- * @param K[in] key to encapsulate
- * @return BFE_SUCCESS or BFE_ERR_*.
- */
-BFE_VISIBLE int bloomfilter_enc_encrypt_key(bloomfilter_enc_ciphertext_pair_t* ciphertextPair,
-                                            bloomfilter_enc_public_key_t* public_key,
-                                            const uint8_t* K);
-
-/**
  * Generates a random key K and encapsulates it.
  *
  * @param ciphertext_pair[out]  pair in form of (C, K), C being the ciphertext and K being the

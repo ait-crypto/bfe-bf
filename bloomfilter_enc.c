@@ -356,18 +356,19 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
   bloomfilter_enc_ciphertext_pair_t genCiphertextPair;
   bloomfilter_enc_init_ciphertext_pair(&genCiphertextPair, public_key);
 
-  bn_t r, group1Order;
+  bn_t r, order;
   bn_null(r);
-  bn_null(group1Order);
+  bn_null(order);
 
   TRY {
     bn_new(r);
-    bn_new(group1Order);
+    bn_new(order);
 
-    ep_curve_get_ord(group1Order);
-    unsigned int exponentLength  = bn_size_bin(group1Order);
-    unsigned int totalRandLength = public_key->keyLength + exponentLength;
+    ep_curve_get_ord(order);
+    const unsigned int exponentLength  = bn_size_bin(order);
+    const unsigned int totalRandLength = public_key->keyLength + exponentLength;
     uint8_t randDigest[totalRandLength];
+    // (r, K') = R(K)
     SHAKE256(randDigest, totalRandLength, tempKey, public_key->keyLength);
     bn_read_bin(r, randDigest, exponentLength);
 
@@ -385,7 +386,7 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
   }
   FINALLY {
     bn_free(r);
-    bn_free(group1Order);
+    bn_free(order);
     bloomfilter_enc_clear_ciphertext_pair(&genCiphertextPair);
   }
 
