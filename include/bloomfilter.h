@@ -3,6 +3,7 @@
 
 #include "bitset.h"
 
+#include <relic/relic.h>
 #include <stddef.h>
 
 typedef struct _bloomfilter_t {
@@ -48,7 +49,7 @@ BFE_VISIBLE bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveP
  * @param filter                    - the corresponding filter.
  * @return The size of the filter.
  */
-BFE_VISIBLE unsigned int bloomfilter_get_size(bloomfilter_t filter);
+BFE_VISIBLE unsigned int bloomfilter_get_size(bloomfilter_t* filter);
 
 /**
  * Returns the bit positions of the bloom filter that would be set for the given input. No bloom
@@ -57,23 +58,20 @@ BFE_VISIBLE unsigned int bloomfilter_get_size(bloomfilter_t filter);
  * @param positions[out]            - the returned array. The length of the array has to be equal to
  * hashCount.
  * @param input[in]                 - input element for the filter.
- * @param inputLen[in]              - length of input in bytes.
  * @param hashCount[in]             - number of hash function in the hypothetical bloom filter.
  * @param filterSize[in]            - size of the hypothetical bloom filter.
  * @return The size of the filter.
  */
-BFE_VISIBLE void bloomfilter_get_bit_positions(unsigned int* positions, const void* input,
-                                               size_t inputLen, unsigned int hashCount,
-                                               unsigned int filterSize);
+BFE_VISIBLE void bloomfilter_get_bit_positions(unsigned int* positions, const ep_t input,
+                                               unsigned int hashCount, unsigned int filterSize);
 
 /**
  * Adds a given element to the bloom filter.
  *
  * @param filter                    - the filter to which the element is being added.
  * @param input                     - input element for the filter.
- * @param inputLen                  - length of input in bytes.
  */
-BFE_VISIBLE void bloomfilter_add(bloomfilter_t* filter, const void* input, size_t inputLen);
+BFE_VISIBLE void bloomfilter_add(bloomfilter_t* filter, const ep_t input);
 
 /**
  * Sets all the bits of a bloom filter to FALSE.
@@ -88,11 +86,9 @@ BFE_VISIBLE void bloomfilter_reset(bloomfilter_t* filter);
  *
  * @param filter                    - the corresponding filter.
  * @param input                     - input element for the filter.
- * @param inputLen                  - length of input in bytes.
  * @return 0 if element is definitely not in the filter, 1 if element is likely in the filter.
  */
-BFE_VISIBLE int bloomfilter_maybe_contains(bloomfilter_t filter, const void* input,
-                                           size_t inputLen);
+BFE_VISIBLE int bloomfilter_maybe_contains(bloomfilter_t filter, const ep_t input);
 
 /**
  * Frees the memory allocated by the bloom filter. This method has to be called after the filter is

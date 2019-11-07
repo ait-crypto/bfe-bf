@@ -1,4 +1,6 @@
 #include "../include/bloomfilter.h"
+#undef DOUBLE
+#undef CALL
 
 #include <cgreen/cgreen.h>
 
@@ -7,19 +9,31 @@ BeforeEach(BF) {}
 AfterEach(BF) {}
 
 Ensure(BF, add) {
-  const uint8_t input1[2] = {'P', 'a'};
-  const uint8_t input2[2] = {'P', 'b'};
-  const uint8_t input3[2] = {'P', 'c'};
+  ep_t p1, p2, p3;
+  ep_null(p1);
+  ep_null(p2);
+  ep_null(p3);
+
+  ep_new(p1);
+  ep_new(p2);
+  ep_new(p3);
+
+  ep_rand(p1);
+  ep_rand(p2);
+  ep_rand(p3);
 
   bloomfilter_t bloom = bloomfilter_init(300, 0.001);
-  bloomfilter_add(&bloom, input1, sizeof(input1));
-  bloomfilter_add(&bloom, input2, sizeof(input2));
+  bloomfilter_add(&bloom, p1);
+  bloomfilter_add(&bloom, p2);
 
-  assert_true(bloomfilter_maybe_contains(bloom, input1, sizeof(input1)));
-  assert_true(bloomfilter_maybe_contains(bloom, input2, sizeof(input2)));
-  assert_false(bloomfilter_maybe_contains(bloom, input3, sizeof(input3)));
+  assert_true(bloomfilter_maybe_contains(bloom, p1));
+  assert_true(bloomfilter_maybe_contains(bloom, p2));
+  assert_false(bloomfilter_maybe_contains(bloom, p3));
 
   bloomfilter_clean(&bloom);
+  ep_free(p3);
+  ep_free(p2);
+  ep_free(p1);
 }
 
 int main() {

@@ -96,6 +96,7 @@ Ensure(BFE, keys_serialized) {
   assert_true(!bloomfilter_enc_init_secret_key(&sk));
   assert_true(!bloomfilter_enc_init_public_key(&pk));
   assert_true(!bloomfilter_enc_setup(&pk, &sk, 57, 50, 0.001));
+  assert_true(!bloomfilter_enc_init_public_key(&deserialized_pk));
 
   bloomfilter_enc_ciphertext_pair_t ciphertextPair;
   assert_true(!bloomfilter_enc_init_ciphertext_pair(&ciphertextPair, &pk));

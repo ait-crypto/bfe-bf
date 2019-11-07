@@ -37,7 +37,6 @@ add_subdirectory(zf_log)
 add_subdirectory(FIPS202-opt64)
 
 add_library(bfe SHARED
-            bfibe.c
             bitset.c
             bloomfilter.c
             bloomfilter_enc.c

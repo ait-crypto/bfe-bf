@@ -1,23 +1,23 @@
 #ifndef BFE_BLOOMFILTER_ENC_H
 #define BFE_BLOOMFILTER_ENC_H
 
-#include "bfibe.h"
 #include "bloomfilter.h"
 #include "macros.h"
 
-#include <relic/relic_epx.h>
+#include <relic/relic.h>
 
 typedef struct {
   unsigned int filterHashCount;
   unsigned int filterSize;
   unsigned int keyLength;
-  bf_ibe_public_key_t publicKey;
+
+  ep_t public_key;
 } bloomfilter_enc_public_key_t;
 
 typedef struct {
   bloomfilter_t filter;
-  unsigned int secretKeyLen;
-  bf_ibe_extracted_key_t* secretKey;
+  unsigned int secret_keys_len;
+  ep2_t* secret_keys;
 } bloomfilter_enc_secret_key_t;
 
 typedef struct {

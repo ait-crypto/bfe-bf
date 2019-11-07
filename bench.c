@@ -4,6 +4,8 @@
 #define BENCH 50
 #include <relic/relic_bench.h>
 
+#include <string.h>
+
 #include "include/bloomfilter_enc.h"
 
 static void bench_bfe(void) {
