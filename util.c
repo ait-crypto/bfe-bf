@@ -1,9 +1,9 @@
 #include "util.h"
 
+#include <endian.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <endian.h>
 
 #include <relic/relic.h>
 
@@ -11,8 +11,8 @@
 
 #if defined __GLIBC__ && defined __linux__
 #if __GLIBC__ > 2 || __GLIBC_MINOR__ > 24
-#include <sys/random.h>
 #include <errno.h>
+#include <sys/random.h>
 
 void generateRandomBytes(uint8_t* dst, unsigned int binSize) {
   const int ret = getrandom(dst, binSize, GRND_NONBLOCK);

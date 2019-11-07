@@ -9,8 +9,8 @@
 bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount) {
   bloomfilter_t bloomFilter;
 
-  bloomFilter.hashCount   = hashCount;
-  bloomFilter.bitSet      = bitset_init(size);
+  bloomFilter.hashCount = hashCount;
+  bloomFilter.bitSet    = bitset_init(size);
 
   return bloomFilter;
 }
@@ -52,8 +52,8 @@ static unsigned int get_position(uint32_t hash_idx, const uint8_t* input, size_t
 
 void bloomfilter_get_bit_positions(unsigned int* positions, const ep_t input,
                                    unsigned int hashCount, unsigned int filterSize) {
-  const unsigned int bin_size = ep_size_bin(input, 0);
-  uint8_t bin[2 * RLC_FP_BYTES + 1] = { 0 };
+  const unsigned int bin_size       = ep_size_bin(input, 0);
+  uint8_t bin[2 * RLC_FP_BYTES + 1] = {0};
   ep_write_bin(bin, sizeof(bin), input, 0);
 
   for (unsigned int i = 0; i < hashCount; i++) {
@@ -63,8 +63,8 @@ void bloomfilter_get_bit_positions(unsigned int* positions, const ep_t input,
 
 void bloomfilter_add(bloomfilter_t* filter, const ep_t input) {
   const unsigned int bloomfilter_size = bloomfilter_get_size(filter);
-  const unsigned int bin_size = ep_size_bin(input, 0);
-  uint8_t bin[2 * RLC_FP_BYTES + 1] = { 0 };
+  const unsigned int bin_size         = ep_size_bin(input, 0);
+  uint8_t bin[2 * RLC_FP_BYTES + 1]   = {0};
   ep_write_bin(bin, sizeof(bin), input, 0);
 
   for (unsigned int i = 0; i < filter->hashCount; i++) {
@@ -79,8 +79,8 @@ void bloomfilter_reset(bloomfilter_t* filter) {
 
 int bloomfilter_maybe_contains(bloomfilter_t filter, const ep_t input) {
   const unsigned int bloomfilter_size = bloomfilter_get_size(&filter);
-  const unsigned int bin_size = ep_size_bin(input, 0);
-  uint8_t bin[2 * RLC_FP_BYTES + 1] = { 0 };
+  const unsigned int bin_size         = ep_size_bin(input, 0);
+  uint8_t bin[2 * RLC_FP_BYTES + 1]   = {0};
   ep_write_bin(bin, sizeof(bin), input, 0);
 
   for (unsigned int i = 0; i < filter.hashCount; i++) {

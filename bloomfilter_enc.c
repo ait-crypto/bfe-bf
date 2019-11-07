@@ -1,14 +1,14 @@
-#include "include/bloomfilter_enc.h"
+#include "include/bfe.h"
 
-#include "FIPS202-opt64/SimpleFIPS202.h"
 #include "FIPS202-opt64/KeccakHash.h"
+#include "FIPS202-opt64/SimpleFIPS202.h"
 
 #include "include/bloomfilter.h"
 #include "include/err_codes.h"
 #include "logger.h"
 #include "util.h"
 
-static int bf_ibe_setup(bn_t secret_key, bloomfilter_enc_public_key_t* public_key) {
+static int bf_ibe_setup(bn_t secret_key, bfe_public_key_t* public_key) {
   int status = BFE_SUCCESS;
 
   bn_t order;
@@ -30,8 +30,8 @@ static int bf_ibe_setup(bn_t secret_key, bloomfilter_enc_public_key_t* public_ke
   return status;
 }
 
-static int bf_ibe_extract(ep2_t extracted_key, const bn_t secret_key,
-                   const uint8_t* id, size_t idLen) {
+static int bf_ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint8_t* id,
+                          size_t idLen) {
   int status = BFE_SUCCESS;
 
   ep2_t qid;
@@ -52,8 +52,8 @@ static int bf_ibe_extract(ep2_t extracted_key, const bn_t secret_key,
 
 // G(y) \xor K
 static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t y) {
-  const unsigned int size = fp12_size_bin(y, 0);
-  uint8_t bin[12 * RLC_FP_BYTES] = { 0 };
+  const unsigned int size        = fp12_size_bin(y, 0);
+  uint8_t bin[12 * RLC_FP_BYTES] = {0};
   fp12_write_bin(bin, size, y, 0);
 
   Keccak_HashInstance shake;
@@ -72,8 +72,8 @@ static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t 
   }
 }
 
-static int bf_ibe_encrypt(uint8_t* dst, ep_t pkr, const uint8_t* id,
-                          size_t id_len, const uint8_t* message, size_t message_len) {
+static int bf_ibe_encrypt(uint8_t* dst, ep_t pkr, const uint8_t* id, size_t id_len,
+                          const uint8_t* message, size_t message_len) {
   int status = BFE_SUCCESS;
   ep2_t qid;
   fp12_t t;
@@ -104,7 +104,7 @@ static int bf_ibe_encrypt(uint8_t* dst, ep_t pkr, const uint8_t* id,
 }
 
 static int bf_ibe_decrypt(uint8_t* message, ep_t g1r, const uint8_t* Kxored, size_t length,
-                   ep2_t secret_key) {
+                          ep2_t secret_key) {
   int status = BFE_SUCCESS;
   fp12_t t;
   fp12_null(t);
@@ -136,12 +136,12 @@ __attribute__((destructor)) static void clean_relic(void) {
   core_clean();
 }
 
-int bloomfilter_enc_init_secret_key(bloomfilter_enc_secret_key_t* secret_key) {
-  memset(secret_key, 0, sizeof(bloomfilter_enc_secret_key_t));
+int bfe_init_secret_key(bfe_secret_key_t* secret_key) {
+  memset(secret_key, 0, sizeof(bfe_secret_key_t));
   return BFE_SUCCESS;
 }
 
-void bloomfilter_enc_clear_secret_key(bloomfilter_enc_secret_key_t* secret_key) {
+void bfe_clear_secret_key(bfe_secret_key_t* secret_key) {
   if (secret_key) {
     if (secret_key->secret_keys) {
       for (unsigned int i = 0; i < secret_key->secret_keys_len; i++) {
@@ -158,21 +158,22 @@ void bloomfilter_enc_clear_secret_key(bloomfilter_enc_secret_key_t* secret_key) 
   }
 }
 
-int bloomfilter_enc_init_public_key(bloomfilter_enc_public_key_t* public_key) {
+int bfe_init_public_key(bfe_public_key_t* public_key) {
   public_key->filterHashCount = public_key->filterSize = public_key->keyLength = 0;
 
   int status = BFE_SUCCESS;
   ep_null(public_key->public_key);
   TRY {
     ep_new(public_key->public_key);
-  } CATCH_ANY {
+  }
+  CATCH_ANY {
     status = BFE_ERR_GENERAL;
   }
 
   return status;
 }
 
-void bloomfilter_enc_clear_public_key(bloomfilter_enc_public_key_t* public_key) {
+void bfe_clear_public_key(bfe_public_key_t* public_key) {
   if (public_key) {
     public_key->filterHashCount = public_key->filterSize = public_key->keyLength = 0;
 
@@ -181,9 +182,8 @@ void bloomfilter_enc_clear_public_key(bloomfilter_enc_public_key_t* public_key) 
   }
 }
 
-int bloomfilter_enc_setup(bloomfilter_enc_public_key_t* public_key,
-                          bloomfilter_enc_secret_key_t* secret_key, unsigned int keyLength,
-                          unsigned int filterElementNumber, double falsePositiveProbability) {
+int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsigned int keyLength,
+              unsigned int filterElementNumber, double falsePositiveProbability) {
   int status = BFE_SUCCESS;
   bn_t sk;
   bn_null(sk);
@@ -208,7 +208,7 @@ int bloomfilter_enc_setup(bloomfilter_enc_public_key_t* public_key,
 
     status = bf_ibe_setup(sk, public_key);
     if (!status) {
-      #pragma omp parallel for reduction(| : status)
+#pragma omp parallel for reduction(| : status)
       for (unsigned int i = 0; i < bloomSize; i++) {
         const uint32_t id = htole32(i);
         status |= bf_ibe_extract(secret_key->secret_keys[i], sk, (const uint8_t*)&id, sizeof(id));
@@ -226,9 +226,8 @@ end:
   return status;
 }
 
-static int _bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_t* ciphertext,
-                                    bloomfilter_enc_public_key_t* public_key, bn_t r,
-                                    const uint8_t* K) {
+static int _bfe_encrypt(bfe_ciphertext_t* ciphertext, bfe_public_key_t* public_key, bn_t r,
+                        const uint8_t* K) {
   int status = BFE_SUCCESS;
   unsigned int bitPositions[public_key->filterHashCount];
 
@@ -246,7 +245,9 @@ static int _bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_t* ciphertext,
                                   public_key->filterSize);
 
     for (unsigned int i = 0; i < public_key->filterHashCount; i++) {
-      status = bf_ibe_encrypt(&ciphertext->v[i * public_key->keyLength], pkr, (const uint8_t*)&bitPositions[i], sizeof(i), K, public_key->keyLength);
+      status =
+          bf_ibe_encrypt(&ciphertext->v[i * public_key->keyLength], pkr,
+                         (const uint8_t*)&bitPositions[i], sizeof(i), K, public_key->keyLength);
       if (status) {
         break;
       }
@@ -263,9 +264,7 @@ static int _bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_t* ciphertext,
   return status;
 }
 
-int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_t* ciphertext,
-                            uint8_t* Kout,
-                            const bloomfilter_enc_public_key_t* public_key) {
+int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key_t* public_key) {
   uint8_t K[public_key->keyLength];
   generateRandomBytes(K, public_key->keyLength);
 
@@ -288,7 +287,7 @@ int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_t* ciphertext,
     SHAKE256(randDigest, totalRandLength, K, public_key->keyLength);
     bn_read_bin(r, randDigest, exponentLength);
 
-    status = _bloomfilter_enc_encrypt(ciphertext, public_key, r, K);
+    status = _bfe_encrypt(ciphertext, public_key, r, K);
     if (status == BFE_SUCCESS) {
       memcpy(Kout, randDigest + exponentLength, public_key->keyLength);
     }
@@ -305,8 +304,7 @@ int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_t* ciphertext,
   return status;
 }
 
-void bloomfilter_enc_puncture(bloomfilter_enc_secret_key_t* secret_key,
-                              bloomfilter_enc_ciphertext_t* ciphertext) {
+void bfe_puncture(bfe_secret_key_t* secret_key, bfe_ciphertext_t* ciphertext) {
   unsigned int affectedIndexes[secret_key->filter.hashCount];
 
   bloomfilter_add(&secret_key->filter, ciphertext->u);
@@ -318,8 +316,8 @@ void bloomfilter_enc_puncture(bloomfilter_enc_secret_key_t* secret_key,
   }
 }
 
-static int bloomfilter_enc_ciphertext_cmp(const bloomfilter_enc_ciphertext_t* ciphertext1,
-                                          const bloomfilter_enc_ciphertext_t* ciphertext2) {
+static int bfe_ciphertext_cmp(const bfe_ciphertext_t* ciphertext1,
+                              const bfe_ciphertext_t* ciphertext2) {
   return (ep_cmp(ciphertext1->u, ciphertext2->u) == RLC_EQ &&
           ciphertext1->vLen == ciphertext2->vLen &&
           memcmp(ciphertext1->v, ciphertext2->v, ciphertext1->vLen) == 0)
@@ -327,9 +325,8 @@ static int bloomfilter_enc_ciphertext_cmp(const bloomfilter_enc_ciphertext_t* ci
              : 1;
 }
 
-int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_key,
-                            bloomfilter_enc_secret_key_t* secretKey,
-                            bloomfilter_enc_ciphertext_t* ciphertext) {
+int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* secretKey,
+                bfe_ciphertext_t* ciphertext) {
   int status = BFE_SUCCESS;
 
   uint8_t tempKey[public_key->keyLength];
@@ -354,8 +351,8 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
     return BFE_ERR_KEY_PUNCTURED;
   }
 
-  bloomfilter_enc_ciphertext_t check_ciphertext;
-  bloomfilter_enc_init_ciphertext(&check_ciphertext, public_key);
+  bfe_ciphertext_t check_ciphertext;
+  bfe_init_ciphertext(&check_ciphertext, public_key);
 
   bn_t r, order;
   bn_null(r);
@@ -373,9 +370,9 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
     SHAKE256(randDigest, totalRandLength, tempKey, public_key->keyLength);
     bn_read_bin(r, randDigest, exponentLength);
 
-    status = _bloomfilter_enc_encrypt(&check_ciphertext, public_key, r, tempKey);
+    status = _bfe_encrypt(&check_ciphertext, public_key, r, tempKey);
 
-    if (!status && bloomfilter_enc_ciphertext_cmp(&check_ciphertext, ciphertext) == 0) {
+    if (!status && bfe_ciphertext_cmp(&check_ciphertext, ciphertext) == 0) {
       memcpy(key, randDigest + exponentLength, public_key->keyLength);
     } else {
       logger_log(LOGGER_INFO, "Encryption failed or ciphertexts did not match");
@@ -388,13 +385,13 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
   FINALLY {
     bn_free(r);
     bn_free(order);
-    bloomfilter_enc_clear_ciphertext(&check_ciphertext);
+    bfe_clear_ciphertext(&check_ciphertext);
   }
 
   return status;
 }
 
-static int init_ciphertext(bloomfilter_enc_ciphertext_t* ciphertext, unsigned int hash_count,
+static int init_ciphertext(bfe_ciphertext_t* ciphertext, unsigned int hash_count,
                            unsigned int key_length) {
   int status = BFE_SUCCESS;
 
@@ -417,27 +414,26 @@ static int init_ciphertext(bloomfilter_enc_ciphertext_t* ciphertext, unsigned in
   return status;
 }
 
-int bloomfilter_enc_init_ciphertext(bloomfilter_enc_ciphertext_t* ciphertext,
-                                    const bloomfilter_enc_public_key_t* public_key) {
+int bfe_init_ciphertext(bfe_ciphertext_t* ciphertext, const bfe_public_key_t* public_key) {
   return init_ciphertext(ciphertext, public_key->filterHashCount, public_key->keyLength);
 }
 
-void bloomfilter_enc_clear_ciphertext(bloomfilter_enc_ciphertext_t* ciphertext) {
+void bfe_clear_ciphertext(bfe_ciphertext_t* ciphertext) {
   if (ciphertext) {
     free(ciphertext->v);
     ep_free(ciphertext->u);
     ciphertext->vLen = 0;
-    ciphertext->v = NULL;
+    ciphertext->v    = NULL;
   }
 }
 
-unsigned int bloomfilter_enc_ciphertext_size_bin(const bloomfilter_enc_ciphertext_t* ciphertext) {
+unsigned int bfe_ciphertext_size_bin(const bfe_ciphertext_t* ciphertext) {
   return 2 * sizeof(uint32_t) + ep_size_bin(ciphertext->u, 0) + ciphertext->vLen;
 }
 
-void bloomfilter_enc_ciphertext_write_bin(uint8_t* bin, bloomfilter_enc_ciphertext_t* ciphertext) {
+void bfe_ciphertext_write_bin(uint8_t* bin, bfe_ciphertext_t* ciphertext) {
   const uint32_t uLen     = ep_size_bin(ciphertext->u, 0);
-  const uint32_t totalLen = bloomfilter_enc_ciphertext_size_bin(ciphertext);
+  const uint32_t totalLen = bfe_ciphertext_size_bin(ciphertext);
 
   write_u32(&bin, totalLen);
   write_u32(&bin, uLen);
@@ -446,7 +442,7 @@ void bloomfilter_enc_ciphertext_write_bin(uint8_t* bin, bloomfilter_enc_cipherte
   memcpy(&bin[uLen], ciphertext->v, ciphertext->vLen);
 }
 
-int bloomfilter_enc_ciphertext_read_bin(bloomfilter_enc_ciphertext_t* ciphertext, const uint8_t* bin) {
+int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin) {
   const uint32_t totalLen = read_u32(&bin);
   const uint32_t uLen     = read_u32(&bin);
   const unsigned int vLen = totalLen - uLen - 2 * sizeof(uint32_t);
@@ -463,7 +459,7 @@ int bloomfilter_enc_ciphertext_read_bin(bloomfilter_enc_ciphertext_t* ciphertext
     memcpy(ciphertext->v, &bin[uLen], vLen);
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in bloomfilter_enc_ciphertext_read_bin function.");
+    logger_log(LOGGER_ERROR, "Error occurred in bfe_ciphertext_read_bin function.");
     status = BFE_ERR_GENERAL;
   }
   FINALLY {}
@@ -471,12 +467,12 @@ int bloomfilter_enc_ciphertext_read_bin(bloomfilter_enc_ciphertext_t* ciphertext
   return status;
 }
 
-unsigned int bloomfilter_enc_public_key_size_bin(const bloomfilter_enc_public_key_t* public_key) {
+unsigned int bfe_public_key_size_bin(const bfe_public_key_t* public_key) {
   return 4 * sizeof(uint32_t) + ep_size_bin(public_key->public_key, 0);
 }
 
-void bloomfilter_enc_public_key_write_bin(uint8_t* bin, bloomfilter_enc_public_key_t* public_key) {
-  const unsigned int keyLen     = ep_size_bin(public_key->public_key, 0);
+void bfe_public_key_write_bin(uint8_t* bin, bfe_public_key_t* public_key) {
+  const unsigned int keyLen = ep_size_bin(public_key->public_key, 0);
 
   write_u32(&bin, public_key->filterHashCount);
   write_u32(&bin, public_key->filterSize);
@@ -485,7 +481,7 @@ void bloomfilter_enc_public_key_write_bin(uint8_t* bin, bloomfilter_enc_public_k
   ep_write_bin(bin, keyLen, public_key->public_key, 0);
 }
 
-int bloomfilter_enc_public_key_read_bin(bloomfilter_enc_public_key_t* public_key, const uint8_t* bin) {
+int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* bin) {
   public_key->filterHashCount = read_u32(&bin);
   public_key->filterSize      = read_u32(&bin);
   public_key->keyLength       = read_u32(&bin);
@@ -497,7 +493,7 @@ int bloomfilter_enc_public_key_read_bin(bloomfilter_enc_public_key_t* public_key
     ep_read_bin(public_key->public_key, bin, keyLen);
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in bloomfilter_enc_public_key_read_bin function.");
+    logger_log(LOGGER_ERROR, "Error occurred in bfe_public_key_read_bin function.");
     status = BFE_ERR_GENERAL;
   }
   FINALLY {}
@@ -505,7 +501,7 @@ int bloomfilter_enc_public_key_read_bin(bloomfilter_enc_public_key_t* public_key
   return status;
 }
 
-unsigned int bloomfilter_enc_secret_key_size_bin(const bloomfilter_enc_secret_key_t* secret_key) {
+unsigned int bfe_secret_key_size_bin(const bfe_secret_key_t* secret_key) {
   unsigned int num_keys = 0;
   for (unsigned int i = 0; i < secret_key->filter.bitSet.size; i++) {
     if (bitset_get(secret_key->filter.bitSet, i) == 0) {
@@ -513,10 +509,11 @@ unsigned int bloomfilter_enc_secret_key_size_bin(const bloomfilter_enc_secret_ke
     }
   }
 
-  return 3 * sizeof(uint32_t) + BITSET_SIZE(secret_key->filter.bitSet.size) * sizeof(uint64_t) + num_keys * ep2_size_bin(secret_key->secret_keys[0], 0);
+  return 3 * sizeof(uint32_t) + BITSET_SIZE(secret_key->filter.bitSet.size) * sizeof(uint64_t) +
+         num_keys * ep2_size_bin(secret_key->secret_keys[0], 0);
 }
 
-void bloomfilter_enc_secret_key_write_bin(uint8_t* bin, bloomfilter_enc_secret_key_t* secret_key) {
+void bfe_secret_key_write_bin(uint8_t* bin, bfe_secret_key_t* secret_key) {
   write_u32(&bin, secret_key->filter.hashCount);
   write_u32(&bin, secret_key->filter.bitSet.size);
   for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitSet.size); ++i) {
@@ -533,8 +530,8 @@ void bloomfilter_enc_secret_key_write_bin(uint8_t* bin, bloomfilter_enc_secret_k
   }
 }
 
-int bloomfilter_enc_secret_key_read_bin(bloomfilter_enc_secret_key_t* secret_key, const uint8_t* bin) {
-  const unsigned int hash_count = read_u32(&bin);
+int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint8_t* bin) {
+  const unsigned int hash_count  = read_u32(&bin);
   const unsigned int filter_size = read_u32(&bin);
 
   secret_key->filter = bloomfilter_init_fixed(filter_size, hash_count);
@@ -542,9 +539,9 @@ int bloomfilter_enc_secret_key_read_bin(bloomfilter_enc_secret_key_t* secret_key
     secret_key->filter.bitSet.bitArray[i] = read_u64(&bin);
   }
   secret_key->secret_keys_len = filter_size;
-  secret_key->secret_keys = calloc(filter_size, sizeof(ep2_t));
+  secret_key->secret_keys     = calloc(filter_size, sizeof(ep2_t));
 
-  int status = BFE_SUCCESS;
+  int status                        = BFE_SUCCESS;
   const unsigned int secret_key_len = read_u32(&bin);
   TRY {
     for (unsigned int i = 0; i < filter_size; i++) {
@@ -557,7 +554,7 @@ int bloomfilter_enc_secret_key_read_bin(bloomfilter_enc_secret_key_t* secret_key
     }
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in bloomfilter_enc_secret_key_read_bin function.");
+    logger_log(LOGGER_ERROR, "Error occurred in bfe_secret_key_read_bin function.");
     status = BFE_ERR_GENERAL;
   }
   FINALLY {}

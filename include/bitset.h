@@ -39,7 +39,8 @@ static inline void bitset_set(bitset_t* bitset, unsigned int index) {
  * @return 0 if the bit is FALSE, non-0 if the bit is TRUE.
  */
 static inline uint64_t bitset_get(bitset_t bitSet, unsigned int index) {
-  return bitSet.bitArray[index / BITSET_WORD_BITS] & (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
+  return bitSet.bitArray[index / BITSET_WORD_BITS] &
+         (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
 }
 
 /**
@@ -57,4 +58,4 @@ BFE_VISIBLE void bitset_reset(bitset_t* bitSet);
  */
 BFE_VISIBLE void bitset_clean(bitset_t* bitset);
 
-#endif // MASTER_PROJECT_BITSET_H
+#endif // BFE_BITSET_H

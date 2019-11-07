@@ -1,9 +1,9 @@
-#ifndef MASTER_PROJECT_UTIL_H
-#define MASTER_PROJECT_UTIL_H
+#ifndef BFE_UTIL_H
+#define BFE_UTIL_H
 
+#include <endian.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <endian.h>
 #include <string.h>
 
 void generateRandomBytes(uint8_t* bin, unsigned int binSize);
@@ -34,4 +34,4 @@ static inline uint64_t read_u64(const uint8_t** src) {
   return le64toh(v);
 }
 
-#endif // MASTER_PROJECT_UTIL_H
+#endif // BFE_UTIL_H

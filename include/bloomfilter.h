@@ -1,5 +1,5 @@
-#ifndef MASTER_PROJECT_BLOOMFILTER_H
-#define MASTER_PROJECT_BLOOMFILTER_H
+#ifndef BFE_BLOOMFILTER_H
+#define BFE_BLOOMFILTER_H
 
 #include "bitset.h"
 
@@ -98,4 +98,4 @@ BFE_VISIBLE int bloomfilter_maybe_contains(bloomfilter_t filter, const ep_t inpu
  */
 BFE_VISIBLE void bloomfilter_clean(bloomfilter_t* filter);
 
-#endif // MASTER_PROJECT_BLOOMFILTER_H
+#endif // BFE_BLOOMFILTER_H

@@ -1,4 +1,4 @@
-#include "../include/bloomfilter_enc.h"
+#include "../include/bfe.h"
 #undef DOUBLE
 #undef CALL
 
@@ -9,123 +9,123 @@ BeforeEach(BFE) {}
 AfterEach(BFE) {}
 
 Ensure(BFE, encrypt_decrypt) {
-  bloomfilter_enc_secret_key_t sk;
-  bloomfilter_enc_public_key_t pk;
+  bfe_secret_key_t sk;
+  bfe_public_key_t pk;
 
-  assert_true(!bloomfilter_enc_init_secret_key(&sk));
-  assert_true(!bloomfilter_enc_init_public_key(&pk));
-  assert_true(!bloomfilter_enc_setup(&pk, &sk, 57, 50, 0.001));
+  assert_true(!bfe_init_secret_key(&sk));
+  assert_true(!bfe_init_public_key(&pk));
+  assert_true(!bfe_setup(&pk, &sk, 57, 50, 0.001));
 
-  bloomfilter_enc_ciphertext_t ciphertext;
+  bfe_ciphertext_t ciphertext;
 
   uint8_t K[pk.keyLength], decrypted[pk.keyLength];
   memset(decrypted, 0, pk.keyLength);
-  assert_true(!bloomfilter_enc_init_ciphertext(&ciphertext, &pk));
-  assert_true(!bloomfilter_enc_encrypt(&ciphertext, K, &pk));
-  assert_true(!bloomfilter_enc_decrypt(decrypted, &pk, &sk, &ciphertext));
+  assert_true(!bfe_init_ciphertext(&ciphertext, &pk));
+  assert_true(!bfe_encrypt(&ciphertext, K, &pk));
+  assert_true(!bfe_decrypt(decrypted, &pk, &sk, &ciphertext));
   assert_true(!memcmp(K, decrypted, pk.keyLength));
 
-  bloomfilter_enc_clear_secret_key(&sk);
-  bloomfilter_enc_clear_public_key(&pk);
-  bloomfilter_enc_clear_ciphertext(&ciphertext);
+  bfe_clear_secret_key(&sk);
+  bfe_clear_public_key(&pk);
+  bfe_clear_ciphertext(&ciphertext);
 }
 
 Ensure(BFE, encrypt_decrypt_serialized) {
-  bloomfilter_enc_secret_key_t sk;
-  bloomfilter_enc_public_key_t pk;
+  bfe_secret_key_t sk;
+  bfe_public_key_t pk;
 
-  assert_true(!bloomfilter_enc_init_secret_key(&sk));
-  assert_true(!bloomfilter_enc_init_public_key(&pk));
-  assert_true(!bloomfilter_enc_setup(&pk, &sk, 57, 50, 0.001));
+  assert_true(!bfe_init_secret_key(&sk));
+  assert_true(!bfe_init_public_key(&pk));
+  assert_true(!bfe_setup(&pk, &sk, 57, 50, 0.001));
 
-  bloomfilter_enc_ciphertext_t ciphertext;
-  bloomfilter_enc_ciphertext_t deserialized_ciphertext;
+  bfe_ciphertext_t ciphertext;
+  bfe_ciphertext_t deserialized_ciphertext;
 
   uint8_t K[pk.keyLength], decrypted[pk.keyLength];
   memset(decrypted, 0, pk.keyLength);
 
-  assert_true(!bloomfilter_enc_init_ciphertext(&ciphertext, &pk));
-  assert_true(!bloomfilter_enc_encrypt(&ciphertext, K, &pk));
+  assert_true(!bfe_init_ciphertext(&ciphertext, &pk));
+  assert_true(!bfe_encrypt(&ciphertext, K, &pk));
 
-  const size_t csize = bloomfilter_enc_ciphertext_size_bin(&ciphertext);
+  const size_t csize = bfe_ciphertext_size_bin(&ciphertext);
   uint8_t bin[csize];
 
-  bloomfilter_enc_ciphertext_write_bin(bin, &ciphertext);
-  assert_true(!bloomfilter_enc_ciphertext_read_bin(&deserialized_ciphertext, bin));
+  bfe_ciphertext_write_bin(bin, &ciphertext);
+  assert_true(!bfe_ciphertext_read_bin(&deserialized_ciphertext, bin));
 
-  assert_true(!bloomfilter_enc_decrypt(decrypted, &pk, &sk, &deserialized_ciphertext));
+  assert_true(!bfe_decrypt(decrypted, &pk, &sk, &deserialized_ciphertext));
   assert_true(!memcmp(K, decrypted, pk.keyLength));
 
-  bloomfilter_enc_clear_secret_key(&sk);
-  bloomfilter_enc_clear_public_key(&pk);
-  bloomfilter_enc_clear_ciphertext(&deserialized_ciphertext);
-  bloomfilter_enc_clear_ciphertext(&ciphertext);
+  bfe_clear_secret_key(&sk);
+  bfe_clear_public_key(&pk);
+  bfe_clear_ciphertext(&deserialized_ciphertext);
+  bfe_clear_ciphertext(&ciphertext);
 }
 
 Ensure(BFE, decrypt_punctured) {
-  bloomfilter_enc_secret_key_t sk;
-  bloomfilter_enc_public_key_t pk;
+  bfe_secret_key_t sk;
+  bfe_public_key_t pk;
 
-  assert_true(!bloomfilter_enc_init_secret_key(&sk));
-  assert_true(!bloomfilter_enc_init_public_key(&pk));
-  assert_true(!bloomfilter_enc_setup(&pk, &sk, 57, 50, 0.001));
+  assert_true(!bfe_init_secret_key(&sk));
+  assert_true(!bfe_init_public_key(&pk));
+  assert_true(!bfe_setup(&pk, &sk, 57, 50, 0.001));
 
-  bloomfilter_enc_ciphertext_t ciphertext;
+  bfe_ciphertext_t ciphertext;
 
   uint8_t K[pk.keyLength], decrypted[pk.keyLength];
   memset(decrypted, 0, pk.keyLength);
 
-  assert_true(!bloomfilter_enc_init_ciphertext(&ciphertext, &pk));
-  assert_true(!bloomfilter_enc_encrypt(&ciphertext, K, &pk));
-  bloomfilter_enc_puncture(&sk, &ciphertext);
+  assert_true(!bfe_init_ciphertext(&ciphertext, &pk));
+  assert_true(!bfe_encrypt(&ciphertext, K, &pk));
+  bfe_puncture(&sk, &ciphertext);
 
-  assert_false(!bloomfilter_enc_decrypt(decrypted, &pk, &sk, &ciphertext));
+  assert_false(!bfe_decrypt(decrypted, &pk, &sk, &ciphertext));
 
-  bloomfilter_enc_clear_secret_key(&sk);
-  bloomfilter_enc_clear_public_key(&pk);
-  bloomfilter_enc_clear_ciphertext(&ciphertext);
+  bfe_clear_secret_key(&sk);
+  bfe_clear_public_key(&pk);
+  bfe_clear_ciphertext(&ciphertext);
 }
 
 Ensure(BFE, keys_serialized) {
-  bloomfilter_enc_secret_key_t sk;
-  bloomfilter_enc_public_key_t pk;
+  bfe_secret_key_t sk;
+  bfe_public_key_t pk;
 
-  bloomfilter_enc_secret_key_t deserialized_sk;
-  bloomfilter_enc_public_key_t deserialized_pk;
+  bfe_secret_key_t deserialized_sk;
+  bfe_public_key_t deserialized_pk;
 
-  assert_true(!bloomfilter_enc_init_secret_key(&sk));
-  assert_true(!bloomfilter_enc_init_public_key(&pk));
-  assert_true(!bloomfilter_enc_setup(&pk, &sk, 57, 50, 0.001));
-  assert_true(!bloomfilter_enc_init_public_key(&deserialized_pk));
+  assert_true(!bfe_init_secret_key(&sk));
+  assert_true(!bfe_init_public_key(&pk));
+  assert_true(!bfe_setup(&pk, &sk, 57, 50, 0.001));
+  assert_true(!bfe_init_public_key(&deserialized_pk));
 
-  bloomfilter_enc_ciphertext_t ciphertext;
-  assert_true(!bloomfilter_enc_init_ciphertext(&ciphertext, &pk));
+  bfe_ciphertext_t ciphertext;
+  assert_true(!bfe_init_ciphertext(&ciphertext, &pk));
 
-  uint8_t pk_bin[bloomfilter_enc_public_key_size_bin(&pk)];
-  bloomfilter_enc_public_key_write_bin(pk_bin, &pk);
-  assert_true(!bloomfilter_enc_public_key_read_bin(&deserialized_pk, pk_bin));
+  uint8_t pk_bin[bfe_public_key_size_bin(&pk)];
+  bfe_public_key_write_bin(pk_bin, &pk);
+  assert_true(!bfe_public_key_read_bin(&deserialized_pk, pk_bin));
 
-  uint8_t* sk_bin = malloc(bloomfilter_enc_secret_key_size_bin(&sk));
-  bloomfilter_enc_secret_key_write_bin(sk_bin, &sk);
-  assert_true(!bloomfilter_enc_secret_key_read_bin(&deserialized_sk, sk_bin));
+  uint8_t* sk_bin = malloc(bfe_secret_key_size_bin(&sk));
+  bfe_secret_key_write_bin(sk_bin, &sk);
+  assert_true(!bfe_secret_key_read_bin(&deserialized_sk, sk_bin));
   free(sk_bin);
 
   uint8_t K[pk.keyLength], decrypted[pk.keyLength];
   memset(decrypted, 0, pk.keyLength);
 
-  assert_true(!bloomfilter_enc_encrypt(&ciphertext, K, &deserialized_pk));
-  assert_true(!bloomfilter_enc_decrypt(decrypted, &pk, &sk, &ciphertext));
+  assert_true(!bfe_encrypt(&ciphertext, K, &deserialized_pk));
+  assert_true(!bfe_decrypt(decrypted, &pk, &sk, &ciphertext));
   assert_true(!memcmp(K, decrypted, pk.keyLength));
 
-  assert_true(!bloomfilter_enc_encrypt(&ciphertext, K, &pk));
-  assert_true(!bloomfilter_enc_decrypt(decrypted, &pk, &deserialized_sk, &ciphertext));
+  assert_true(!bfe_encrypt(&ciphertext, K, &pk));
+  assert_true(!bfe_decrypt(decrypted, &pk, &deserialized_sk, &ciphertext));
   assert_true(!memcmp(K, decrypted, pk.keyLength));
 
-  bloomfilter_enc_clear_ciphertext(&ciphertext);
-  bloomfilter_enc_clear_secret_key(&deserialized_sk);
-  bloomfilter_enc_clear_public_key(&deserialized_pk);
-  bloomfilter_enc_clear_secret_key(&sk);
-  bloomfilter_enc_clear_public_key(&pk);
+  bfe_clear_ciphertext(&ciphertext);
+  bfe_clear_secret_key(&deserialized_sk);
+  bfe_clear_public_key(&deserialized_pk);
+  bfe_clear_secret_key(&sk);
+  bfe_clear_public_key(&pk);
 }
 
 int main() {
