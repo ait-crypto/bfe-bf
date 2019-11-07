@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 # honor visibility properties
 cmake_policy(SET CMP0063 NEW)
+# enforce IPO if enabled
+cmake_policy(SET CMP0069 NEW)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 if(NOT CMAKE_BUILD_TYPE)
@@ -15,6 +17,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 include(GNUInstallDirs)
 include(CheckCCompilerFlag)
+include(CheckIPOSupported)
 
 function(check_c_compiler_flag_and_add flag result)
   check_c_compiler_flag("${flag}" ${result})
@@ -27,6 +30,8 @@ check_c_compiler_flag_and_add(-Wall CC_SUPPORTS_WALL)
 check_c_compiler_flag_and_add(-Wextra CC_SUPPORTS_WEXTRA)
 check_c_compiler_flag_and_add(-Wshadow CC_SUPPORTS_WSHADOW)
 check_c_compiler_flag_and_add(-Werror=implicit-function-declaration CC_SUPPORTS_WERROR_IMPLICIT_FUNCTION_DECLARATION)
+
+check_ipo_supported(RESULT LTO_SUPPORTED)
 
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/zf_log/CMakeLists.txt)
   set(HAVE_ZFLOG 1)
@@ -53,6 +58,10 @@ add_library(bfe SHARED
 
 set_target_properties(bfe PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(bfe PROPERTIES C_VISIBILITY_PRESET hidden)
+if (LTO_SUPPORTED)
+  set_target_properties(bfe PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
 configure_file(bfe.pc.in bfe.pc @ONLY)
 
 target_link_libraries(bfe PUBLIC ${RELIC_LIBRARY})
