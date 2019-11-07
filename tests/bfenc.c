@@ -101,7 +101,7 @@ Ensure(BFE, keys_serialized) {
   bfe_ciphertext_t ciphertext;
   assert_true(!bfe_init_ciphertext(&ciphertext, &pk));
 
-  uint8_t pk_bin[bfe_public_key_size_bin(&pk)];
+  uint8_t pk_bin[bfe_public_key_size_bin()];
   bfe_public_key_write_bin(pk_bin, &pk);
   assert_true(!bfe_public_key_read_bin(&deserialized_pk, pk_bin));
 

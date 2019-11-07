@@ -6,6 +6,10 @@
 #include "logger.h"
 #include "util.h"
 
+#define EP_SIZE (1 + 2 * RLC_FP_BYTES)
+#define EP2_SIZE (1 + 4 * RLC_FP_BYTES)
+#define FP12_SIZE (12 * RLC_FP_BYTES)
+
 static int bf_ibe_setup(bn_t secret_key, bfe_public_key_t* public_key) {
   int status = BFE_SUCCESS;
 
@@ -51,8 +55,8 @@ static int bf_ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint
 // G(y) \xor K
 static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t y) {
   const unsigned int size        = fp12_size_bin(y, 0);
-  uint8_t bin[12 * RLC_FP_BYTES] = {0};
-  fp12_write_bin(bin, size, y, 0);
+  uint8_t bin[FP12_SIZE] = {0};
+  fp12_write_bin(bin, sizeof(FP12_SIZE), y, 0);
 
   Keccak_HashInstance shake;
   Keccak_HashInitialize_SHAKE256(&shake);
@@ -430,24 +434,22 @@ void bfe_clear_ciphertext(bfe_ciphertext_t* ciphertext) {
 }
 
 unsigned int bfe_ciphertext_size_bin(const bfe_ciphertext_t* ciphertext) {
-  return 2 * sizeof(uint32_t) + ep_size_bin(ciphertext->u, 0) + ciphertext->vLen;
+  return 1 * sizeof(uint32_t) + EP_SIZE + ciphertext->vLen;
 }
 
 void bfe_ciphertext_write_bin(uint8_t* bin, bfe_ciphertext_t* ciphertext) {
-  const uint32_t uLen     = ep_size_bin(ciphertext->u, 0);
+  const uint32_t uLen     = EP_SIZE;
   const uint32_t totalLen = bfe_ciphertext_size_bin(ciphertext);
 
   write_u32(&bin, totalLen);
-  write_u32(&bin, uLen);
 
-  ep_write_bin(bin, ep_size_bin(ciphertext->u, 0), ciphertext->u, 0);
+  ep_write_bin(bin, EP_SIZE, ciphertext->u, 0);
   memcpy(&bin[uLen], ciphertext->v, ciphertext->vLen);
 }
 
 int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin) {
   const uint32_t totalLen = read_u32(&bin);
-  const uint32_t uLen     = read_u32(&bin);
-  const unsigned int vLen = totalLen - uLen - 2 * sizeof(uint32_t);
+  const unsigned int vLen = totalLen - EP_SIZE - 1 * sizeof(uint32_t);
 
   if (init_ciphertext(ciphertext, 1, vLen)) {
     logger_log(LOGGER_ERROR, "Failed to init ciphertext");
@@ -456,9 +458,9 @@ int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin) {
 
   int status = BFE_SUCCESS;
   TRY {
-    ep_read_bin(ciphertext->u, bin, uLen);
+    ep_read_bin(ciphertext->u, bin, EP_SIZE);
     ciphertext->vLen = vLen;
-    memcpy(ciphertext->v, &bin[uLen], vLen);
+    memcpy(ciphertext->v, &bin[EP_SIZE], vLen);
   }
   CATCH_ANY {
     logger_log(LOGGER_ERROR, "Error occurred in bfe_ciphertext_read_bin function.");
@@ -469,18 +471,16 @@ int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin) {
   return status;
 }
 
-unsigned int bfe_public_key_size_bin(const bfe_public_key_t* public_key) {
-  return 4 * sizeof(uint32_t) + ep_size_bin(public_key->public_key, 0);
+unsigned int bfe_public_key_size_bin(void) {
+  return 3 * sizeof(uint32_t) + EP_SIZE;
 }
 
 void bfe_public_key_write_bin(uint8_t* bin, bfe_public_key_t* public_key) {
-  const unsigned int keyLen = ep_size_bin(public_key->public_key, 0);
 
   write_u32(&bin, public_key->filterHashCount);
   write_u32(&bin, public_key->filterSize);
   write_u32(&bin, public_key->keyLength);
-  write_u32(&bin, keyLen);
-  ep_write_bin(bin, keyLen, public_key->public_key, 0);
+  ep_write_bin(bin, EP_SIZE, public_key->public_key, 0);
 }
 
 int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* bin) {
@@ -488,11 +488,9 @@ int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* bin) {
   public_key->filterSize      = read_u32(&bin);
   public_key->keyLength       = read_u32(&bin);
 
-  const unsigned int keyLen = read_u32(&bin);
-
   int status = BFE_SUCCESS;
   TRY {
-    ep_read_bin(public_key->public_key, bin, keyLen);
+    ep_read_bin(public_key->public_key, bin, EP_SIZE);
   }
   CATCH_ANY {
     logger_log(LOGGER_ERROR, "Error occurred in bfe_public_key_read_bin function.");
@@ -511,8 +509,8 @@ unsigned int bfe_secret_key_size_bin(const bfe_secret_key_t* secret_key) {
     }
   }
 
-  return 3 * sizeof(uint32_t) + BITSET_SIZE(secret_key->filter.bitSet.size) * sizeof(uint64_t) +
-         num_keys * ep2_size_bin(secret_key->secret_keys[0], 0);
+  return 2 * sizeof(uint32_t) + BITSET_SIZE(secret_key->filter.bitSet.size) * sizeof(uint64_t) +
+         num_keys * EP2_SIZE;
 }
 
 void bfe_secret_key_write_bin(uint8_t* bin, bfe_secret_key_t* secret_key) {
@@ -522,12 +520,10 @@ void bfe_secret_key_write_bin(uint8_t* bin, bfe_secret_key_t* secret_key) {
     write_u64(&bin, secret_key->filter.bitSet.bitArray[i]);
   }
 
-  const unsigned int secret_key_len = ep2_size_bin(secret_key->secret_keys[0], 0);
-  write_u32(&bin, secret_key_len);
   for (unsigned int i = 0; i < secret_key->filter.bitSet.size; i++) {
     if (bitset_get(secret_key->filter.bitSet, i) == 0) {
-      ep2_write_bin(bin, secret_key_len, secret_key->secret_keys[i], 0);
-      bin += secret_key_len;
+      ep2_write_bin(bin, EP2_SIZE, secret_key->secret_keys[i], 0);
+      bin += EP2_SIZE;
     }
   }
 }
@@ -544,14 +540,12 @@ int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint8_t* bin) {
   secret_key->secret_keys     = calloc(filter_size, sizeof(ep2_t));
 
   int status                        = BFE_SUCCESS;
-  const unsigned int secret_key_len = read_u32(&bin);
   TRY {
     for (unsigned int i = 0; i < filter_size; i++) {
       if (bitset_get(secret_key->filter.bitSet, i) == 0) {
-        // ep2_null(secret_key->secret_keys[i]);
         ep2_new(secret_key->secret_keys[i]);
-        ep2_read_bin(secret_key->secret_keys[i], bin, secret_key_len);
-        bin += secret_key_len;
+        ep2_read_bin(secret_key->secret_keys[i], bin, EP2_SIZE);
+        bin += EP2_SIZE;
       }
     }
   }

@@ -171,10 +171,9 @@ BFE_VISIBLE int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint
 /**
  * Calculates number of bytes needed to store a given public key.
  *
- * @param public_key[in] the public key.
  * @return Number of bytes needed to store the public key.
  */
-BFE_VISIBLE unsigned int bfe_public_key_size_bin(const bfe_public_key_t* public_key);
+BFE_VISIBLE unsigned int bfe_public_key_size_bin(void);
 
 /**
  * Writes a given public key to a byte array.
