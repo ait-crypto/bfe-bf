@@ -1,8 +1,6 @@
 #include "include/bfe.h"
 
 #include "FIPS202-opt64/KeccakHash.h"
-#include "FIPS202-opt64/SimpleFIPS202.h"
-
 #include "include/bloomfilter.h"
 #include "include/err_codes.h"
 #include "logger.h"
@@ -269,27 +267,29 @@ int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_ke
   generateRandomBytes(K, public_key->keyLength);
 
   int status = BFE_SUCCESS;
-  bn_t order;
   bn_t r;
-
-  bn_null(order);
   bn_null(r);
 
   TRY {
-    bn_new(order);
     bn_new(r);
 
-    ep_curve_get_ord(order);
-    const unsigned int exponentLength  = bn_size_bin(order);
-    const unsigned int totalRandLength = public_key->keyLength + exponentLength;
-    uint8_t randDigest[totalRandLength];
-    // (r, K') = R(K)
-    SHAKE256(randDigest, totalRandLength, K, public_key->keyLength);
-    bn_read_bin(r, randDigest, exponentLength);
+    ep_curve_get_ord(r);
+    const unsigned int exponentLength  = bn_size_bin(r);
+
+    Keccak_HashInstance shake;
+    Keccak_HashInitialize_SHAKE256(&shake);
+    Keccak_HashUpdate(&shake, K, public_key->keyLength * 8);
+    Keccak_HashFinal(&shake, NULL);
+
+    // r of (r, K') = R(K)
+    uint8_t buf[exponentLength];
+    Keccak_HashSqueeze(&shake, buf, exponentLength * 8);
+    bn_read_bin(r, buf, exponentLength);
 
     status = _bfe_encrypt(ciphertext, public_key, r, K);
     if (status == BFE_SUCCESS) {
-      memcpy(Kout, randDigest + exponentLength, public_key->keyLength);
+      // K' of (r, K') = R(K)
+      Keccak_HashSqueeze(&shake, Kout, public_key->keyLength * 8);
     }
   }
   CATCH_ANY {
@@ -297,7 +297,6 @@ int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_ke
     status = BFE_ERR_GENERAL;
   }
   FINALLY {
-    bn_free(order);
     bn_free(r);
   }
 
@@ -354,26 +353,30 @@ int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* se
   bfe_ciphertext_t check_ciphertext;
   bfe_init_ciphertext(&check_ciphertext, public_key);
 
-  bn_t r, order;
+  bn_t r;
   bn_null(r);
-  bn_null(order);
 
   TRY {
     bn_new(r);
-    bn_new(order);
 
-    ep_curve_get_ord(order);
-    const unsigned int exponentLength  = bn_size_bin(order);
-    const unsigned int totalRandLength = public_key->keyLength + exponentLength;
-    uint8_t randDigest[totalRandLength];
-    // (r, K') = R(K)
-    SHAKE256(randDigest, totalRandLength, tempKey, public_key->keyLength);
-    bn_read_bin(r, randDigest, exponentLength);
+    ep_curve_get_ord(r);
+    const unsigned int exponentLength  = bn_size_bin(r);
+
+    Keccak_HashInstance shake;
+    Keccak_HashInitialize_SHAKE256(&shake);
+    Keccak_HashUpdate(&shake, tempKey, public_key->keyLength * 8);
+    Keccak_HashFinal(&shake, NULL);
+
+    // r of (r, K') = R(K)
+    uint8_t buf[exponentLength];
+    Keccak_HashSqueeze(&shake, buf, exponentLength * 8);
+    bn_read_bin(r, buf, exponentLength);
 
     status = _bfe_encrypt(&check_ciphertext, public_key, r, tempKey);
 
     if (!status && bfe_ciphertext_cmp(&check_ciphertext, ciphertext) == 0) {
-      memcpy(key, randDigest + exponentLength, public_key->keyLength);
+      // K' of (r, K') = R(K)
+      Keccak_HashSqueeze(&shake, key, public_key->keyLength * 8);
     } else {
       logger_log(LOGGER_INFO, "Encryption failed or ciphertexts did not match");
     }
@@ -384,7 +387,6 @@ int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* se
   }
   FINALLY {
     bn_free(r);
-    bn_free(order);
     bfe_clear_ciphertext(&check_ciphertext);
   }
 

@@ -53,8 +53,7 @@ add_library(bfe SHARED
             util.c
             FIPS202-opt64/KeccakHash.c
             FIPS202-opt64/KeccakP-1600-opt64.c
-            FIPS202-opt64/KeccakSpongeWidth1600.c
-            FIPS202-opt64/SimpleFIPS202.c)
+            FIPS202-opt64/KeccakSpongeWidth1600.c)
 
 set_target_properties(bfe PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(bfe PROPERTIES C_VISIBILITY_PRESET hidden)
