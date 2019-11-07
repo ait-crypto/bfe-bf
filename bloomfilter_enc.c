@@ -231,7 +231,6 @@ static int _bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertex
                                     const uint8_t* K) {
   int status = BFE_SUCCESS;
   unsigned int bitPositions[public_key->filterHashCount];
-  memcpy(ciphertextPair->K, K, ciphertextPair->KLen);
 
   ep_t pkr;
   ep_null(pkr);
@@ -264,8 +263,11 @@ static int _bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertex
   return status;
 }
 
-int bloomfilter_enc_encrypt_key(bloomfilter_enc_ciphertext_pair_t* ciphertextPair,
-                                bloomfilter_enc_public_key_t* public_key, const uint8_t* K) {
+int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertextPair,
+                            bloomfilter_enc_public_key_t* public_key) {
+  uint8_t K[public_key->keyLength];
+  generateRandomBytes(K, public_key->keyLength);
+
   int status = BFE_SUCCESS;
   bn_t order;
   bn_t r;
@@ -286,6 +288,9 @@ int bloomfilter_enc_encrypt_key(bloomfilter_enc_ciphertext_pair_t* ciphertextPai
     bn_read_bin(r, randDigest, exponentLength);
 
     status = _bloomfilter_enc_encrypt(ciphertextPair, public_key, r, K);
+    if (status == BFE_SUCCESS) {
+      memcpy(ciphertextPair->K, randDigest + exponentLength, public_key->keyLength);
+    }
   }
   CATCH_ANY {
     logger_log(LOGGER_ERROR, "Error occurred in Bloom Filter Encryption encrypt function.");
@@ -297,14 +302,6 @@ int bloomfilter_enc_encrypt_key(bloomfilter_enc_ciphertext_pair_t* ciphertextPai
   }
 
   return status;
-}
-
-int bloomfilter_enc_encrypt(bloomfilter_enc_ciphertext_pair_t* ciphertextPair,
-                            bloomfilter_enc_public_key_t* public_key) {
-  uint8_t K[public_key->keyLength];
-  generateRandomBytes(K, public_key->keyLength);
-
-  return bloomfilter_enc_encrypt_key(ciphertextPair, public_key, K);
 }
 
 void bloomfilter_enc_puncture(bloomfilter_enc_secret_key_t* secret_key,
@@ -377,7 +374,7 @@ int bloomfilter_enc_decrypt(uint8_t* key, bloomfilter_enc_public_key_t* public_k
     status = _bloomfilter_enc_encrypt(&genCiphertextPair, public_key, r, tempKey);
 
     if (!status && bloomfilter_enc_ciphertext_cmp(&genCiphertextPair.ciphertext, ciphertext) == 0) {
-      memcpy(key, tempKey, public_key->keyLength);
+      memcpy(key, randDigest + exponentLength, public_key->keyLength);
     } else {
       logger_log(LOGGER_INFO, "Encryption failed or ciphertexts did not match");
     }
