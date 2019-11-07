@@ -8,7 +8,7 @@
 
 typedef struct _bloomfilter_t {
   unsigned int hashCount;
-  bitset_t bitSet;
+  bitset_t bitset;
 } bloomfilter_t;
 
 /**

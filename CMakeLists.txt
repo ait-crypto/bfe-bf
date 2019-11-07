@@ -47,7 +47,6 @@ if(HAVE_ZFLOG)
 endif()
 
 add_library(bfe SHARED
-            bitset.c
             bloomfilter.c
             bloomfilter_enc.c
             util.c

@@ -147,7 +147,7 @@ void bfe_clear_secret_key(bfe_secret_key_t* secret_key) {
   if (secret_key) {
     if (secret_key->secret_keys) {
       for (unsigned int i = 0; i < secret_key->secret_keys_len; i++) {
-        if (bitset_get(secret_key->filter.bitSet, i) == 0) {
+        if (bitset_get(secret_key->filter.bitset, i) == 0) {
           ep2_set_infty(secret_key->secret_keys[i]);
           ep2_free(secret_key->secret_keys[i]);
         }
@@ -340,7 +340,7 @@ int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* se
 
   status = BFE_ERR_GENERAL;
   for (unsigned int i = 0; i < secretKey->filter.hashCount; i++) {
-    if (bitset_get(secretKey->filter.bitSet, affectedIndexes[i]) == 0) {
+    if (bitset_get(secretKey->filter.bitset, affectedIndexes[i]) == 0) {
       status = bf_ibe_decrypt(tempKey, ciphertext->u, &ciphertext->v[i * public_key->keyLength],
                               public_key->keyLength, secretKey->secret_keys[affectedIndexes[i]]);
       if (status == BFE_SUCCESS) {
@@ -503,25 +503,25 @@ int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* bin) {
 
 unsigned int bfe_secret_key_size_bin(const bfe_secret_key_t* secret_key) {
   unsigned int num_keys = 0;
-  for (unsigned int i = 0; i < secret_key->filter.bitSet.size; i++) {
-    if (bitset_get(secret_key->filter.bitSet, i) == 0) {
+  for (unsigned int i = 0; i < secret_key->filter.bitset.size; i++) {
+    if (bitset_get(secret_key->filter.bitset, i) == 0) {
       ++num_keys;
     }
   }
 
-  return 2 * sizeof(uint32_t) + BITSET_SIZE(secret_key->filter.bitSet.size) * sizeof(uint64_t) +
+  return 2 * sizeof(uint32_t) + BITSET_SIZE(secret_key->filter.bitset.size) * sizeof(uint64_t) +
          num_keys * EP2_SIZE;
 }
 
 void bfe_secret_key_write_bin(uint8_t* bin, bfe_secret_key_t* secret_key) {
   write_u32(&bin, secret_key->filter.hashCount);
-  write_u32(&bin, secret_key->filter.bitSet.size);
-  for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitSet.size); ++i) {
-    write_u64(&bin, secret_key->filter.bitSet.bitArray[i]);
+  write_u32(&bin, secret_key->filter.bitset.size);
+  for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitset.size); ++i) {
+    write_u64(&bin, secret_key->filter.bitset.bits[i]);
   }
 
-  for (unsigned int i = 0; i < secret_key->filter.bitSet.size; i++) {
-    if (bitset_get(secret_key->filter.bitSet, i) == 0) {
+  for (unsigned int i = 0; i < secret_key->filter.bitset.size; i++) {
+    if (bitset_get(secret_key->filter.bitset, i) == 0) {
       ep2_write_bin(bin, EP2_SIZE, secret_key->secret_keys[i], 0);
       bin += EP2_SIZE;
     }
@@ -533,8 +533,8 @@ int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint8_t* bin) {
   const unsigned int filter_size = read_u32(&bin);
 
   secret_key->filter = bloomfilter_init_fixed(filter_size, hash_count);
-  for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitSet.size); ++i) {
-    secret_key->filter.bitSet.bitArray[i] = read_u64(&bin);
+  for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitset.size); ++i) {
+    secret_key->filter.bitset.bits[i] = read_u64(&bin);
   }
   secret_key->secret_keys_len = filter_size;
   secret_key->secret_keys     = calloc(filter_size, sizeof(ep2_t));
@@ -542,7 +542,7 @@ int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint8_t* bin) {
   int status                        = BFE_SUCCESS;
   TRY {
     for (unsigned int i = 0; i < filter_size; i++) {
-      if (bitset_get(secret_key->filter.bitSet, i) == 0) {
+      if (bitset_get(secret_key->filter.bitset, i) == 0) {
         ep2_new(secret_key->secret_keys[i]);
         ep2_read_bin(secret_key->secret_keys[i], bin, EP2_SIZE);
         bin += EP2_SIZE;

@@ -10,7 +10,7 @@ bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount) 
   bloomfilter_t bloomFilter;
 
   bloomFilter.hashCount = hashCount;
-  bloomFilter.bitSet    = bitset_init(size);
+  bloomFilter.bitset    = bitset_init(size);
 
   return bloomFilter;
 }
@@ -20,13 +20,13 @@ bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability) 
 
   const unsigned int bitset_size = bloomfilter_get_needed_size(n, falsePositiveProbability);
   bloomFilter.hashCount          = ceil((bitset_size / (double)n) * log(2));
-  bloomFilter.bitSet             = bitset_init(bitset_size);
+  bloomFilter.bitset             = bitset_init(bitset_size);
 
   return bloomFilter;
 }
 
 unsigned int bloomfilter_get_size(bloomfilter_t* filter) {
-  return filter->bitSet.size;
+  return filter->bitset.size;
 }
 
 unsigned int bloomfilter_get_needed_size(unsigned int n, double falsePositiveProbability) {
@@ -69,12 +69,12 @@ void bloomfilter_add(bloomfilter_t* filter, const ep_t input) {
 
   for (unsigned int i = 0; i < filter->hashCount; i++) {
     unsigned int pos = get_position(i, bin, bin_size, bloomfilter_size);
-    bitset_set(&filter->bitSet, pos);
+    bitset_set(&filter->bitset, pos);
   }
 }
 
 void bloomfilter_reset(bloomfilter_t* filter) {
-  bitset_reset(&filter->bitSet);
+  bitset_reset(&filter->bitset);
 }
 
 int bloomfilter_maybe_contains(bloomfilter_t filter, const ep_t input) {
@@ -85,7 +85,7 @@ int bloomfilter_maybe_contains(bloomfilter_t filter, const ep_t input) {
 
   for (unsigned int i = 0; i < filter.hashCount; i++) {
     unsigned int pos = get_position(i, bin, bin_size, bloomfilter_size);
-    if (!bitset_get(filter.bitSet, pos)) {
+    if (!bitset_get(filter.bitset, pos)) {
       return 0;
     }
   }
@@ -94,5 +94,5 @@ int bloomfilter_maybe_contains(bloomfilter_t filter, const ep_t input) {
 }
 
 void bloomfilter_clean(bloomfilter_t* filter) {
-  bitset_clean(&filter->bitSet);
+  bitset_clean(&filter->bitset);
 }
