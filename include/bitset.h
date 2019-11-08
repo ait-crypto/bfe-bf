@@ -46,8 +46,8 @@ static inline void bitset_set(bitset_t* bitset, unsigned int index) {
  * @param index                     - the index of the bit in question.
  * @return 0 if the bit is FALSE, non-0 if the bit is TRUE.
  */
-static inline uint64_t bitset_get(bitset_t bitset, unsigned int index) {
-  return bitset.bits[index / BITSET_WORD_BITS] & (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
+static inline uint64_t bitset_get(const bitset_t* bitset, unsigned int index) {
+  return bitset->bits[index / BITSET_WORD_BITS] & (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
 }
 
 /**

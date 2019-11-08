@@ -48,7 +48,7 @@ endif()
 
 add_library(bfe SHARED
             bloomfilter.c
-            bloomfilter_enc.c
+            bfe.c
             util.c
             FIPS202-opt64/KeccakHash.c
             FIPS202-opt64/KeccakP-1600-opt64.c

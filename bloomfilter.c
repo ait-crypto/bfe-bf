@@ -85,7 +85,7 @@ int bloomfilter_maybe_contains(const bloomfilter_t* filter, const ep_t input) {
 
   for (unsigned int i = 0; i < filter->hash_count; i++) {
     unsigned int pos = get_position(i, bin, bin_size, bloomfilter_size);
-    if (!bitset_get(filter->bitset, pos)) {
+    if (!bitset_get(&filter->bitset, pos)) {
       return 0;
     }
   }
