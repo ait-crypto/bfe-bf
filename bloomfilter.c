@@ -10,7 +10,7 @@ bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hash_count)
   bloomfilter_t bloomFilter;
 
   bloomFilter.hash_count = hash_count;
-  bloomFilter.bitset    = bitset_init(size);
+  bloomFilter.bitset     = bitset_init(size);
 
   return bloomFilter;
 }
@@ -19,7 +19,7 @@ bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability) 
   bloomfilter_t bloomFilter;
 
   const unsigned int bitset_size = bloomfilter_get_needed_size(n, falsePositiveProbability);
-  bloomFilter.hash_count          = ceil((bitset_size / (double)n) * log(2));
+  bloomFilter.hash_count         = ceil((bitset_size / (double)n) * log(2));
   bloomFilter.bitset             = bitset_init(bitset_size);
 
   return bloomFilter;

@@ -24,7 +24,7 @@ typedef struct {
 static inline bitset_t bitset_init(unsigned int size) {
   bitset_t bitset;
   bitset.bits = calloc(BITSET_SIZE(size), sizeof(uint64_t));
-  bitset.size     = size;
+  bitset.size = size;
 
   return bitset;
 }
@@ -47,8 +47,7 @@ static inline void bitset_set(bitset_t* bitset, unsigned int index) {
  * @return 0 if the bit is FALSE, non-0 if the bit is TRUE.
  */
 static inline uint64_t bitset_get(bitset_t bitset, unsigned int index) {
-  return bitset.bits[index / BITSET_WORD_BITS] &
-         (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
+  return bitset.bits[index / BITSET_WORD_BITS] & (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
 }
 
 /**
@@ -70,7 +69,7 @@ static inline void bitset_clean(bitset_t* bitset) {
   if (bitset) {
     free(bitset->bits);
     bitset->bits = NULL;
-    bitset->size     = 0;
+    bitset->size = 0;
   }
 }
 

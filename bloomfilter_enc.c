@@ -54,8 +54,8 @@ static int bf_ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint
 
 // G(y) \xor K
 static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t y) {
-  const unsigned int size        = fp12_size_bin(y, 0);
-  uint8_t bin[FP12_SIZE] = {0};
+  const unsigned int size = fp12_size_bin(y, 0);
+  uint8_t bin[FP12_SIZE]  = {0};
   fp12_write_bin(bin, sizeof(FP12_SIZE), y, 0);
 
   Keccak_HashInstance shake;
@@ -199,11 +199,11 @@ int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsign
     goto end;
   }
 
-  public_key->key_size       = key_size;
-  public_key->filter_size      = bloomSize;
+  public_key->key_size          = key_size;
+  public_key->filter_size       = bloomSize;
   public_key->filter_hash_count = filter.hash_count;
-  secret_key->secret_keys_len = bloomSize;
-  secret_key->filter          = filter;
+  secret_key->secret_keys_len   = bloomSize;
+  secret_key->filter            = filter;
 
   TRY {
     bn_new(sk);
@@ -247,9 +247,8 @@ static int _bfe_encrypt(bfe_ciphertext_t* ciphertext, bfe_public_key_t* public_k
                                   public_key->filter_size);
 
     for (unsigned int i = 0; i < public_key->filter_hash_count; i++) {
-      status =
-          bf_ibe_encrypt(&ciphertext->v[i * public_key->key_size], pkr,
-                         (const uint8_t*)&bitPositions[i], sizeof(i), K, public_key->key_size);
+      status = bf_ibe_encrypt(&ciphertext->v[i * public_key->key_size], pkr,
+                              (const uint8_t*)&bitPositions[i], sizeof(i), K, public_key->key_size);
       if (status) {
         break;
       }
@@ -278,7 +277,7 @@ int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_ke
     bn_new(r);
 
     ep_curve_get_ord(r);
-    const unsigned int exponentLength  = bn_size_bin(r);
+    const unsigned int exponentLength = bn_size_bin(r);
 
     Keccak_HashInstance shake;
     Keccak_HashInitialize_SHAKE256(&shake);
@@ -364,7 +363,7 @@ int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* se
     bn_new(r);
 
     ep_curve_get_ord(r);
-    const unsigned int exponentLength  = bn_size_bin(r);
+    const unsigned int exponentLength = bn_size_bin(r);
 
     Keccak_HashInstance shake;
     Keccak_HashInitialize_SHAKE256(&shake);
@@ -411,7 +410,7 @@ static int init_ciphertext(bfe_ciphertext_t* ciphertext, unsigned int hash_count
 
   if (!status) {
     ciphertext->v_size = hash_count * key_length;
-    ciphertext->v    = calloc(hash_count, key_length);
+    ciphertext->v      = calloc(hash_count, key_length);
     if (!ciphertext->v) {
       status = BFE_ERR_GENERAL;
     }
@@ -429,7 +428,7 @@ void bfe_clear_ciphertext(bfe_ciphertext_t* ciphertext) {
     free(ciphertext->v);
     ep_free(ciphertext->u);
     ciphertext->v_size = 0;
-    ciphertext->v    = NULL;
+    ciphertext->v      = NULL;
   }
 }
 
@@ -438,13 +437,13 @@ unsigned int bfe_ciphertext_size_bin(const bfe_ciphertext_t* ciphertext) {
 }
 
 void bfe_ciphertext_write_bin(uint8_t* bin, bfe_ciphertext_t* ciphertext) {
-  const uint32_t uLen     = EP_SIZE;
+  const uint32_t u_size     = EP_SIZE;
   const uint32_t total_size = bfe_ciphertext_size_bin(ciphertext);
 
   write_u32(&bin, total_size);
 
   ep_write_bin(bin, EP_SIZE, ciphertext->u, 0);
-  memcpy(&bin[uLen], ciphertext->v, ciphertext->v_size);
+  memcpy(&bin[u_size], ciphertext->v, ciphertext->v_size);
 }
 
 int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin) {
@@ -485,8 +484,8 @@ void bfe_public_key_write_bin(uint8_t* bin, bfe_public_key_t* public_key) {
 
 int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* bin) {
   public_key->filter_hash_count = read_u32(&bin);
-  public_key->filter_size      = read_u32(&bin);
-  public_key->key_size       = read_u32(&bin);
+  public_key->filter_size       = read_u32(&bin);
+  public_key->key_size          = read_u32(&bin);
 
   int status = BFE_SUCCESS;
   TRY {
@@ -539,7 +538,7 @@ int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint8_t* bin) {
   secret_key->secret_keys_len = filter_size;
   secret_key->secret_keys     = calloc(filter_size, sizeof(ep2_t));
 
-  int status                        = BFE_SUCCESS;
+  int status = BFE_SUCCESS;
   TRY {
     for (unsigned int i = 0; i < filter_size; i++) {
       if (bitset_get(secret_key->filter.bitset, i) == 0) {
