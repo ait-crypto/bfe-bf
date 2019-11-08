@@ -20,14 +20,14 @@ static void bench_bfe(void) {
   bfe_ciphertext_t ciphertext;
   bfe_init_ciphertext(&ciphertext, &pk);
 
-  uint8_t K[pk.keyLength], decrypted[pk.keyLength];
+  uint8_t K[pk.key_size], decrypted[pk.key_size];
   BENCH_BEGIN("encrypt") {
     BENCH_ADD(bfe_encrypt(&ciphertext, K, &pk));
   }
   BENCH_END;
   BENCH_BEGIN("decrypt") {
     bfe_encrypt(&ciphertext, K, &pk);
-    memset(decrypted, 0, pk.keyLength);
+    memset(decrypted, 0, pk.key_size);
     BENCH_ADD(bfe_decrypt(decrypted, &pk, &sk, &ciphertext));
   }
   BENCH_END;

@@ -6,10 +6,10 @@
 #include "FIPS202-opt64/KeccakHash.h"
 #include "include/bloomfilter.h"
 
-bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hashCount) {
+bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hash_count) {
   bloomfilter_t bloomFilter;
 
-  bloomFilter.hashCount = hashCount;
+  bloomFilter.hash_count = hash_count;
   bloomFilter.bitset    = bitset_init(size);
 
   return bloomFilter;
@@ -19,13 +19,13 @@ bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability) 
   bloomfilter_t bloomFilter;
 
   const unsigned int bitset_size = bloomfilter_get_needed_size(n, falsePositiveProbability);
-  bloomFilter.hashCount          = ceil((bitset_size / (double)n) * log(2));
+  bloomFilter.hash_count          = ceil((bitset_size / (double)n) * log(2));
   bloomFilter.bitset             = bitset_init(bitset_size);
 
   return bloomFilter;
 }
 
-unsigned int bloomfilter_get_size(bloomfilter_t* filter) {
+unsigned int bloomfilter_get_size(const bloomfilter_t* filter) {
   return filter->bitset.size;
 }
 
@@ -51,13 +51,13 @@ static unsigned int get_position(uint32_t hash_idx, const uint8_t* input, size_t
 }
 
 void bloomfilter_get_bit_positions(unsigned int* positions, const ep_t input,
-                                   unsigned int hashCount, unsigned int filterSize) {
+                                   unsigned int hash_count, unsigned int filter_size) {
   const unsigned int bin_size       = ep_size_bin(input, 0);
   uint8_t bin[2 * RLC_FP_BYTES + 1] = {0};
   ep_write_bin(bin, sizeof(bin), input, 0);
 
-  for (unsigned int i = 0; i < hashCount; i++) {
-    positions[i] = get_position(i, bin, bin_size, filterSize);
+  for (unsigned int i = 0; i < hash_count; i++) {
+    positions[i] = get_position(i, bin, bin_size, filter_size);
   }
 }
 
@@ -67,7 +67,7 @@ void bloomfilter_add(bloomfilter_t* filter, const ep_t input) {
   uint8_t bin[2 * RLC_FP_BYTES + 1]   = {0};
   ep_write_bin(bin, sizeof(bin), input, 0);
 
-  for (unsigned int i = 0; i < filter->hashCount; i++) {
+  for (unsigned int i = 0; i < filter->hash_count; i++) {
     unsigned int pos = get_position(i, bin, bin_size, bloomfilter_size);
     bitset_set(&filter->bitset, pos);
   }
@@ -77,15 +77,15 @@ void bloomfilter_reset(bloomfilter_t* filter) {
   bitset_reset(&filter->bitset);
 }
 
-int bloomfilter_maybe_contains(bloomfilter_t filter, const ep_t input) {
-  const unsigned int bloomfilter_size = bloomfilter_get_size(&filter);
+int bloomfilter_maybe_contains(const bloomfilter_t* filter, const ep_t input) {
+  const unsigned int bloomfilter_size = bloomfilter_get_size(filter);
   const unsigned int bin_size         = ep_size_bin(input, 0);
   uint8_t bin[2 * RLC_FP_BYTES + 1]   = {0};
   ep_write_bin(bin, sizeof(bin), input, 0);
 
-  for (unsigned int i = 0; i < filter.hashCount; i++) {
+  for (unsigned int i = 0; i < filter->hash_count; i++) {
     unsigned int pos = get_position(i, bin, bin_size, bloomfilter_size);
-    if (!bitset_get(filter.bitset, pos)) {
+    if (!bitset_get(filter->bitset, pos)) {
       return 0;
     }
   }

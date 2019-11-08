@@ -161,7 +161,7 @@ void bfe_clear_secret_key(bfe_secret_key_t* secret_key) {
 }
 
 int bfe_init_public_key(bfe_public_key_t* public_key) {
-  public_key->filterHashCount = public_key->filterSize = public_key->keyLength = 0;
+  public_key->filter_hash_count = public_key->filter_size = public_key->key_size = 0;
 
   int status = BFE_SUCCESS;
   ep_null(public_key->public_key);
@@ -177,14 +177,14 @@ int bfe_init_public_key(bfe_public_key_t* public_key) {
 
 void bfe_clear_public_key(bfe_public_key_t* public_key) {
   if (public_key) {
-    public_key->filterHashCount = public_key->filterSize = public_key->keyLength = 0;
+    public_key->filter_hash_count = public_key->filter_size = public_key->key_size = 0;
 
     ep_free(public_key->public_key);
     ep_null(public_key->public_key);
   }
 }
 
-int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsigned int keyLength,
+int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsigned int key_size,
               unsigned int filterElementNumber, double falsePositiveProbability) {
   int status = BFE_SUCCESS;
   bn_t sk;
@@ -199,9 +199,9 @@ int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsign
     goto end;
   }
 
-  public_key->keyLength       = keyLength;
-  public_key->filterSize      = bloomSize;
-  public_key->filterHashCount = filter.hashCount;
+  public_key->key_size       = key_size;
+  public_key->filter_size      = bloomSize;
+  public_key->filter_hash_count = filter.hash_count;
   secret_key->secret_keys_len = bloomSize;
   secret_key->filter          = filter;
 
@@ -231,7 +231,7 @@ end:
 static int _bfe_encrypt(bfe_ciphertext_t* ciphertext, bfe_public_key_t* public_key, bn_t r,
                         const uint8_t* K) {
   int status = BFE_SUCCESS;
-  unsigned int bitPositions[public_key->filterHashCount];
+  unsigned int bitPositions[public_key->filter_hash_count];
 
   ep_t pkr;
   ep_null(pkr);
@@ -243,13 +243,13 @@ static int _bfe_encrypt(bfe_ciphertext_t* ciphertext, bfe_public_key_t* public_k
     ep_new(pkr);
     ep_mul(pkr, public_key->public_key, r);
 
-    bloomfilter_get_bit_positions(bitPositions, ciphertext->u, public_key->filterHashCount,
-                                  public_key->filterSize);
+    bloomfilter_get_bit_positions(bitPositions, ciphertext->u, public_key->filter_hash_count,
+                                  public_key->filter_size);
 
-    for (unsigned int i = 0; i < public_key->filterHashCount; i++) {
+    for (unsigned int i = 0; i < public_key->filter_hash_count; i++) {
       status =
-          bf_ibe_encrypt(&ciphertext->v[i * public_key->keyLength], pkr,
-                         (const uint8_t*)&bitPositions[i], sizeof(i), K, public_key->keyLength);
+          bf_ibe_encrypt(&ciphertext->v[i * public_key->key_size], pkr,
+                         (const uint8_t*)&bitPositions[i], sizeof(i), K, public_key->key_size);
       if (status) {
         break;
       }
@@ -267,8 +267,8 @@ static int _bfe_encrypt(bfe_ciphertext_t* ciphertext, bfe_public_key_t* public_k
 }
 
 int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key_t* public_key) {
-  uint8_t K[public_key->keyLength];
-  generateRandomBytes(K, public_key->keyLength);
+  uint8_t K[public_key->key_size];
+  generateRandomBytes(K, public_key->key_size);
 
   int status = BFE_SUCCESS;
   bn_t r;
@@ -282,7 +282,7 @@ int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_ke
 
     Keccak_HashInstance shake;
     Keccak_HashInitialize_SHAKE256(&shake);
-    Keccak_HashUpdate(&shake, K, public_key->keyLength * 8);
+    Keccak_HashUpdate(&shake, K, public_key->key_size * 8);
     Keccak_HashFinal(&shake, NULL);
 
     // r of (r, K') = R(K)
@@ -293,7 +293,7 @@ int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_ke
     status = _bfe_encrypt(ciphertext, public_key, r, K);
     if (status == BFE_SUCCESS) {
       // K' of (r, K') = R(K)
-      Keccak_HashSqueeze(&shake, Kout, public_key->keyLength * 8);
+      Keccak_HashSqueeze(&shake, Kout, public_key->key_size * 8);
     }
   }
   CATCH_ANY {
@@ -308,12 +308,12 @@ int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_ke
 }
 
 void bfe_puncture(bfe_secret_key_t* secret_key, bfe_ciphertext_t* ciphertext) {
-  unsigned int affectedIndexes[secret_key->filter.hashCount];
+  unsigned int affectedIndexes[secret_key->filter.hash_count];
 
   bloomfilter_add(&secret_key->filter, ciphertext->u);
-  bloomfilter_get_bit_positions(affectedIndexes, ciphertext->u, secret_key->filter.hashCount,
+  bloomfilter_get_bit_positions(affectedIndexes, ciphertext->u, secret_key->filter.hash_count,
                                 bloomfilter_get_size(&secret_key->filter));
-  for (unsigned int i = 0; i < secret_key->filter.hashCount; i++) {
+  for (unsigned int i = 0; i < secret_key->filter.hash_count; i++) {
     ep2_set_infty(secret_key->secret_keys[affectedIndexes[i]]);
     ep2_free(secret_key->secret_keys[affectedIndexes[i]]);
   }
@@ -322,8 +322,8 @@ void bfe_puncture(bfe_secret_key_t* secret_key, bfe_ciphertext_t* ciphertext) {
 static int bfe_ciphertext_cmp(const bfe_ciphertext_t* ciphertext1,
                               const bfe_ciphertext_t* ciphertext2) {
   return (ep_cmp(ciphertext1->u, ciphertext2->u) == RLC_EQ &&
-          ciphertext1->vLen == ciphertext2->vLen &&
-          memcmp(ciphertext1->v, ciphertext2->v, ciphertext1->vLen) == 0)
+          ciphertext1->v_size == ciphertext2->v_size &&
+          memcmp(ciphertext1->v, ciphertext2->v, ciphertext1->v_size) == 0)
              ? 0
              : 1;
 }
@@ -332,17 +332,17 @@ int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* se
                 bfe_ciphertext_t* ciphertext) {
   int status = BFE_SUCCESS;
 
-  uint8_t tempKey[public_key->keyLength];
-  unsigned int affectedIndexes[secretKey->filter.hashCount];
+  uint8_t tempKey[public_key->key_size];
+  unsigned int affectedIndexes[secretKey->filter.hash_count];
 
-  bloomfilter_get_bit_positions(affectedIndexes, ciphertext->u, secretKey->filter.hashCount,
+  bloomfilter_get_bit_positions(affectedIndexes, ciphertext->u, secretKey->filter.hash_count,
                                 bloomfilter_get_size(&secretKey->filter));
 
   status = BFE_ERR_GENERAL;
-  for (unsigned int i = 0; i < secretKey->filter.hashCount; i++) {
+  for (unsigned int i = 0; i < secretKey->filter.hash_count; i++) {
     if (bitset_get(secretKey->filter.bitset, affectedIndexes[i]) == 0) {
-      status = bf_ibe_decrypt(tempKey, ciphertext->u, &ciphertext->v[i * public_key->keyLength],
-                              public_key->keyLength, secretKey->secret_keys[affectedIndexes[i]]);
+      status = bf_ibe_decrypt(tempKey, ciphertext->u, &ciphertext->v[i * public_key->key_size],
+                              public_key->key_size, secretKey->secret_keys[affectedIndexes[i]]);
       if (status == BFE_SUCCESS) {
         break;
       }
@@ -368,7 +368,7 @@ int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* se
 
     Keccak_HashInstance shake;
     Keccak_HashInitialize_SHAKE256(&shake);
-    Keccak_HashUpdate(&shake, tempKey, public_key->keyLength * 8);
+    Keccak_HashUpdate(&shake, tempKey, public_key->key_size * 8);
     Keccak_HashFinal(&shake, NULL);
 
     // r of (r, K') = R(K)
@@ -380,7 +380,7 @@ int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* se
 
     if (!status && bfe_ciphertext_cmp(&check_ciphertext, ciphertext) == 0) {
       // K' of (r, K') = R(K)
-      Keccak_HashSqueeze(&shake, key, public_key->keyLength * 8);
+      Keccak_HashSqueeze(&shake, key, public_key->key_size * 8);
     } else {
       logger_log(LOGGER_INFO, "Encryption failed or ciphertexts did not match");
     }
@@ -410,7 +410,7 @@ static int init_ciphertext(bfe_ciphertext_t* ciphertext, unsigned int hash_count
   }
 
   if (!status) {
-    ciphertext->vLen = hash_count * key_length;
+    ciphertext->v_size = hash_count * key_length;
     ciphertext->v    = calloc(hash_count, key_length);
     if (!ciphertext->v) {
       status = BFE_ERR_GENERAL;
@@ -421,37 +421,37 @@ static int init_ciphertext(bfe_ciphertext_t* ciphertext, unsigned int hash_count
 }
 
 int bfe_init_ciphertext(bfe_ciphertext_t* ciphertext, const bfe_public_key_t* public_key) {
-  return init_ciphertext(ciphertext, public_key->filterHashCount, public_key->keyLength);
+  return init_ciphertext(ciphertext, public_key->filter_hash_count, public_key->key_size);
 }
 
 void bfe_clear_ciphertext(bfe_ciphertext_t* ciphertext) {
   if (ciphertext) {
     free(ciphertext->v);
     ep_free(ciphertext->u);
-    ciphertext->vLen = 0;
+    ciphertext->v_size = 0;
     ciphertext->v    = NULL;
   }
 }
 
 unsigned int bfe_ciphertext_size_bin(const bfe_ciphertext_t* ciphertext) {
-  return 1 * sizeof(uint32_t) + EP_SIZE + ciphertext->vLen;
+  return 1 * sizeof(uint32_t) + EP_SIZE + ciphertext->v_size;
 }
 
 void bfe_ciphertext_write_bin(uint8_t* bin, bfe_ciphertext_t* ciphertext) {
   const uint32_t uLen     = EP_SIZE;
-  const uint32_t totalLen = bfe_ciphertext_size_bin(ciphertext);
+  const uint32_t total_size = bfe_ciphertext_size_bin(ciphertext);
 
-  write_u32(&bin, totalLen);
+  write_u32(&bin, total_size);
 
   ep_write_bin(bin, EP_SIZE, ciphertext->u, 0);
-  memcpy(&bin[uLen], ciphertext->v, ciphertext->vLen);
+  memcpy(&bin[uLen], ciphertext->v, ciphertext->v_size);
 }
 
 int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin) {
-  const uint32_t totalLen = read_u32(&bin);
-  const unsigned int vLen = totalLen - EP_SIZE - 1 * sizeof(uint32_t);
+  const uint32_t total_size = read_u32(&bin);
+  const unsigned int v_size = total_size - EP_SIZE - 1 * sizeof(uint32_t);
 
-  if (init_ciphertext(ciphertext, 1, vLen)) {
+  if (init_ciphertext(ciphertext, 1, v_size)) {
     logger_log(LOGGER_ERROR, "Failed to init ciphertext");
     return BFE_ERR_GENERAL;
   }
@@ -459,8 +459,8 @@ int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin) {
   int status = BFE_SUCCESS;
   TRY {
     ep_read_bin(ciphertext->u, bin, EP_SIZE);
-    ciphertext->vLen = vLen;
-    memcpy(ciphertext->v, &bin[EP_SIZE], vLen);
+    ciphertext->v_size = v_size;
+    memcpy(ciphertext->v, &bin[EP_SIZE], v_size);
   }
   CATCH_ANY {
     logger_log(LOGGER_ERROR, "Error occurred in bfe_ciphertext_read_bin function.");
@@ -477,16 +477,16 @@ unsigned int bfe_public_key_size_bin(void) {
 
 void bfe_public_key_write_bin(uint8_t* bin, bfe_public_key_t* public_key) {
 
-  write_u32(&bin, public_key->filterHashCount);
-  write_u32(&bin, public_key->filterSize);
-  write_u32(&bin, public_key->keyLength);
+  write_u32(&bin, public_key->filter_hash_count);
+  write_u32(&bin, public_key->filter_size);
+  write_u32(&bin, public_key->key_size);
   ep_write_bin(bin, EP_SIZE, public_key->public_key, 0);
 }
 
 int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* bin) {
-  public_key->filterHashCount = read_u32(&bin);
-  public_key->filterSize      = read_u32(&bin);
-  public_key->keyLength       = read_u32(&bin);
+  public_key->filter_hash_count = read_u32(&bin);
+  public_key->filter_size      = read_u32(&bin);
+  public_key->key_size       = read_u32(&bin);
 
   int status = BFE_SUCCESS;
   TRY {
@@ -514,7 +514,7 @@ unsigned int bfe_secret_key_size_bin(const bfe_secret_key_t* secret_key) {
 }
 
 void bfe_secret_key_write_bin(uint8_t* bin, bfe_secret_key_t* secret_key) {
-  write_u32(&bin, secret_key->filter.hashCount);
+  write_u32(&bin, secret_key->filter.hash_count);
   write_u32(&bin, secret_key->filter.bitset.size);
   for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitset.size); ++i) {
     write_u64(&bin, secret_key->filter.bitset.bits[i]);
