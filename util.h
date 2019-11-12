@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
-void random_bytes(uint8_t* bin, unsigned int size);
+int random_bytes(uint8_t* bin, size_t size);
 
 static inline void write_u32(uint8_t** dst, uint32_t v) {
   v = htole32(v);

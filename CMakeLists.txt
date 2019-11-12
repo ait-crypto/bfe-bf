@@ -18,6 +18,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 include(GNUInstallDirs)
 include(CheckCCompilerFlag)
 include(CheckIPOSupported)
+include(CheckIncludeFiles)
+include(CheckSymbolExists)
 
 function(check_c_compiler_flag_and_add flag result)
   check_c_compiler_flag("${flag}" ${result})
@@ -30,6 +32,12 @@ check_c_compiler_flag_and_add(-Wall CC_SUPPORTS_WALL)
 check_c_compiler_flag_and_add(-Wextra CC_SUPPORTS_WEXTRA)
 check_c_compiler_flag_and_add(-Wshadow CC_SUPPORTS_WSHADOW)
 check_c_compiler_flag_and_add(-Werror=implicit-function-declaration CC_SUPPORTS_WERROR_IMPLICIT_FUNCTION_DECLARATION)
+
+# check headers
+check_include_files(sys/random.h HAVE_SYS_RANDOM_H)
+
+# check availability of some functions
+check_symbol_exists(getrandom sys/random.h HAVE_GETRANDOM)
 
 check_ipo_supported(RESULT LTO_SUPPORTED)
 
@@ -71,6 +79,12 @@ endif()
 target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
 if(OpenMP_C_FOUND)
   target_link_libraries(bfe PRIVATE OpenMP::OpenMP_C)
+endif()
+if(HAVE_GETRANDOM)
+  target_compile_definitions(bfe PRIVATE HAVE_GETRANDOM)
+endif()
+if(HAVE_SYS_RANDOM_H)
+  target_compile_definitions(bfe PRIVATE HAVE_SYS_RANDOM_H)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
