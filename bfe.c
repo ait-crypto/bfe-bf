@@ -156,7 +156,7 @@ void bfe_clear_secret_key(bfe_secret_key_t* secret_key) {
       secret_key->secret_keys_len = 0;
       secret_key->secret_keys     = NULL;
     }
-    bloomfilter_clean(&secret_key->filter);
+    bloomfilter_clear(&secret_key->filter);
   }
 }
 

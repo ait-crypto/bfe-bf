@@ -93,6 +93,6 @@ int bloomfilter_maybe_contains(const bloomfilter_t* filter, const ep_t input) {
   return 1;
 }
 
-void bloomfilter_clean(bloomfilter_t* filter) {
+void bloomfilter_clear(bloomfilter_t* filter) {
   bitset_clean(&filter->bitset);
 }

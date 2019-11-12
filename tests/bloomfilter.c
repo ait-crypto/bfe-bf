@@ -30,7 +30,7 @@ Ensure(BF, add) {
   assert_true(bloomfilter_maybe_contains(&bloom, p2));
   assert_false(bloomfilter_maybe_contains(&bloom, p3));
 
-  bloomfilter_clean(&bloom);
+  bloomfilter_clear(&bloom);
   ep_free(p3);
   ep_free(p2);
   ep_free(p1);

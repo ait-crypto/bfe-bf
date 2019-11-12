@@ -93,8 +93,8 @@ BFE_VISIBLE int bloomfilter_maybe_contains(const bloomfilter_t* filter, const ep
  * Frees the memory allocated by the bloom filter. This method has to be called after the filter is
  * no longer needed to avoid memory leaks.
  *
- * @param[out] filter the corresponding filter.
+ * @param[out] filter the filter to clear.
  */
-BFE_VISIBLE void bloomfilter_clean(bloomfilter_t* filter);
+BFE_VISIBLE void bloomfilter_clear(bloomfilter_t* filter);
 
 #endif // BFE_BLOOMFILTER_H
