@@ -57,7 +57,7 @@
  *  bfe_ciphertext_t ciphertext;
  *  bfe_init_ciphertext(&ciphertext, &pk);
  *  uint8_t key[pk.key_size];
- *  if (bfe_encrypt(&ciphertext, K, &deserialized_pk)) {
+ *  if (bfe_encrypt(&ciphertext, K, &pk)) {
  *    // handle error
  *  }
  *
@@ -74,12 +74,20 @@
  * @code{.c}
  *  // the serialized secret key
  *  uint8_t* serialized_sk;
+ *  // the serialized public key
+ *  const uint8_t* public_key
  *  // the serialized ciphertext
  *  const uint8_t* serialized_ct;
  *
  *  // deserialize the secret key
- *  bfe_secret_key_t pk;
+ *  bfe_secret_key_t sk;
  *  if (bfe_secret_key_read_bin(&sk, serialized_sk)) {
+ *    // handle error
+ *  }
+ *
+ *  // deserialize the public key
+ *  bfe_public_key_t pk;
+ *  if (bfe_public_key_read_bin(&pk, serialized_pk)) {
  *    // handle error
  *  }
  *
@@ -91,7 +99,7 @@
  *
  *  // decaps ciphertext
  *  uint8_t key[pk.key_size];
- *  if (bfe_encrypt(&ciphertext, K, &deserialized_pk)) {
+ *  if (bfe_decrypt(key, &pk, &sk, &ciphertext)) {
  *    // handle error
  *  }
  *
@@ -101,6 +109,7 @@
  *
  *  // clean up
  *  bfe_clear_ciphertext(&ciphertext);
+ *  bfe_clear_public_key(&pk);
  *  bfe_clear_secret_key(&sk);
  * @endcode
  */
