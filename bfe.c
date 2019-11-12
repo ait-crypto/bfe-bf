@@ -470,7 +470,6 @@ int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin) {
     logger_log(LOGGER_ERROR, "Error occurred in bfe_ciphertext_read_bin function.");
     status = BFE_ERR_GENERAL;
   }
-  FINALLY {}
 
   return status;
 }
@@ -500,7 +499,6 @@ int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* bin) {
     logger_log(LOGGER_ERROR, "Error occurred in bfe_public_key_read_bin function.");
     status = BFE_ERR_GENERAL;
   }
-  FINALLY {}
 
   return status;
 }
@@ -557,7 +555,6 @@ int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint8_t* bin) {
     logger_log(LOGGER_ERROR, "Error occurred in bfe_secret_key_read_bin function.");
     status = BFE_ERR_GENERAL;
   }
-  FINALLY {}
 
   return status;
 }
