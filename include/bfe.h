@@ -57,7 +57,7 @@
  *  bfe_ciphertext_t ciphertext;
  *  bfe_init_ciphertext(&ciphertext, &pk);
  *  uint8_t key[pk.key_size];
- *  if (bfe_encrypt(&ciphertext, K, &pk)) {
+ *  if (bfe_encaps(&ciphertext, K, &pk)) {
  *    // handle error
  *  }
  *
@@ -99,7 +99,7 @@
  *
  *  // decaps ciphertext
  *  uint8_t key[pk.key_size];
- *  if (bfe_decrypt(key, &pk, &sk, &ciphertext)) {
+ *  if (bfe_decaps(key, &pk, &sk, &ciphertext)) {
  *    // handle error
  *  }
  *
@@ -198,7 +198,7 @@ BFE_VISIBLE int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret
  * @param[in] public_key the public key
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-BFE_VISIBLE int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* K,
+BFE_VISIBLE int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* K,
                             const bfe_public_key_t* public_key);
 
 /**
@@ -221,7 +221,7 @@ BFE_VISIBLE void bfe_puncture(bfe_secret_key_t* secret_key, bfe_ciphertext_t* ci
  * @param[in] ciphertext the ciphertext
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-BFE_VISIBLE int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key,
+BFE_VISIBLE int bfe_decaps(uint8_t* key, bfe_public_key_t* public_key,
                             bfe_secret_key_t* secret_key, bfe_ciphertext_t* ciphertext);
 
 /**

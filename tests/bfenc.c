@@ -23,8 +23,8 @@ Ensure(BFE, encrypt_decrypt) {
   uint8_t K[KEY_SIZE], decrypted[KEY_SIZE];
   memset(decrypted, 0, KEY_SIZE);
   assert_true(!bfe_init_ciphertext(&ciphertext, &pk));
-  assert_true(!bfe_encrypt(&ciphertext, K, &pk));
-  assert_true(!bfe_decrypt(decrypted, &pk, &sk, &ciphertext));
+  assert_true(!bfe_encaps(&ciphertext, K, &pk));
+  assert_true(!bfe_decaps(decrypted, &pk, &sk, &ciphertext));
   assert_true(!memcmp(K, decrypted, KEY_SIZE));
 
   bfe_clear_secret_key(&sk);
@@ -47,7 +47,7 @@ Ensure(BFE, encrypt_decrypt_serialized) {
   memset(decrypted, 0, KEY_SIZE);
 
   assert_true(!bfe_init_ciphertext(&ciphertext, &pk));
-  assert_true(!bfe_encrypt(&ciphertext, K, &pk));
+  assert_true(!bfe_encaps(&ciphertext, K, &pk));
 
   const size_t csize = bfe_ciphertext_size_bin(&ciphertext);
   uint8_t bin[csize];
@@ -55,7 +55,7 @@ Ensure(BFE, encrypt_decrypt_serialized) {
   bfe_ciphertext_write_bin(bin, &ciphertext);
   assert_true(!bfe_ciphertext_read_bin(&deserialized_ciphertext, bin));
 
-  assert_true(!bfe_decrypt(decrypted, &pk, &sk, &deserialized_ciphertext));
+  assert_true(!bfe_decaps(decrypted, &pk, &sk, &deserialized_ciphertext));
   assert_true(!memcmp(K, decrypted, KEY_SIZE));
 
   bfe_clear_secret_key(&sk);
@@ -78,10 +78,10 @@ Ensure(BFE, decrypt_punctured) {
   memset(decrypted, 0, KEY_SIZE);
 
   assert_true(!bfe_init_ciphertext(&ciphertext, &pk));
-  assert_true(!bfe_encrypt(&ciphertext, K, &pk));
+  assert_true(!bfe_encaps(&ciphertext, K, &pk));
   bfe_puncture(&sk, &ciphertext);
 
-  assert_false(!bfe_decrypt(decrypted, &pk, &sk, &ciphertext));
+  assert_false(!bfe_decaps(decrypted, &pk, &sk, &ciphertext));
 
   bfe_clear_secret_key(&sk);
   bfe_clear_public_key(&pk);
@@ -115,12 +115,12 @@ Ensure(BFE, keys_serialized) {
   uint8_t K[KEY_SIZE], decrypted[KEY_SIZE];
   memset(decrypted, 0, KEY_SIZE);
 
-  assert_true(!bfe_encrypt(&ciphertext, K, &deserialized_pk));
-  assert_true(!bfe_decrypt(decrypted, &pk, &sk, &ciphertext));
+  assert_true(!bfe_encaps(&ciphertext, K, &deserialized_pk));
+  assert_true(!bfe_decaps(decrypted, &pk, &sk, &ciphertext));
   assert_true(!memcmp(K, decrypted, KEY_SIZE));
 
-  assert_true(!bfe_encrypt(&ciphertext, K, &pk));
-  assert_true(!bfe_decrypt(decrypted, &pk, &deserialized_sk, &ciphertext));
+  assert_true(!bfe_encaps(&ciphertext, K, &pk));
+  assert_true(!bfe_decaps(decrypted, &pk, &deserialized_sk, &ciphertext));
   assert_true(!memcmp(K, decrypted, KEY_SIZE));
 
   bfe_clear_ciphertext(&ciphertext);

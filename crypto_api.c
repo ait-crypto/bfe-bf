@@ -40,7 +40,7 @@ int crypto_kem_enc(unsigned char* serialized_ct, unsigned char* k,
   // encaps a new key
   bfe_ciphertext_t ciphertext;
   bfe_init_ciphertext(&ciphertext, &pk);
-  status = bfe_encrypt(&ciphertext, k, &pk);
+  status = bfe_encaps(&ciphertext, k, &pk);
   if (status) {
     goto ret;
   }
@@ -80,7 +80,7 @@ int crypto_kem_dec(unsigned char* k, const unsigned char* serialized_ct,
   }
 
   // decaps ciphertext
-  status = bfe_decrypt(k, &pk, &sk, &ct);
+  status = bfe_decaps(k, &pk, &sk, &ct);
 
 ret:
   bfe_clear_ciphertext(&ct);

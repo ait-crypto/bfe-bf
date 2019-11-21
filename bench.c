@@ -22,17 +22,17 @@ static void bench_bfe(void) {
 
   uint8_t K[pk.key_size], decrypted[pk.key_size];
   BENCH_BEGIN("encrypt") {
-    BENCH_ADD(bfe_encrypt(&ciphertext, K, &pk));
+    BENCH_ADD(bfe_encaps(&ciphertext, K, &pk));
   }
   BENCH_END;
   BENCH_BEGIN("decrypt") {
-    bfe_encrypt(&ciphertext, K, &pk);
+    bfe_encaps(&ciphertext, K, &pk);
     memset(decrypted, 0, pk.key_size);
-    BENCH_ADD(bfe_decrypt(decrypted, &pk, &sk, &ciphertext));
+    BENCH_ADD(bfe_decaps(decrypted, &pk, &sk, &ciphertext));
   }
   BENCH_END;
   BENCH_BEGIN("puncture") {
-    bfe_encrypt(&ciphertext, K, &pk);
+    bfe_encaps(&ciphertext, K, &pk);
     BENCH_ADD(bfe_puncture(&sk, &ciphertext));
   }
   BENCH_END;

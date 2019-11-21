@@ -269,7 +269,7 @@ static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t
   return status;
 }
 
-int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key_t* public_key) {
+int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key_t* public_key) {
   uint8_t K[public_key->key_size];
   random_bytes(K, public_key->key_size);
 
@@ -330,7 +330,7 @@ static int bfe_ciphertext_cmp(const bfe_ciphertext_t* ciphertext1,
              : 1;
 }
 
-int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* secretKey,
+int bfe_decaps(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* secretKey,
                 bfe_ciphertext_t* ciphertext) {
   int status = BFE_SUCCESS;
 
