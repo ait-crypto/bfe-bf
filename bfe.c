@@ -186,10 +186,10 @@ void bfe_clear_public_key(bfe_public_key_t* public_key) {
 }
 
 int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsigned int key_size,
-              unsigned int filterElementNumber, double falsePositiveProbability) {
+              unsigned int filterElementNumber, double false_positive_prob) {
   int status = BFE_SUCCESS;
 
-  bloomfilter_t filter         = bloomfilter_init(filterElementNumber, falsePositiveProbability);
+  bloomfilter_t filter         = bloomfilter_init(filterElementNumber, false_positive_prob);
   const unsigned int bloomSize = bloomfilter_get_size(&filter);
 
   secret_key->secret_keys = calloc(bloomSize, sizeof(ep2_t));

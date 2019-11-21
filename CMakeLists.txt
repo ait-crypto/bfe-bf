@@ -41,18 +41,9 @@ check_symbol_exists(getrandom sys/random.h HAVE_GETRANDOM)
 
 check_ipo_supported(RESULT LTO_SUPPORTED)
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/zf_log/CMakeLists.txt)
-  set(HAVE_ZFLOG 1)
-endif()
-
 find_package(relic REQUIRED)
 find_package(Doxygen)
 find_package(OpenMP)
-if(HAVE_ZFLOG)
-  # force PIC for zf_log
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-  add_subdirectory(zf_log)
-endif()
 
 add_library(bfe SHARED
             bloomfilter.c
@@ -73,10 +64,6 @@ configure_file(bfe.pc.in bfe.pc @ONLY)
 
 target_link_libraries(bfe PUBLIC ${RELIC_LIBRARY})
 target_link_libraries(bfe PRIVATE m)
-if(HAVE_ZFLOG)
-  target_link_libraries(bfe PRIVATE zf_log)
-  target_compile_definitions(bfe PRIVATE HAVE_ZFLOG)
-endif()
 target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
 if(OpenMP_C_FOUND)
   target_link_libraries(bfe PRIVATE OpenMP::OpenMP_C)

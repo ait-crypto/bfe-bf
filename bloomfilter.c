@@ -6,6 +6,8 @@
 #include "FIPS202-opt64/KeccakHash.h"
 #include "include/bloomfilter.h"
 
+static const double log_2 = log(2);
+
 bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hash_count) {
   bloomfilter_t bloomFilter;
 
@@ -15,11 +17,11 @@ bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hash_count)
   return bloomFilter;
 }
 
-bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability) {
+bloomfilter_t bloomfilter_init(unsigned int n, double false_positive_prob) {
   bloomfilter_t bloomFilter;
 
-  const unsigned int bitset_size = bloomfilter_get_needed_size(n, falsePositiveProbability);
-  bloomFilter.hash_count         = ceil((bitset_size / (double)n) * log(2));
+  const unsigned int bitset_size = bloomfilter_get_needed_size(n, false_positive_prob);
+  bloomFilter.hash_count         = ceil((bitset_size / (double)n) * log_2);
   bloomFilter.bitset             = bitset_init(bitset_size);
 
   return bloomFilter;
@@ -29,8 +31,8 @@ unsigned int bloomfilter_get_size(const bloomfilter_t* filter) {
   return filter->bitset.size;
 }
 
-unsigned int bloomfilter_get_needed_size(unsigned int n, double falsePositiveProbability) {
-  return -floor((n * log(falsePositiveProbability)) / pow(log(2), 2));
+unsigned int bloomfilter_get_needed_size(unsigned int n, double false_positive_prob) {
+  return -floor((n * log(false_positive_prob)) / (log_2 * log_2));
 }
 
 static unsigned int get_position(uint32_t hash_idx, const uint8_t* input, size_t input_len,

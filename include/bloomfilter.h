@@ -17,12 +17,12 @@ typedef struct _bloomfilter_t {
  * function is made for estimation purposes.
  *
  * @param[in] n the expected number of elements inside the filter.
- * @param[in] falsePositiveProbability target false positive probability for the filter with the
+ * @param[in] false_positive_prob target false positive probability for the filter with the
  * specified number of elements.
  * @return The size a bloom filter with the given parameters would have.
  */
 BFE_VISIBLE unsigned int bloomfilter_get_needed_size(unsigned int n,
-                                                     double falsePositiveProbability);
+                                                     double false_positive_prob);
 
 /**
  * Creates a new bloom filter with the explicit size and hash count parameters.
@@ -37,11 +37,11 @@ BFE_VISIBLE bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int
  * Creates a new bloom filter with the given parameters.
  *
  * @param[in] n the expected number of elements inside the filter.
- * @param[in] falsePositiveProbability target false positive probability for the filter with the
+ * @param[in] false_positive_prob target false positive probability for the filter with the
  * specified number of elements.
  * @return The initialized bloom filter.
  */
-BFE_VISIBLE bloomfilter_t bloomfilter_init(unsigned int n, double falsePositiveProbability);
+BFE_VISIBLE bloomfilter_t bloomfilter_init(unsigned int n, double false_positive_prob);
 
 /**
  * Returns the total number of positions inside the filter.
