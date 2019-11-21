@@ -38,7 +38,7 @@ static uint64_t read_u64(const uint8_t** src) {
   return le64toh(v);
 }
 
-static int bf_ibe_setup(bn_t secret_key, bfe_public_key_t* public_key) {
+static int ibe_setup(bn_t secret_key, bfe_public_key_t* public_key) {
   int status = BFE_SUCCESS;
 
   bn_t order;
@@ -60,8 +60,8 @@ static int bf_ibe_setup(bn_t secret_key, bfe_public_key_t* public_key) {
   return status;
 }
 
-static int bf_ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint8_t* id,
-                          size_t id_size) {
+static int ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint8_t* id,
+                       size_t id_size) {
   int status = BFE_SUCCESS;
 
   ep2_t qid;
@@ -89,6 +89,8 @@ static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t 
   Keccak_HashInitialize_SHAKE256(&shake);
   Keccak_HashUpdate(&shake, domain_G, sizeof(domain_G) * 8);
   Keccak_HashUpdate(&shake, buffer, FP12_SIZE * 8);
+  uint64_t len_le = htole64(len);
+  Keccak_HashUpdate(&shake, (const uint8_t*)&len_le, sizeof(len_le) * 8);
   Keccak_HashFinal(&shake, NULL);
 
   for (; len; len -= MIN(len, 64), dst += 64, input += 64) {
@@ -102,8 +104,8 @@ static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t 
   }
 }
 
-static int bf_ibe_encrypt(uint8_t* dst, ep_t pkr, const uint8_t* id, size_t id_len,
-                          const uint8_t* message, size_t message_len) {
+static int ibe_encrypt(uint8_t* dst, ep_t pkr, const uint8_t* id, size_t id_len,
+                       const uint8_t* message, size_t message_len) {
   int status = BFE_SUCCESS;
   ep2_t qid;
   fp12_t t;
@@ -133,8 +135,8 @@ static int bf_ibe_encrypt(uint8_t* dst, ep_t pkr, const uint8_t* id, size_t id_l
   return status;
 }
 
-static int bf_ibe_decrypt(uint8_t* message, ep_t g1r, const uint8_t* Kxored, size_t length,
-                          ep2_t secret_key) {
+static int ibe_decrypt(uint8_t* message, ep_t g1r, const uint8_t* Kxored, size_t length,
+                       ep2_t secret_key) {
   int status = BFE_SUCCESS;
   fp12_t t;
   fp12_null(t);
@@ -237,13 +239,13 @@ int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsign
     bn_new(sk);
 
     /* generate IBE key */
-    status = bf_ibe_setup(sk, public_key);
+    status = ibe_setup(sk, public_key);
     if (!status) {
 #pragma omp parallel for reduction(| : status)
       for (unsigned int i = 0; i < bf_size; ++i) {
         /* extraxt key for identity i */
         const uint64_t id = htole64(i);
-        status |= bf_ibe_extract(secret_key->secret_keys[i], sk, (const uint8_t*)&id, sizeof(id));
+        status |= ibe_extract(secret_key->secret_keys[i], sk, (const uint8_t*)&id, sizeof(id));
       }
     }
   }
@@ -278,8 +280,8 @@ static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t
     for (unsigned int i = 0; i < public_key->filter_hash_count; ++i) {
       const uint64_t id = htole64(bit_positions[i]);
 
-      status = bf_ibe_encrypt(&ciphertext->v[i * public_key->key_size], pkr, (const uint8_t*)&id,
-                              sizeof(id), K, public_key->key_size);
+      status = ibe_encrypt(&ciphertext->v[i * public_key->key_size], pkr, (const uint8_t*)&id,
+                           sizeof(id), K, public_key->key_size);
       if (status) {
         break;
       }
@@ -370,8 +372,8 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
   status = BFE_ERR_GENERAL;
   for (unsigned int i = 0; i < secret_key->filter.hash_count; ++i) {
     if (bitset_get(&secret_key->filter.bitset, indices[i]) == 0) {
-      status = bf_ibe_decrypt(key_buf, ciphertext->u, &ciphertext->v[i * public_key->key_size],
-                              public_key->key_size, secret_key->secret_keys[indices[i]]);
+      status = ibe_decrypt(key_buf, ciphertext->u, &ciphertext->v[i * public_key->key_size],
+                           public_key->key_size, secret_key->secret_keys[indices[i]]);
       if (status == BFE_SUCCESS) {
         break;
       }
