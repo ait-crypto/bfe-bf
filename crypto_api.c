@@ -3,7 +3,7 @@
 #include "include/bfe.h"
 #include "include/err_codes.h"
 
-#include <stdio.h>
+#include <string.h>
 
 int crypto_kem_keypair(unsigned char* serialized_pk, unsigned char* serialized_sk) {
   int status = BFE_SUCCESS;
