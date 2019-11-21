@@ -9,6 +9,35 @@
 #define EP2_SIZE (1 + 4 * RLC_FP_BYTES)
 #define FP12_SIZE (12 * RLC_FP_BYTES)
 
+static const uint8_t domain_G[] = "BFE_G";
+static const uint8_t domain_H[] = "BFE_H";
+
+static void write_u32(uint8_t** dst, uint32_t v) {
+  v = htole32(v);
+  memcpy(*dst, &v, sizeof(v));
+  *dst += sizeof(v);
+}
+
+static uint32_t read_u32(const uint8_t** src) {
+  uint32_t v;
+  memcpy(&v, *src, sizeof(v));
+  *src += sizeof(v);
+  return le32toh(v);
+}
+
+static void write_u64(uint8_t** dst, uint64_t v) {
+  v = htole64(v);
+  memcpy(*dst, &v, sizeof(v));
+  *dst += sizeof(v);
+}
+
+static uint64_t read_u64(const uint8_t** src) {
+  uint64_t v;
+  memcpy(&v, *src, sizeof(v));
+  *src += sizeof(v);
+  return le64toh(v);
+}
+
 static int bf_ibe_setup(bn_t secret_key, bfe_public_key_t* public_key) {
   int status = BFE_SUCCESS;
 
@@ -53,14 +82,12 @@ static int bf_ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint
 
 // G(y) \xor K
 static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t y) {
-  static const uint8_t domain[] = "BFE_G";
-
   uint8_t bin[FP12_SIZE]  = {0};
   fp12_write_bin(bin, FP12_SIZE, y, 0);
 
   Keccak_HashInstance shake;
   Keccak_HashInitialize_SHAKE256(&shake);
-  Keccak_HashUpdate(&shake, domain, sizeof(domain) * 8);
+  Keccak_HashUpdate(&shake, domain_G, sizeof(domain_G) * 8);
   Keccak_HashUpdate(&shake, bin, FP12_SIZE * 8);
   Keccak_HashFinal(&shake, NULL);
 
@@ -281,17 +308,18 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
     bn_new(r);
 
     ep_curve_get_ord(r);
-    const unsigned int exponentLength = bn_size_bin(r);
+    const unsigned int order_size = bn_size_bin(r);
 
     Keccak_HashInstance shake;
     Keccak_HashInitialize_SHAKE256(&shake);
+    Keccak_HashUpdate(&shake, domain_H, sizeof(domain_H) * 8);
     Keccak_HashUpdate(&shake, K, public_key->key_size * 8);
     Keccak_HashFinal(&shake, NULL);
 
     // r of (r, K') = R(K)
-    uint8_t buf[exponentLength];
-    Keccak_HashSqueeze(&shake, buf, exponentLength * 8);
-    bn_read_bin(r, buf, exponentLength);
+    uint8_t buf[order_size];
+    Keccak_HashSqueeze(&shake, buf, order_size * 8);
+    bn_read_bin(r, buf, order_size);
 
     status = internal_encrypt(ciphertext, public_key, r, K);
     if (status == BFE_SUCCESS) {
@@ -365,17 +393,18 @@ int bfe_decaps(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* sec
     bn_new(r);
 
     ep_curve_get_ord(r);
-    const unsigned int exponentLength = bn_size_bin(r);
+    const unsigned int order_size = bn_size_bin(r);
 
     Keccak_HashInstance shake;
     Keccak_HashInitialize_SHAKE256(&shake);
+    Keccak_HashUpdate(&shake, domain_H, sizeof(domain_H) * 8);
     Keccak_HashUpdate(&shake, key_buf, public_key->key_size * 8);
     Keccak_HashFinal(&shake, NULL);
 
     // r of (r, K') = R(K)
-    uint8_t buf[exponentLength];
-    Keccak_HashSqueeze(&shake, buf, exponentLength * 8);
-    bn_read_bin(r, buf, exponentLength);
+    uint8_t buf[order_size];
+    Keccak_HashSqueeze(&shake, buf, order_size * 8);
+    bn_read_bin(r, buf, order_size);
 
     status = internal_encrypt(&check_ciphertext, public_key, r, key_buf);
 
@@ -473,7 +502,6 @@ unsigned int bfe_public_key_size_bin(void) {
 }
 
 void bfe_public_key_write_bin(uint8_t* bin, bfe_public_key_t* public_key) {
-
   write_u32(&bin, public_key->filter_hash_count);
   write_u32(&bin, public_key->filter_size);
   write_u32(&bin, public_key->key_size);
