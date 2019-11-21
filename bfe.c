@@ -3,7 +3,6 @@
 #include "FIPS202-opt64/KeccakHash.h"
 #include "include/bloomfilter.h"
 #include "include/err_codes.h"
-#include "logger.h"
 #include "util.h"
 
 #define EP_SIZE (1 + 2 * RLC_FP_BYTES)
@@ -54,13 +53,15 @@ static int bf_ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint
 
 // G(y) \xor K
 static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t y) {
-  const unsigned int size = fp12_size_bin(y, 0);
+  static const uint8_t domain[] = "BFE_G";
+
   uint8_t bin[FP12_SIZE]  = {0};
-  fp12_write_bin(bin, sizeof(FP12_SIZE), y, 0);
+  fp12_write_bin(bin, FP12_SIZE, y, 0);
 
   Keccak_HashInstance shake;
   Keccak_HashInitialize_SHAKE256(&shake);
-  Keccak_HashUpdate(&shake, bin, size * 8);
+  Keccak_HashUpdate(&shake, domain, sizeof(domain) * 8);
+  Keccak_HashUpdate(&shake, bin, FP12_SIZE * 8);
   Keccak_HashFinal(&shake, NULL);
 
   for (; len; len -= MIN(len, 64), dst += 64, input += 64) {
@@ -187,16 +188,14 @@ void bfe_clear_public_key(bfe_public_key_t* public_key) {
 int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsigned int key_size,
               unsigned int filterElementNumber, double falsePositiveProbability) {
   int status = BFE_SUCCESS;
-  bn_t sk;
-  bn_null(sk);
 
   bloomfilter_t filter         = bloomfilter_init(filterElementNumber, falsePositiveProbability);
   const unsigned int bloomSize = bloomfilter_get_size(&filter);
 
   secret_key->secret_keys = calloc(bloomSize, sizeof(ep2_t));
   if (!secret_key->secret_keys) {
-    status = BFE_ERR_GENERAL;
-    goto end;
+    bloomfilter_clear(&filter);
+    return BFE_ERR_GENERAL;
   }
 
   public_key->key_size          = key_size;
@@ -205,6 +204,8 @@ int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsign
   secret_key->secret_keys_len   = bloomSize;
   secret_key->filter            = filter;
 
+  bn_t sk;
+  bn_null(sk);
   TRY {
     bn_new(sk);
 
@@ -226,7 +227,6 @@ int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsign
     bn_free(sk);
   }
 
-end:
   return status;
 }
 
@@ -260,7 +260,6 @@ static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t
     }
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in Bloom Filter Encryption encrypt function.");
     status = BFE_ERR_GENERAL;
   }
   FINALLY {
@@ -301,7 +300,6 @@ int bfe_encrypt(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_ke
     }
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in Bloom Filter Encryption encrypt function.");
     status = BFE_ERR_GENERAL;
   }
   FINALLY {
@@ -354,7 +352,6 @@ int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* se
   }
 
   if (status != BFE_SUCCESS) {
-    logger_log(LOGGER_DEBUG, "Key already punctured");
     return BFE_ERR_KEY_PUNCTURED;
   }
 
@@ -386,11 +383,10 @@ int bfe_decrypt(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* se
       // K' of (r, K') = R(K)
       Keccak_HashSqueeze(&shake, key, public_key->key_size * 8);
     } else {
-      logger_log(LOGGER_INFO, "Encryption failed or ciphertexts did not match");
+      status = BFE_ERR_GENERAL;
     }
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in Bloom Filter Encryption decrypt function.");
     status = BFE_ERR_GENERAL;
   }
   FINALLY {
@@ -456,7 +452,6 @@ int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin) {
   const unsigned int v_size = total_size - EP_SIZE - 1 * sizeof(uint32_t);
 
   if (init_ciphertext(ciphertext, 1, v_size)) {
-    logger_log(LOGGER_ERROR, "Failed to init ciphertext");
     return BFE_ERR_GENERAL;
   }
 
@@ -467,7 +462,6 @@ int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin) {
     memcpy(ciphertext->v, &bin[EP_SIZE], v_size);
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in bfe_ciphertext_read_bin function.");
     status = BFE_ERR_GENERAL;
   }
 
@@ -496,7 +490,6 @@ int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* bin) {
     ep_read_bin(public_key->public_key, bin, EP_SIZE);
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in bfe_public_key_read_bin function.");
     status = BFE_ERR_GENERAL;
   }
 
@@ -552,7 +545,6 @@ int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint8_t* bin) {
     }
   }
   CATCH_ANY {
-    logger_log(LOGGER_ERROR, "Error occurred in bfe_secret_key_read_bin function.");
     status = BFE_ERR_GENERAL;
   }
 
