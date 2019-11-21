@@ -35,9 +35,12 @@ unsigned int bloomfilter_get_needed_size(unsigned int n, double falsePositivePro
 
 static unsigned int get_position(uint32_t hash_idx, const uint8_t* input, size_t input_len,
                                  unsigned int filter_size) {
+  static const uint8_t domain[] = "BF_";
+
   Keccak_HashInstance shake;
   Keccak_HashInitialize_SHAKE128(&shake);
 
+  Keccak_HashUpdate(&shake, domain, sizeof(domain) * 8);
   hash_idx = htole32(hash_idx);
   Keccak_HashUpdate(&shake, (const uint8_t*)&hash_idx, sizeof(hash_idx) * 8);
   Keccak_HashUpdate(&shake, input, input_len * 8);
