@@ -16,7 +16,7 @@ Ensure(BFE, encrypt_decrypt) {
 
   assert_true(!bfe_init_secret_key(&sk));
   assert_true(!bfe_init_public_key(&pk));
-  assert_true(!bfe_setup(&pk, &sk, KEY_SIZE, 50, 0.001));
+  assert_true(!bfe_keygen(&pk, &sk, KEY_SIZE, 50, 0.001));
 
   bfe_ciphertext_t ciphertext;
 
@@ -38,7 +38,7 @@ Ensure(BFE, encrypt_decrypt_serialized) {
 
   assert_true(!bfe_init_secret_key(&sk));
   assert_true(!bfe_init_public_key(&pk));
-  assert_true(!bfe_setup(&pk, &sk, KEY_SIZE, 50, 0.001));
+  assert_true(!bfe_keygen(&pk, &sk, KEY_SIZE, 50, 0.001));
 
   bfe_ciphertext_t ciphertext;
   bfe_ciphertext_t deserialized_ciphertext;
@@ -70,7 +70,7 @@ Ensure(BFE, decrypt_punctured) {
 
   assert_true(!bfe_init_secret_key(&sk));
   assert_true(!bfe_init_public_key(&pk));
-  assert_true(!bfe_setup(&pk, &sk, KEY_SIZE, 50, 0.001));
+  assert_true(!bfe_keygen(&pk, &sk, KEY_SIZE, 50, 0.001));
 
   bfe_ciphertext_t ciphertext;
 
@@ -97,7 +97,7 @@ Ensure(BFE, keys_serialized) {
 
   assert_true(!bfe_init_secret_key(&sk));
   assert_true(!bfe_init_public_key(&pk));
-  assert_true(!bfe_setup(&pk, &sk, KEY_SIZE, 50, 0.001));
+  assert_true(!bfe_keygen(&pk, &sk, KEY_SIZE, 50, 0.001));
   assert_true(!bfe_init_public_key(&deserialized_pk));
 
   bfe_ciphertext_t ciphertext;

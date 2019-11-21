@@ -19,7 +19,7 @@
  *  // generate new keys
  *  bfe_init_secret_key(&sk);
  *  bfe_init_public_key(&pk);
- *  if (!bfe_setup(&pk, &sk, 32, 1 << 19, 0.0009765625)) {
+ *  if (!bfe_keygen(&pk, &sk, 32, 1 << 19, 0.0009765625)) {
  *    // handle error
  *  }
  *
@@ -35,7 +35,7 @@
  *  bfe_clear_secret_key(&sk);
  *  bfe_clear_public_key(&pk);
  * @endcode
- * The paramters passed to @ref bfe_setup setups the system to encapsulate 32 byte keys with a bloom
+ * The paramters passed to @ref bfe_keygen setups the system to encapsulate 32 byte keys with a bloom
  * filter size of <code>2^19</code> elements and a correctness error of approximately
  * <code>2^-10</code>.
  *
@@ -186,7 +186,7 @@ BFE_VISIBLE void bfe_clear_public_key(bfe_public_key_t* public_key);
  * @param[in] false_positive_probability desired false positive probability of the bloom filter
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-BFE_VISIBLE int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key,
+BFE_VISIBLE int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key,
                           unsigned int key_length, unsigned int filter_element_number,
                           double false_positive_probability);
 

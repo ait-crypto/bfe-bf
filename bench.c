@@ -15,7 +15,7 @@ static void bench_bfe(void) {
   bfe_init_secret_key(&sk);
   bfe_init_public_key(&pk);
   /* n=2^19 >= 2^12 per day for 3 months, correctness error ~ 2^-10 */
-  BENCH_ONCE("keygen", bfe_setup(&pk, &sk, 32, 1 << 19, 0.0009765625));
+  BENCH_ONCE("keygen", bfe_keygen(&pk, &sk, 32, 1 << 19, 0.0009765625));
 
   bfe_ciphertext_t ciphertext;
   bfe_init_ciphertext(&ciphertext, &pk);

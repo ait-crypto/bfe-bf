@@ -38,7 +38,7 @@ static uint64_t read_u64(const uint8_t** src) {
   return le64toh(v);
 }
 
-static int ibe_setup(bn_t secret_key, bfe_public_key_t* public_key) {
+static int ibe_keygen(bn_t secret_key, bfe_public_key_t* public_key) {
   int status = BFE_SUCCESS;
 
   bn_t order;
@@ -214,7 +214,7 @@ void bfe_clear_public_key(bfe_public_key_t* public_key) {
   }
 }
 
-int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsigned int key_size,
+int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsigned int key_size,
               unsigned int filterElementNumber, double false_positive_prob) {
   int status = BFE_SUCCESS;
 
@@ -239,7 +239,7 @@ int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsign
     bn_new(sk);
 
     /* generate IBE key */
-    status = ibe_setup(sk, public_key);
+    status = ibe_keygen(sk, public_key);
     if (!status) {
 #pragma omp parallel for reduction(| : status)
       for (unsigned int i = 0; i < bf_size; ++i) {

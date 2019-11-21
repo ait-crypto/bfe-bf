@@ -14,7 +14,7 @@ int crypto_kem_keypair(unsigned char* serialized_pk, unsigned char* serialized_s
   // generate new keys
   bfe_init_secret_key(&sk);
   bfe_init_public_key(&pk);
-  status = bfe_setup(&pk, &sk, CRYPTO_BYTES, 1 << 19, 0.0009765625);
+  status = bfe_keygen(&pk, &sk, CRYPTO_BYTES, 1 << 19, 0.0009765625);
 
   if (!status) {
     bfe_public_key_write_bin(serialized_pk, &pk);
