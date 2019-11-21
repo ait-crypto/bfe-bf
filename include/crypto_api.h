@@ -8,9 +8,9 @@
 #define CRYPTO_CIPHERTEXTBYTES ((1 * 4) + (1 + 2 * 48) + (32 * 11))
 #define CRYPTO_BYTES 32
 
-BFE_VISIBLE int crypto_kem_keypair(unsigned char *pk, unsigned char *sk);
-BFE_VISIBLE int crypto_kem_enc(unsigned char *c, unsigned char *k, const unsigned char *pk);
-BFE_VISIBLE int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char *sk);
-BFE_VISIBLE int crypto_kem_punc(unsigned char *sk, const unsigned char *c);
+BFE_VISIBLE int crypto_kem_keypair(unsigned char* pk, unsigned char* sk);
+BFE_VISIBLE int crypto_kem_enc(unsigned char* c, unsigned char* k, const unsigned char* pk);
+BFE_VISIBLE int crypto_kem_dec(unsigned char* k, const unsigned char* c, const unsigned char* sk);
+BFE_VISIBLE int crypto_kem_punc(unsigned char* sk, const unsigned char* c);
 
 #endif

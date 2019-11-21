@@ -82,7 +82,7 @@ static int bf_ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint
 
 // G(y) \xor K
 static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t y) {
-  uint8_t bin[FP12_SIZE]  = {0};
+  uint8_t bin[FP12_SIZE] = {0};
   fp12_write_bin(bin, FP12_SIZE, y, 0);
 
   Keccak_HashInstance shake;
@@ -216,8 +216,8 @@ int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsign
               unsigned int filterElementNumber, double false_positive_prob) {
   int status = BFE_SUCCESS;
 
-  bloomfilter_t filter         = bloomfilter_init(filterElementNumber, false_positive_prob);
-  const unsigned int bloomSize = bloomfilter_get_size(&filter);
+  bloomfilter_t filter         = bf_init(filterElementNumber, false_positive_prob);
+  const unsigned int bloomSize = bf_get_size(&filter);
 
   secret_key->secret_keys = calloc(bloomSize, sizeof(ep2_t));
   if (!secret_key->secret_keys) {
@@ -260,7 +260,7 @@ int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsign
 static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t* public_key,
                             bn_t r, const uint8_t* K) {
   int status = BFE_SUCCESS;
-  unsigned int bitPositions[public_key->filter_hash_count];
+  unsigned int bit_positions[public_key->filter_hash_count];
 
   ep_t pkr;
   ep_null(pkr);
@@ -272,15 +272,14 @@ static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t
     ep_new(pkr);
     ep_mul(pkr, public_key->public_key, r);
 
-    bloomfilter_get_bit_positions(bitPositions, ciphertext->u, public_key->filter_hash_count,
-                                  public_key->filter_size);
+    bf_get_bit_positions(bit_positions, ciphertext->u, public_key->filter_hash_count,
+                         public_key->filter_size);
 
     for (unsigned int i = 0; i < public_key->filter_hash_count; i++) {
-      /* extraxt key for identity bitPositions[i] */
-      const uint64_t id = htole64(bitPositions[i]);
+      const uint64_t id = htole64(bit_positions[i]);
 
-      status = bf_ibe_encrypt(&ciphertext->v[i * public_key->key_size], pkr,
-                              (const uint8_t*)&id, sizeof(id), K, public_key->key_size);
+      status = bf_ibe_encrypt(&ciphertext->v[i * public_key->key_size], pkr, (const uint8_t*)&id,
+                              sizeof(id), K, public_key->key_size);
       if (status) {
         break;
       }
@@ -340,9 +339,9 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
 void bfe_puncture(bfe_secret_key_t* secret_key, bfe_ciphertext_t* ciphertext) {
   unsigned int indices[secret_key->filter.hash_count];
 
-  bloomfilter_add(&secret_key->filter, ciphertext->u);
-  bloomfilter_get_bit_positions(indices, ciphertext->u, secret_key->filter.hash_count,
-                                bloomfilter_get_size(&secret_key->filter));
+  bf_add(&secret_key->filter, ciphertext->u);
+  bf_get_bit_positions(indices, ciphertext->u, secret_key->filter.hash_count,
+                       bf_get_size(&secret_key->filter));
   for (unsigned int i = 0; i < secret_key->filter.hash_count; i++) {
     ep2_set_infty(secret_key->secret_keys[indices[i]]);
     ep2_free(secret_key->secret_keys[indices[i]]);
@@ -359,14 +358,14 @@ static int bfe_ciphertext_cmp(const bfe_ciphertext_t* ciphertext1,
 }
 
 int bfe_decaps(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* secretKey,
-                bfe_ciphertext_t* ciphertext) {
+               bfe_ciphertext_t* ciphertext) {
   int status = BFE_SUCCESS;
 
   uint8_t key_buf[public_key->key_size];
   unsigned int indices[secretKey->filter.hash_count];
 
-  bloomfilter_get_bit_positions(indices, ciphertext->u, secretKey->filter.hash_count,
-                                bloomfilter_get_size(&secretKey->filter));
+  bf_get_bit_positions(indices, ciphertext->u, secretKey->filter.hash_count,
+                       bf_get_size(&secretKey->filter));
 
   status = BFE_ERR_GENERAL;
   for (unsigned int i = 0; i < secretKey->filter.hash_count; i++) {
@@ -555,7 +554,7 @@ int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint8_t* bin) {
   const unsigned int hash_count  = read_u32(&bin);
   const unsigned int filter_size = read_u32(&bin);
 
-  secret_key->filter = bloomfilter_init_fixed(filter_size, hash_count);
+  secret_key->filter = bf_init_fixed(filter_size, hash_count);
   for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitset.size); ++i) {
     secret_key->filter.bitset.bits[i] = read_u64(&bin);
   }

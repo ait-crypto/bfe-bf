@@ -8,30 +8,24 @@
 
 static const double log_2 = log(2);
 
-bloomfilter_t bloomfilter_init_fixed(unsigned int size, unsigned int hash_count) {
-  bloomfilter_t bloomFilter;
-
-  bloomFilter.hash_count = hash_count;
-  bloomFilter.bitset     = bitset_init(size);
-
-  return bloomFilter;
+bloomfilter_t bf_init_fixed(unsigned int size, unsigned int hash_count) {
+  bloomfilter_t bf = {.hash_count = hash_count, .bitset = bitset_init(size)};
+  return bf;
 }
 
-bloomfilter_t bloomfilter_init(unsigned int n, double false_positive_prob) {
-  bloomfilter_t bloomFilter;
+bloomfilter_t bf_init(unsigned int n, double false_positive_prob) {
+  const unsigned int bitset_size = bf_get_needed_size(n, false_positive_prob);
 
-  const unsigned int bitset_size = bloomfilter_get_needed_size(n, false_positive_prob);
-  bloomFilter.hash_count         = ceil((bitset_size / (double)n) * log_2);
-  bloomFilter.bitset             = bitset_init(bitset_size);
-
-  return bloomFilter;
+  bloomfilter_t bf = {.hash_count = ceil((bitset_size / (double)n) * log_2),
+                      .bitset     = bitset_init(bitset_size)};
+  return bf;
 }
 
-unsigned int bloomfilter_get_size(const bloomfilter_t* filter) {
+unsigned int bf_get_size(const bloomfilter_t* filter) {
   return filter->bitset.size;
 }
 
-unsigned int bloomfilter_get_needed_size(unsigned int n, double false_positive_prob) {
+unsigned int bf_get_needed_size(unsigned int n, double false_positive_prob) {
   return -floor((n * log(false_positive_prob)) / (log_2 * log_2));
 }
 
@@ -55,8 +49,8 @@ static unsigned int get_position(uint32_t hash_idx, const uint8_t* input, size_t
   return pos % filter_size;
 }
 
-void bloomfilter_get_bit_positions(unsigned int* positions, const ep_t input,
-                                   unsigned int hash_count, unsigned int filter_size) {
+void bf_get_bit_positions(unsigned int* positions, const ep_t input, unsigned int hash_count,
+                          unsigned int filter_size) {
   const unsigned int bin_size       = ep_size_bin(input, 0);
   uint8_t bin[2 * RLC_FP_BYTES + 1] = {0};
   ep_write_bin(bin, sizeof(bin), input, 0);
@@ -66,8 +60,8 @@ void bloomfilter_get_bit_positions(unsigned int* positions, const ep_t input,
   }
 }
 
-void bloomfilter_add(bloomfilter_t* filter, const ep_t input) {
-  const unsigned int bloomfilter_size = bloomfilter_get_size(filter);
+void bf_add(bloomfilter_t* filter, const ep_t input) {
+  const unsigned int bloomfilter_size = bf_get_size(filter);
   const unsigned int bin_size         = ep_size_bin(input, 0);
   uint8_t bin[2 * RLC_FP_BYTES + 1]   = {0};
   ep_write_bin(bin, sizeof(bin), input, 0);
@@ -78,12 +72,12 @@ void bloomfilter_add(bloomfilter_t* filter, const ep_t input) {
   }
 }
 
-void bloomfilter_reset(bloomfilter_t* filter) {
+void bf_reset(bloomfilter_t* filter) {
   bitset_reset(&filter->bitset);
 }
 
-int bloomfilter_maybe_contains(const bloomfilter_t* filter, const ep_t input) {
-  const unsigned int bloomfilter_size = bloomfilter_get_size(filter);
+int bf_maybe_contains(const bloomfilter_t* filter, const ep_t input) {
+  const unsigned int bloomfilter_size = bf_get_size(filter);
   const unsigned int bin_size         = ep_size_bin(input, 0);
   uint8_t bin[2 * RLC_FP_BYTES + 1]   = {0};
   ep_write_bin(bin, sizeof(bin), input, 0);

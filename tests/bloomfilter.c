@@ -22,13 +22,13 @@ Ensure(BF, add) {
   ep_rand(p2);
   ep_rand(p3);
 
-  bloomfilter_t bloom = bloomfilter_init(300, 0.001);
-  bloomfilter_add(&bloom, p1);
-  bloomfilter_add(&bloom, p2);
+  bloomfilter_t bloom = bf_init(300, 0.001);
+  bf_add(&bloom, p1);
+  bf_add(&bloom, p2);
 
-  assert_true(bloomfilter_maybe_contains(&bloom, p1));
-  assert_true(bloomfilter_maybe_contains(&bloom, p2));
-  assert_false(bloomfilter_maybe_contains(&bloom, p3));
+  assert_true(bf_maybe_contains(&bloom, p1));
+  assert_true(bf_maybe_contains(&bloom, p2));
+  assert_false(bf_maybe_contains(&bloom, p3));
 
   bloomfilter_clear(&bloom);
   ep_free(p3);

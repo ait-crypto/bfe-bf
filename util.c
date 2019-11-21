@@ -11,11 +11,11 @@ int random_bytes(uint8_t* dst, size_t len) {
   return 1;
 }
 #elif defined(__linux__) || defined(__APPLE__)
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #if defined(__linux__)
 #include <linux/random.h>

@@ -199,7 +199,7 @@ BFE_VISIBLE int bfe_setup(bfe_public_key_t* public_key, bfe_secret_key_t* secret
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
 BFE_VISIBLE int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* K,
-                            const bfe_public_key_t* public_key);
+                           const bfe_public_key_t* public_key);
 
 /**
  * Punctures a secret key for the given ciphertext. After this action the secret key will not be
@@ -221,8 +221,8 @@ BFE_VISIBLE void bfe_puncture(bfe_secret_key_t* secret_key, bfe_ciphertext_t* ci
  * @param[in] ciphertext the ciphertext
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
-BFE_VISIBLE int bfe_decaps(uint8_t* key, bfe_public_key_t* public_key,
-                            bfe_secret_key_t* secret_key, bfe_ciphertext_t* ciphertext);
+BFE_VISIBLE int bfe_decaps(uint8_t* key, bfe_public_key_t* public_key, bfe_secret_key_t* secret_key,
+                           bfe_ciphertext_t* ciphertext);
 
 /**
  * Init the ciphertext.
