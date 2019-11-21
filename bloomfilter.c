@@ -51,23 +51,23 @@ static unsigned int get_position(uint32_t hash_idx, const uint8_t* input, size_t
 
 void bf_get_bit_positions(unsigned int* positions, const ep_t input, unsigned int hash_count,
                           unsigned int filter_size) {
-  const unsigned int bin_size       = ep_size_bin(input, 0);
-  uint8_t bin[2 * RLC_FP_BYTES + 1] = {0};
-  ep_write_bin(bin, sizeof(bin), input, 0);
+  const unsigned int buffer_size       = ep_size_bin(input, 0);
+  uint8_t buffer[2 * RLC_FP_BYTES + 1] = {0};
+  ep_write_bin(buffer, buffer_size, input, 0);
 
-  for (unsigned int i = 0; i < hash_count; i++) {
-    positions[i] = get_position(i, bin, bin_size, filter_size);
+  for (unsigned int i = 0; i < hash_count; ++i) {
+    positions[i] = get_position(i, buffer, buffer_size, filter_size);
   }
 }
 
 void bf_add(bloomfilter_t* filter, const ep_t input) {
-  const unsigned int bloomfilter_size = bf_get_size(filter);
-  const unsigned int bin_size         = ep_size_bin(input, 0);
-  uint8_t bin[2 * RLC_FP_BYTES + 1]   = {0};
-  ep_write_bin(bin, sizeof(bin), input, 0);
+  const unsigned int bloomfilter_size  = bf_get_size(filter);
+  const unsigned int buffer_size       = ep_size_bin(input, 0);
+  uint8_t buffer[2 * RLC_FP_BYTES + 1] = {0};
+  ep_write_bin(buffer, buffer_size, input, 0);
 
-  for (unsigned int i = 0; i < filter->hash_count; i++) {
-    unsigned int pos = get_position(i, bin, bin_size, bloomfilter_size);
+  for (unsigned int i = 0; i < filter->hash_count; ++i) {
+    unsigned int pos = get_position(i, buffer, buffer_size, bloomfilter_size);
     bitset_set(&filter->bitset, pos);
   }
 }
@@ -77,13 +77,13 @@ void bf_reset(bloomfilter_t* filter) {
 }
 
 int bf_maybe_contains(const bloomfilter_t* filter, const ep_t input) {
-  const unsigned int bloomfilter_size = bf_get_size(filter);
-  const unsigned int bin_size         = ep_size_bin(input, 0);
-  uint8_t bin[2 * RLC_FP_BYTES + 1]   = {0};
-  ep_write_bin(bin, sizeof(bin), input, 0);
+  const unsigned int bloomfilter_size  = bf_get_size(filter);
+  const unsigned int buffer_size       = ep_size_bin(input, 0);
+  uint8_t buffer[2 * RLC_FP_BYTES + 1] = {0};
+  ep_write_bin(buffer, buffer_size, input, 0);
 
-  for (unsigned int i = 0; i < filter->hash_count; i++) {
-    unsigned int pos = get_position(i, bin, bin_size, bloomfilter_size);
+  for (unsigned int i = 0; i < filter->hash_count; ++i) {
+    unsigned int pos = get_position(i, buffer, buffer_size, bloomfilter_size);
     if (!bitset_get(&filter->bitset, pos)) {
       return 0;
     }
