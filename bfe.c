@@ -13,6 +13,8 @@
 static const uint8_t domain_G[] = "BFE_H_G";
 static const uint8_t domain_H[] = "BFE_H_H";
 
+static unsigned int order_size;
+
 static void write_u32(uint8_t** dst, uint32_t v) {
   v = htole32(v);
   memcpy(*dst, &v, sizeof(v));
@@ -163,6 +165,12 @@ __attribute__((constructor)) static void init_relic(void) {
     core_clean();
   } else {
     ep_param_set_any_pairf();
+
+    bn_t order;
+    bn_new(order);
+    ep_curve_get_ord(order);
+    order_size = bn_size_bin(order);
+    bn_free(order);
   }
 }
 
@@ -310,9 +318,6 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
   TRY {
     bn_new(r);
 
-    ep_curve_get_ord(r);
-    const unsigned int order_size = bn_size_bin(r);
-
     Keccak_HashInstance shake;
     Keccak_HashInitialize_SHAKE256(&shake);
     Keccak_HashUpdate(&shake, domain_H, sizeof(domain_H) * 8);
@@ -394,9 +399,6 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
 
   TRY {
     bn_new(r);
-
-    ep_curve_get_ord(r);
-    const unsigned int order_size = bn_size_bin(r);
 
     Keccak_HashInstance shake;
     Keccak_HashInitialize_SHAKE256(&shake);
