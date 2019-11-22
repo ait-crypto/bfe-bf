@@ -77,9 +77,6 @@ endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
   target_link_options(bfe PRIVATE LINKER:-z,relro LINKER:-z,now)
-  if(HAVE_ZFLOG)
-    target_link_options(bfe PRIVATE LINKER:--exclude-libs,ALL)
-  endif()
 endif()
 
 install(TARGETS bfe
