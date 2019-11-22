@@ -10,8 +10,8 @@
 #define EP2_SIZE (1 + 4 * RLC_FP_BYTES)
 #define FP12_SIZE (12 * RLC_FP_BYTES)
 
-static const uint8_t domain_G[] = "BFE_G";
-static const uint8_t domain_H[] = "BFE_H";
+static const uint8_t domain_G[] = "BFE_H_G";
+static const uint8_t domain_H[] = "BFE_H_H";
 
 static void write_u32(uint8_t** dst, uint32_t v) {
   v = htole32(v);
@@ -161,8 +161,9 @@ static int ibe_decrypt(uint8_t* message, ep_t g1r, const uint8_t* Kxored, size_t
 __attribute__((constructor)) static void init_relic(void) {
   if (core_init() != RLC_OK) {
     core_clean();
+  } else {
+    ep_param_set_any_pairf();
   }
-  ep_param_set_any_pairf();
 }
 
 __attribute__((destructor)) static void clean_relic(void) {

@@ -42,7 +42,7 @@ unsigned int bf_get_size(const bloomfilter_t* filter) {
 
 static unsigned int get_position(uint32_t hash_idx, const uint8_t* input, size_t input_len,
                                  unsigned int filter_size) {
-  static const uint8_t domain[] = "BF_";
+  static const uint8_t domain[] = "BF_HASH";
 
   Keccak_HashInstance shake;
   Keccak_HashInitialize_SHAKE128(&shake);
@@ -53,11 +53,9 @@ static unsigned int get_position(uint32_t hash_idx, const uint8_t* input, size_t
   Keccak_HashUpdate(&shake, input, input_len * 8);
   Keccak_HashFinal(&shake, NULL);
 
-  uint64_t pos = 0;
-  Keccak_HashSqueeze(&shake, (uint8_t*)&pos, sizeof(pos) * 8);
-  pos = le64toh(pos);
-
-  return pos % filter_size;
+  uint64_t output = 0;
+  Keccak_HashSqueeze(&shake, (uint8_t*)&output, sizeof(output) * 8);
+  return le64toh(output) % filter_size;
 }
 
 void bf_get_bit_positions(unsigned int* positions, const ep_t input, unsigned int hash_count,
