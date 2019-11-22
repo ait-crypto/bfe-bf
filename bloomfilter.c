@@ -4,7 +4,8 @@
 #include <stdlib.h>
 
 #include "FIPS202-opt64/KeccakHash.h"
-#include "include/bloomfilter.h"
+#include "bloomfilter.h"
+#include "bitset.h"
 
 static const double log_2 = log(2);
 

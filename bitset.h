@@ -1,7 +1,8 @@
 #ifndef BFE_BITSET_H
 #define BFE_BITSET_H
 
-#include "macros.h"
+#include "include/macros.h"
+#include "include/types.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -9,11 +10,6 @@
 
 #define BITSET_WORD_BITS (8 * sizeof(uint64_t))
 #define BITSET_SIZE(size) (((size) + BITSET_WORD_BITS - 1) / BITSET_WORD_BITS)
-
-typedef struct {
-  uint64_t* bits;
-  unsigned int size;
-} bitset_t;
 
 /**
  * Creates a bitset with the given number of bits.

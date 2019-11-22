@@ -1,15 +1,10 @@
 #ifndef BFE_BLOOMFILTER_H
 #define BFE_BLOOMFILTER_H
 
-#include "bitset.h"
+#include "include/types.h"
+#include "include/macros.h"
 
-#include <relic/relic.h>
 #include <stddef.h>
-
-typedef struct _bloomfilter_t {
-  unsigned int hash_count;
-  bitset_t bitset;
-} bloomfilter_t;
 
 /**
  * Calculates a size of a bloom filter needed to satisfy the given expected number of elements

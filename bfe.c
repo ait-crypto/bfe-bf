@@ -1,7 +1,8 @@
 #include "include/bfe.h"
 
 #include "FIPS202-opt64/KeccakHash.h"
-#include "include/bloomfilter.h"
+#include "bloomfilter.h"
+#include "bitset.h"
 #include "include/err_codes.h"
 #include "util.h"
 
