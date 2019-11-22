@@ -187,7 +187,7 @@ void bfe_clear_secret_key(bfe_secret_key_t* secret_key) {
       secret_key->secret_keys_len = 0;
       secret_key->secret_keys     = NULL;
     }
-    bloomfilter_clear(&secret_key->filter);
+    bf_clear(&secret_key->filter);
   }
 }
 
@@ -224,7 +224,7 @@ int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsig
 
   secret_key->secret_keys = calloc(bf_size, sizeof(ep2_t));
   if (!secret_key->secret_keys) {
-    bloomfilter_clear(&filter);
+    bf_clear(&filter);
     return BFE_ERR_GENERAL;
   }
 

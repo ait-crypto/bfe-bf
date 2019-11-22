@@ -1,7 +1,7 @@
 find_package(cgreen)
 if(cgreen_FOUND)
   add_executable(bf bloomfilter.c)
-  target_link_libraries(bf PRIVATE bfe ${CGREEN_LIBRARIES})
+  target_link_libraries(bf PRIVATE bfe_static ${CGREEN_LIBRARIES})
   target_include_directories(bf PRIVATE ${CGREEN_INCLUDE_DIRS})
   add_test(NAME BF COMMAND bf)
 

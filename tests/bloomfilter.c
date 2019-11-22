@@ -30,14 +30,21 @@ Ensure(BF, add) {
   assert_true(bf_maybe_contains(&bloom, p2));
   assert_false(bf_maybe_contains(&bloom, p3));
 
-  bloomfilter_clear(&bloom);
+  bf_clear(&bloom);
   ep_free(p3);
   ep_free(p2);
   ep_free(p1);
 }
 
 int main() {
+  if (core_init() != RLC_OK) {
+    return -1;
+  }
+  ep_param_set_any_pairf();
+
   TestSuite* suite = create_test_suite();
   add_test_with_context(suite, BF, add);
-  return run_test_suite(suite, create_text_reporter());
+  const int ret =  run_test_suite(suite, create_text_reporter());
+  core_clean();
+  return ret;
 }

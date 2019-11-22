@@ -2,21 +2,8 @@
 #define BFE_BLOOMFILTER_H
 
 #include "include/types.h"
-#include "include/macros.h"
 
 #include <stddef.h>
-
-/**
- * Calculates a size of a bloom filter needed to satisfy the given expected number of elements
- * inside the filter with the target false positive probability. No bloom filter is created, this
- * function is made for estimation purposes.
- *
- * @param[in] n the expected number of elements inside the filter.
- * @param[in] false_positive_prob target false positive probability for the filter with the
- * specified number of elements.
- * @return The size a bloom filter with the given parameters would have.
- */
-BFE_VISIBLE unsigned int bf_get_needed_size(unsigned int n, double false_positive_prob);
 
 /**
  * Creates a new bloom filter with the explicit size and hash count parameters.
@@ -25,7 +12,7 @@ BFE_VISIBLE unsigned int bf_get_needed_size(unsigned int n, double false_positiv
  * @param[in] hash_count number of hash functions to be used.
  * @return The initialized bloom filter.
  */
-BFE_VISIBLE bloomfilter_t bf_init_fixed(unsigned int size, unsigned int hash_count);
+bloomfilter_t bf_init_fixed(unsigned int size, unsigned int hash_count);
 
 /**
  * Creates a new bloom filter with the given parameters.
@@ -35,7 +22,7 @@ BFE_VISIBLE bloomfilter_t bf_init_fixed(unsigned int size, unsigned int hash_cou
  * specified number of elements.
  * @return The initialized bloom filter.
  */
-BFE_VISIBLE bloomfilter_t bf_init(unsigned int n, double false_positive_prob);
+bloomfilter_t bf_init(unsigned int n, double false_positive_prob);
 
 /**
  * Returns the total number of positions inside the filter.
@@ -43,7 +30,7 @@ BFE_VISIBLE bloomfilter_t bf_init(unsigned int n, double false_positive_prob);
  * @param[in] filter the corresponding filter.
  * @return The size of the filter.
  */
-BFE_VISIBLE unsigned int bf_get_size(const bloomfilter_t* filter);
+unsigned int bf_get_size(const bloomfilter_t* filter);
 
 /**
  * Returns the bit positions of the bloom filter that would be set for the given input. No bloom
@@ -55,8 +42,8 @@ BFE_VISIBLE unsigned int bf_get_size(const bloomfilter_t* filter);
  * @param[in] filter_size size of the hypothetical bloom filter.
  * @return The size of the filter.
  */
-BFE_VISIBLE void bf_get_bit_positions(unsigned int* positions, const ep_t input,
-                                      unsigned int hash_count, unsigned int filter_size);
+void bf_get_bit_positions(unsigned int* positions, const ep_t input, unsigned int hash_count,
+                          unsigned int filter_size);
 
 /**
  * Adds a given element to the bloom filter.
@@ -64,14 +51,14 @@ BFE_VISIBLE void bf_get_bit_positions(unsigned int* positions, const ep_t input,
  * @param[out] filter the filter to which the element is being added.
  * @param[in] input input element for the filter.
  */
-BFE_VISIBLE void bf_add(bloomfilter_t* filter, const ep_t input);
+void bf_add(bloomfilter_t* filter, const ep_t input);
 
 /**
  * Sets all the bits of a bloom filter to FALSE.
  *
  * @param[out] filter the filter to reset.
  */
-BFE_VISIBLE void bf_reset(bloomfilter_t* filter);
+void bf_reset(bloomfilter_t* filter);
 
 /**
  * Checks whether the given element is possibly in the filter. Due to possibility of false positives
@@ -81,7 +68,7 @@ BFE_VISIBLE void bf_reset(bloomfilter_t* filter);
  * @param[in] input input element for the filter.
  * @return 0 if element is definitely not in the filter, 1 if element is likely in the filter.
  */
-BFE_VISIBLE int bf_maybe_contains(const bloomfilter_t* filter, const ep_t input);
+int bf_maybe_contains(const bloomfilter_t* filter, const ep_t input);
 
 /**
  * Frees the memory allocated by the bloom filter. This method has to be called after the filter is
@@ -89,6 +76,6 @@ BFE_VISIBLE int bf_maybe_contains(const bloomfilter_t* filter, const ep_t input)
  *
  * @param[out] filter the filter to clear.
  */
-BFE_VISIBLE void bloomfilter_clear(bloomfilter_t* filter);
+void bf_clear(bloomfilter_t* filter);
 
 #endif // BFE_BLOOMFILTER_H
