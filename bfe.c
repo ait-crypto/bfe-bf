@@ -10,9 +10,6 @@
 #define EP2_SIZE (1 + 4 * RLC_FP_BYTES)
 #define FP12_SIZE (12 * RLC_FP_BYTES)
 
-static const uint8_t domain_G[] = "BFE_H_G";
-static const uint8_t domain_H[] = "BFE_H_H";
-
 static unsigned int order_size;
 
 static void write_u32(uint8_t** dst, uint32_t v) {
@@ -85,6 +82,8 @@ static int ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint8_t
 
 // G(y) \xor K
 static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t y) {
+  static const uint8_t domain_G[] = "BFE_H_G";
+
   uint8_t buffer[FP12_SIZE] = {0};
   fp12_write_bin(buffer, FP12_SIZE, y, 0);
 
@@ -105,6 +104,15 @@ static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t 
       dst[i] = input[i] ^ buf[i];
     }
   }
+}
+
+static void hash_R(Keccak_HashInstance* ctx, const uint8_t* key, size_t key_size) {
+  static const uint8_t domain_R[] = "BFE_H_R";
+
+  Keccak_HashInitialize_SHAKE256(ctx);
+  Keccak_HashUpdate(ctx, domain_R, sizeof(domain_R) * 8);
+  Keccak_HashUpdate(ctx, key, key_size * 8);
+  Keccak_HashFinal(ctx, NULL);
 }
 
 static int ibe_encrypt(uint8_t* dst, ep_t pkr, const uint8_t* id, size_t id_len,
@@ -319,10 +327,7 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
     bn_new(r);
 
     Keccak_HashInstance shake;
-    Keccak_HashInitialize_SHAKE256(&shake);
-    Keccak_HashUpdate(&shake, domain_H, sizeof(domain_H) * 8);
-    Keccak_HashUpdate(&shake, K, public_key->key_size * 8);
-    Keccak_HashFinal(&shake, NULL);
+    hash_R(&shake, K, public_key->key_size);
 
     // r of (r, K') = R(K)
     uint8_t buf[order_size];
@@ -401,10 +406,7 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
     bn_new(r);
 
     Keccak_HashInstance shake;
-    Keccak_HashInitialize_SHAKE256(&shake);
-    Keccak_HashUpdate(&shake, domain_H, sizeof(domain_H) * 8);
-    Keccak_HashUpdate(&shake, key_buf, public_key->key_size * 8);
-    Keccak_HashFinal(&shake, NULL);
+    hash_R(&shake, key_buf, public_key->key_size);
 
     // r of (r, K') = R(K)
     uint8_t buffer[order_size];
