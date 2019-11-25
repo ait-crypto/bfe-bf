@@ -1,8 +1,8 @@
 #include "include/bfe.h"
 
 #include "FIPS202-opt64/KeccakHash.h"
-#include "bloomfilter.h"
 #include "bitset.h"
+#include "bloomfilter.h"
 #include "include/err_codes.h"
 #include "util.h"
 
@@ -80,7 +80,7 @@ static int ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint8_t
   return status;
 }
 
-// G(y) \xor K
+/* G(y) ^ K */
 static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t y) {
   static const uint8_t domain_G[] = "BFE_H_G";
 
@@ -106,6 +106,7 @@ static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t 
   }
 }
 
+/* R(K) */
 static void hash_R(Keccak_HashInstance* ctx, const uint8_t* key, size_t key_size) {
   static const uint8_t domain_R[] = "BFE_H_R";
 
@@ -126,11 +127,11 @@ static int ibe_encrypt(uint8_t* dst, ep_t pkr, const uint8_t* id, size_t id_len,
 
   TRY {
     ep2_new(qid);
-    fp12_new(g);
+    fp12_new(t);
 
-    // G(i_j)
+    /* G(i_j) */
     ep2_map(qid, id, id_len);
-    // e(pk^r, G(i_j))
+    /* e(pk^r, G(i_j)) */
     pp_map_k12(t, pkr, qid);
 
     hash_and_xor(dst, message_len, message, t);
@@ -233,10 +234,10 @@ void bfe_clear_public_key(bfe_public_key_t* public_key) {
 }
 
 int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsigned int key_size,
-              unsigned int filterElementNumber, double false_positive_prob) {
+               unsigned int filter_size, double false_positive_prob) {
   int status = BFE_SUCCESS;
 
-  bloomfilter_t filter       = bf_init(filterElementNumber, false_positive_prob);
+  bloomfilter_t filter       = bf_init(filter_size, false_positive_prob);
   const unsigned int bf_size = bf_get_size(&filter);
 
   secret_key->secret_keys = calloc(bf_size, sizeof(ep2_t));
@@ -259,6 +260,7 @@ int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsig
     /* generate IBE key */
     status = ibe_keygen(sk, public_key);
     if (!status) {
+      /* run key generation in parallel */
 #pragma omp parallel for reduction(| : status)
       for (unsigned int i = 0; i < bf_size; ++i) {
         /* extraxt key for identity i */
@@ -286,23 +288,22 @@ static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t
   ep_null(pkr);
 
   TRY {
-    // g_1^r
-    ep_mul_gen(ciphertext->u, r);
-    // pk^r
     ep_new(pkr);
+
+    /* g_1^r */
+    ep_mul_gen(ciphertext->u, r);
+    /* pk^r */
     ep_mul(pkr, public_key->public_key, r);
 
     bf_get_bit_positions(bit_positions, ciphertext->u, public_key->filter_hash_count,
                          public_key->filter_size);
 
+#pragma omp parallel for reduction(| : status)
     for (unsigned int i = 0; i < public_key->filter_hash_count; ++i) {
       const uint64_t id = htole64(bit_positions[i]);
 
-      status = ibe_encrypt(&ciphertext->v[i * public_key->key_size], pkr, (const uint8_t*)&id,
-                           sizeof(id), K, public_key->key_size);
-      if (status) {
-        break;
-      }
+      status |= ibe_encrypt(&ciphertext->v[i * public_key->key_size], pkr, (const uint8_t*)&id,
+                            sizeof(id), K, public_key->key_size);
     }
   }
   CATCH_ANY {
@@ -329,14 +330,14 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
     Keccak_HashInstance shake;
     hash_R(&shake, K, public_key->key_size);
 
-    // r of (r, K') = R(K)
+    /* r of (r, K') = R(K) */
     uint8_t buf[order_size];
     Keccak_HashSqueeze(&shake, buf, order_size * 8);
     bn_read_bin(r, buf, order_size);
 
     status = internal_encrypt(ciphertext, public_key, r, K);
-    if (status == BFE_SUCCESS) {
-      // K' of (r, K') = R(K)
+    if (!status) {
+      /* K' of (r, K') = R(K) */
       Keccak_HashSqueeze(&shake, Kout, public_key->key_size * 8);
     }
   }
@@ -408,7 +409,7 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
     Keccak_HashInstance shake;
     hash_R(&shake, key_buf, public_key->key_size);
 
-    // r of (r, K') = R(K)
+    /* r of (r, K') = R(K) */
     uint8_t buffer[order_size];
     Keccak_HashSqueeze(&shake, buffer, order_size * 8);
     bn_read_bin(r, buffer, order_size);
@@ -416,7 +417,7 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
     status = internal_encrypt(&check_ciphertext, public_key, r, key_buf);
 
     if (!status && bfe_ciphertext_cmp(&check_ciphertext, ciphertext) == 0) {
-      // K' of (r, K') = R(K)
+      /* K' of (r, K') = R(K) */
       Keccak_HashSqueeze(&shake, key, public_key->key_size * 8);
     } else {
       status = BFE_ERR_GENERAL;

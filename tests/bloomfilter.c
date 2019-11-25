@@ -44,7 +44,7 @@ int main() {
 
   TestSuite* suite = create_test_suite();
   add_test_with_context(suite, BF, add);
-  const int ret =  run_test_suite(suite, create_text_reporter());
+  const int ret = run_test_suite(suite, create_text_reporter());
   core_clean();
   return ret;
 }

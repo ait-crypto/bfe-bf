@@ -35,8 +35,8 @@
  *  bfe_clear_secret_key(&sk);
  *  bfe_clear_public_key(&pk);
  * @endcode
- * The paramters passed to @ref bfe_keygen setups the system to encapsulate 32 byte keys with a bloom
- * filter size of <code>2^19</code> elements and a correctness error of approximately
+ * The paramters passed to @ref bfe_keygen setups the system to encapsulate 32 byte keys with a
+ * bloom filter size of <code>2^19</code> elements and a correctness error of approximately
  * <code>2^-10</code>.
  *
  * We note that the public key is small enough to fit on the stack. The secret key, however, needs
@@ -114,8 +114,8 @@
  * @endcode
  */
 
-#include "types.h"
 #include "macros.h"
+#include "types.h"
 
 /**
  * Initialize secret key.
@@ -156,8 +156,8 @@ BFE_VISIBLE void bfe_clear_public_key(bfe_public_key_t* public_key);
  * @return BFE_SUCCESS or BFE_ERR_*.
  */
 BFE_VISIBLE int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key,
-                          unsigned int key_length, unsigned int filter_element_number,
-                          double false_positive_probability);
+                           unsigned int key_length, unsigned int filter_element_number,
+                           double false_positive_probability);
 
 /**
  * Generates a random key K and encapsulates it.
