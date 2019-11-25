@@ -329,8 +329,8 @@ static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t
 }
 
 int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key_t* public_key) {
-  uint8_t K[MAX_BFE_KEY_SIZE];
-  random_bytes(K, public_key->key_size);
+  uint8_t key_buffer[MAX_BFE_KEY_SIZE];
+  random_bytes(key_buffer, public_key->key_size);
 
   int status = BFE_SUCCESS;
   bn_t r;
@@ -340,14 +340,14 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
     bn_new(r);
 
     Keccak_HashInstance shake;
-    hash_R(&shake, K, public_key->key_size);
+    hash_R(&shake, key_buffer, public_key->key_size);
 
     /* r of (r, K') = R(K) */
     uint8_t buffer[MAX_ORDER_SIZE];
     Keccak_HashSqueeze(&shake, buffer, order_size * 8);
     bn_read_bin(r, buffer, order_size);
 
-    status = internal_encrypt(ciphertext, public_key, r, K);
+    status = internal_encrypt(ciphertext, public_key, r, key_buffer);
     if (!status) {
       /* K' of (r, K') = R(K) */
       Keccak_HashSqueeze(&shake, Kout, public_key->key_size * 8);
@@ -359,6 +359,9 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
   FINALLY {
     bn_free(r);
   }
+#if defined(HAVE_EXPLICIT_BZERO)
+  explicit_bzero(key_buffer, sizeof(key_buffer));
+#endif
 
   return status;
 }
@@ -442,6 +445,9 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
     bn_free(r);
     bfe_clear_ciphertext(&check_ciphertext);
   }
+#if defined(HAVE_EXPLICIT_BZERO)
+  explicit_bzero(key_buffer, sizeof(key_buffer));
+#endif
 
   return status;
 }

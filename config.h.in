@@ -8,6 +8,7 @@
 
 /* available functions */
 #cmakedefine HAVE_GETRANDOM
+#cmakedefine HAVE_EXPLICIT_BZERO
 
 /* from cmake settings */
 #cmakedefine MAX_BLOOMFILTER_HASH_COUNT @MAX_BLOOMFILTER_HASH_COUNT@

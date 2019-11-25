@@ -43,6 +43,7 @@ check_include_files(sys/random.h HAVE_SYS_RANDOM_H)
 
 # check availability of some functions
 check_symbol_exists(getrandom sys/random.h HAVE_GETRANDOM)
+check_symbol_exists(explicit_bzero string.h HAVE_EXPLICIT_BZERO)
 
 check_ipo_supported(RESULT LTO_SUPPORTED)
 
