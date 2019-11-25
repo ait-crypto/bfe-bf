@@ -1,0 +1,16 @@
+#ifndef BFE_CONFIG_H
+#define BFE_CONFIG_H
+
+/* from cmake checks */
+
+/* available headers */
+#cmakedefine HAVE_SYS_RANDOM_H
+
+/* available functions */
+#cmakedefine HAVE_GETRANDOM
+
+/* from cmake settings */
+#cmakedefine MAX_BLOOMFILTER_HASH_COUNT @MAX_BLOOMFILTER_HASH_COUNT@
+#cmakedefine MAX_BFE_KEY_SIZE @MAX_BFE_KEY_SIZE@
+
+#endif

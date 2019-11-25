@@ -20,7 +20,7 @@ static void bench_bfe(void) {
   bfe_ciphertext_t ciphertext;
   bfe_init_ciphertext(&ciphertext, &pk);
 
-  uint8_t K[pk.key_size], decrypted[pk.key_size];
+  uint8_t K[32], decrypted[32];
   BENCH_BEGIN("encrypt") {
     BENCH_ADD(bfe_encaps(&ciphertext, K, &pk));
   }

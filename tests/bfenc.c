@@ -50,7 +50,8 @@ Ensure(BFE, encrypt_decrypt_serialized) {
   assert_true(!bfe_encaps(&ciphertext, K, &pk));
 
   const size_t csize = bfe_ciphertext_size_bin(&ciphertext);
-  uint8_t bin[csize];
+  uint8_t* bin = malloc(csize);
+  assert_true(bin != NULL);
 
   bfe_ciphertext_write_bin(bin, &ciphertext);
   assert_true(!bfe_ciphertext_read_bin(&deserialized_ciphertext, bin));
@@ -58,6 +59,7 @@ Ensure(BFE, encrypt_decrypt_serialized) {
   assert_true(!bfe_decaps(decrypted, &pk, &sk, &deserialized_ciphertext));
   assert_true(!memcmp(K, decrypted, KEY_SIZE));
 
+  free(bin);
   bfe_clear_secret_key(&sk);
   bfe_clear_public_key(&pk);
   bfe_clear_ciphertext(&deserialized_ciphertext);
@@ -103,9 +105,10 @@ Ensure(BFE, keys_serialized) {
   bfe_ciphertext_t ciphertext;
   assert_true(!bfe_init_ciphertext(&ciphertext, &pk));
 
-  uint8_t pk_bin[bfe_public_key_size_bin()];
+  uint8_t* pk_bin = malloc(bfe_public_key_size_bin());
   bfe_public_key_write_bin(pk_bin, &pk);
   assert_true(!bfe_public_key_read_bin(&deserialized_pk, pk_bin));
+  free(pk_bin);
 
   uint8_t* sk_bin = malloc(bfe_secret_key_size_bin(&sk));
   bfe_secret_key_write_bin(sk_bin, &sk);

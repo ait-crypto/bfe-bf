@@ -6,9 +6,13 @@
 #include "include/err_codes.h"
 #include "util.h"
 
+#include <config.h>
+
 #define EP_SIZE (1 + 2 * RLC_FP_BYTES)
 #define EP2_SIZE (1 + 4 * RLC_FP_BYTES)
 #define FP12_SIZE (12 * RLC_FP_BYTES)
+/* not exactly true, but large enough */
+#define MAX_ORDER_SIZE RLC_FP_BYTES
 
 static unsigned int order_size;
 
@@ -235,12 +239,20 @@ void bfe_clear_public_key(bfe_public_key_t* public_key) {
 
 int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsigned int key_size,
                unsigned int filter_size, double false_positive_prob) {
+  if (key_size > MAX_BFE_KEY_SIZE || order_size > MAX_ORDER_SIZE) {
+    return BFE_ERR_INVALID_PARAM;
+  }
+
   int status = BFE_SUCCESS;
 
-  bloomfilter_t filter       = bf_init(filter_size, false_positive_prob);
-  const unsigned int bf_size = bf_get_size(&filter);
+  bloomfilter_t filter = bf_init(filter_size, false_positive_prob);
+  if (filter.hash_count > MAX_BLOOMFILTER_HASH_COUNT) {
+    bf_clear(&filter);
+    return BFE_ERR_INVALID_PARAM;
+  }
 
-  secret_key->secret_keys = calloc(bf_size, sizeof(ep2_t));
+  const unsigned int bf_size = bf_get_size(&filter);
+  secret_key->secret_keys    = calloc(bf_size, sizeof(ep2_t));
   if (!secret_key->secret_keys) {
     bf_clear(&filter);
     return BFE_ERR_GENERAL;
@@ -282,7 +294,7 @@ int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsig
 static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t* public_key,
                             bn_t r, const uint8_t* K) {
   int status = BFE_SUCCESS;
-  unsigned int bit_positions[public_key->filter_hash_count];
+  unsigned int bit_positions[MAX_BLOOMFILTER_HASH_COUNT];
 
   ep_t pkr;
   ep_null(pkr);
@@ -317,7 +329,7 @@ static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t
 }
 
 int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key_t* public_key) {
-  uint8_t K[public_key->key_size];
+  uint8_t K[MAX_BFE_KEY_SIZE];
   random_bytes(K, public_key->key_size);
 
   int status = BFE_SUCCESS;
@@ -331,9 +343,9 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
     hash_R(&shake, K, public_key->key_size);
 
     /* r of (r, K') = R(K) */
-    uint8_t buf[order_size];
-    Keccak_HashSqueeze(&shake, buf, order_size * 8);
-    bn_read_bin(r, buf, order_size);
+    uint8_t buffer[MAX_ORDER_SIZE];
+    Keccak_HashSqueeze(&shake, buffer, order_size * 8);
+    bn_read_bin(r, buffer, order_size);
 
     status = internal_encrypt(ciphertext, public_key, r, K);
     if (!status) {
@@ -352,7 +364,7 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
 }
 
 void bfe_puncture(bfe_secret_key_t* secret_key, bfe_ciphertext_t* ciphertext) {
-  unsigned int indices[secret_key->filter.hash_count];
+  unsigned int indices[MAX_BLOOMFILTER_HASH_COUNT];
 
   bf_add(&secret_key->filter, ciphertext->u);
   bf_get_bit_positions(indices, ciphertext->u, secret_key->filter.hash_count,
@@ -376,8 +388,8 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
                bfe_ciphertext_t* ciphertext) {
   int status = BFE_SUCCESS;
 
-  uint8_t key_buf[public_key->key_size];
-  unsigned int indices[secret_key->filter.hash_count];
+  uint8_t key_buffer[MAX_BFE_KEY_SIZE];
+  unsigned int indices[MAX_BLOOMFILTER_HASH_COUNT];
 
   bf_get_bit_positions(indices, ciphertext->u, secret_key->filter.hash_count,
                        bf_get_size(&secret_key->filter));
@@ -385,7 +397,7 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
   status = BFE_ERR_GENERAL;
   for (unsigned int i = 0; i < secret_key->filter.hash_count; ++i) {
     if (bitset_get(&secret_key->filter.bitset, indices[i]) == 0) {
-      status = ibe_decrypt(key_buf, ciphertext->u, &ciphertext->v[i * public_key->key_size],
+      status = ibe_decrypt(key_buffer, ciphertext->u, &ciphertext->v[i * public_key->key_size],
                            public_key->key_size, secret_key->secret_keys[indices[i]]);
       if (status == BFE_SUCCESS) {
         break;
@@ -407,14 +419,14 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
     bn_new(r);
 
     Keccak_HashInstance shake;
-    hash_R(&shake, key_buf, public_key->key_size);
+    hash_R(&shake, key_buffer, public_key->key_size);
 
     /* r of (r, K') = R(K) */
-    uint8_t buffer[order_size];
+    uint8_t buffer[MAX_ORDER_SIZE];
     Keccak_HashSqueeze(&shake, buffer, order_size * 8);
     bn_read_bin(r, buffer, order_size);
 
-    status = internal_encrypt(&check_ciphertext, public_key, r, key_buf);
+    status = internal_encrypt(&check_ciphertext, public_key, r, key_buffer);
 
     if (!status && bfe_ciphertext_cmp(&check_ciphertext, ciphertext) == 0) {
       /* K' of (r, K') = R(K) */

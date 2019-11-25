@@ -1,5 +1,7 @@
 #include "util.h"
 
+#include <config.h>
+
 #if defined(__linux__) && defined(HAVE_SYS_RANDOM_H) && defined(HAVE_GETRANDOM)
 #include <sys/random.h>
 

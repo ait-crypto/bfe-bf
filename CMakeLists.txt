@@ -15,6 +15,10 @@ project(bfe LANGUAGES C VERSION 1.0 DESCRIPTION "Bloom Filter Encryption Library
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+# settings
+set(MAX_BLOOMFILTER_HASH_COUNT 16 CACHE STRING "Maximal number of bloom filter hash functions.")
+set(MAX_BFE_KEY_SIZE 32 CACHE STRING "Maximal size of encapsulated key.")
+
 include(GNUInstallDirs)
 include(CheckCCompilerFlag)
 include(CheckIPOSupported)
@@ -32,6 +36,7 @@ check_c_compiler_flag_and_add(-Wall CC_SUPPORTS_WALL)
 check_c_compiler_flag_and_add(-Wextra CC_SUPPORTS_WEXTRA)
 check_c_compiler_flag_and_add(-Wshadow CC_SUPPORTS_WSHADOW)
 check_c_compiler_flag_and_add(-Werror=implicit-function-declaration CC_SUPPORTS_WERROR_IMPLICIT_FUNCTION_DECLARATION)
+check_c_compiler_flag_and_add(-Werror=vla CC_SUPPORTS_WERROR_VLA)
 
 # check headers
 check_include_files(sys/random.h HAVE_SYS_RANDOM_H)
@@ -44,6 +49,9 @@ check_ipo_supported(RESULT LTO_SUPPORTED)
 find_package(relic REQUIRED)
 find_package(Doxygen)
 find_package(OpenMP)
+
+# generate config.h
+configure_file(config.h.in config.h)
 
 add_library(bfe SHARED
             bloomfilter.c
@@ -76,19 +84,13 @@ target_link_libraries(bfe PUBLIC ${RELIC_LIBRARY})
 target_link_libraries(bfe_static PUBLIC ${RELIC_LIBRARY})
 target_link_libraries(bfe PRIVATE m)
 target_link_libraries(bfe_static PRIVATE m)
+target_include_directories(bfe PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(bfe_static PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
 target_include_directories(bfe_static PUBLIC ${RELIC_INCLUDE_DIR})
 if(OpenMP_C_FOUND)
   target_link_libraries(bfe PRIVATE OpenMP::OpenMP_C)
   target_link_libraries(bfe_static PRIVATE OpenMP::OpenMP_C)
-endif()
-if(HAVE_GETRANDOM)
-  target_compile_definitions(bfe PRIVATE HAVE_GETRANDOM)
-  target_compile_definitions(bfe_static PRIVATE HAVE_GETRANDOM)
-endif()
-if(HAVE_SYS_RANDOM_H)
-  target_compile_definitions(bfe PRIVATE HAVE_SYS_RANDOM_H)
-  target_compile_definitions(bfe_static PRIVATE HAVE_SYS_RANDOM_H)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
