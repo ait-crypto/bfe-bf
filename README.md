@@ -29,6 +29,7 @@ License
 -------
 
 The code is licensed under the CC0-1.0 license and was developed by AIT Austrian Institute of
-Technolgy and Graz University of Technology as part of IoT4CPS. The bloom filter implementation was
-originall written by Marin Krmpotić and was released to the public domain. It was heavily modified
-for integration in to the BFE library.
+Technolgy and Graz University of Technology as part of IoT4CPS. The IoT4CPS project is partially
+funded by the "ICT of the Future" Program of the FFG and the BMVIT. The bloom filter implementation
+was originall written by Marin Krmpotić and was released to the public domain. It was heavily
+modified for integration into the BFE library.
