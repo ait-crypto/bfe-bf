@@ -112,6 +112,61 @@
  *  bfe_clear_public_key(&pk);
  *  bfe_clear_secret_key(&sk);
  * @endcode
+ *
+ * The library also privides a KEM API as defined for the NIST Post-Quantum Cryptography project.
+ * Again, let's start with encryption:
+ * @code{.c}
+ *  // the public key
+ *  unsigned char pk[CRYPTO_PUBLICKEYBYTES];
+ *  // the secret key
+ *  unsigned char* sk = malloc(CRYPTO_SECRETKEYBYTES);
+ *
+ *  // generate key pair
+ *  if (crypto_kem_keypair(pk, sk)) {
+ *    // handle error
+ *  }
+ * @endcode
+ *
+ * Encapsulation:
+ * @code{.c}
+ *  // the public key
+ *  unsigned char* pk;
+ *
+ *  // the ciphertext
+ *  unsigned char ct[CRYPTO_CIPHERTEXTBYTES];
+ *  // encapsulate a new key
+ *  unsigned char k[CRYPTO_BYTES];
+ *  if (crypto_kem_enc(ct, k, pk)) {
+ *    // handle error
+ *  }
+ * @endcode
+ *
+ * Decapsulation:
+ * @code{.c}
+ *  // the secret key
+ *  unsigned char* sk;
+ *  // the cipher text
+ *  unsigned char* ct;
+ *
+ *  // decapsulate key
+ *  unsigned char k[CRYPTO_BYTES];
+ *  if (crypto_kem_dec(k, ct, sk)) {
+ *    // handle error
+ *  }
+ * @endcode
+ *
+ * Puncturing:
+ * @code{.c}
+ *  // the secret key
+ *  unsigned char* sk;
+ *  // the cipher text
+ *  unsigned char* ct;
+ *
+ *  // puncture secret key with respect to a ciphertext
+ *  if (crypto_kem_punc(sk, ct)) {
+ *    // handle error
+ *  }
+ * @endcode
  */
 
 #include "macros.h"
