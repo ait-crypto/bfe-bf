@@ -19,7 +19,7 @@
  *  // generate new keys
  *  bfe_init_secret_key(&sk);
  *  bfe_init_public_key(&pk);
- *  if (!bfe_keygen(&pk, &sk, 32, 1 << 19, 0.0009765625)) {
+ *  if (bfe_keygen(&pk, &sk, 32, 1 << 19, 0.0009765625)) {
  *    // handle error
  *  }
  *
