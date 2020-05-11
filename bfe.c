@@ -492,7 +492,7 @@ unsigned int bfe_ciphertext_size_bin(const bfe_ciphertext_t* ciphertext) {
   return 1 * sizeof(uint32_t) + EP_SIZE + ciphertext->v_size;
 }
 
-void bfe_ciphertext_write_bin(uint8_t* dst, bfe_ciphertext_t* ciphertext) {
+void bfe_ciphertext_write_bin(uint8_t* dst, const bfe_ciphertext_t* ciphertext) {
   const uint32_t u_size     = EP_SIZE;
   const uint32_t total_size = bfe_ciphertext_size_bin(ciphertext);
 
@@ -527,7 +527,7 @@ unsigned int bfe_public_key_size_bin(void) {
   return 3 * sizeof(uint32_t) + EP_SIZE;
 }
 
-void bfe_public_key_write_bin(uint8_t* dst, bfe_public_key_t* public_key) {
+void bfe_public_key_write_bin(uint8_t* dst, const bfe_public_key_t* public_key) {
   write_u32(&dst, public_key->filter_hash_count);
   write_u32(&dst, public_key->filter_size);
   write_u32(&dst, public_key->key_size);
@@ -562,7 +562,7 @@ unsigned int bfe_secret_key_size_bin(const bfe_secret_key_t* secret_key) {
          num_keys * EP2_SIZE;
 }
 
-void bfe_secret_key_write_bin(uint8_t* dst, bfe_secret_key_t* secret_key) {
+void bfe_secret_key_write_bin(uint8_t* dst, const bfe_secret_key_t* secret_key) {
   write_u32(&dst, secret_key->filter.hash_count);
   write_u32(&dst, secret_key->filter.bitset.size);
   for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitset.size); ++i) {

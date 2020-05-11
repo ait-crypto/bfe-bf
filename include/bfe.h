@@ -278,7 +278,7 @@ BFE_VISIBLE unsigned int bfe_ciphertext_size_bin(const bfe_ciphertext_t* ciphert
  * @param[out] bin the ciphertext byte array.
  * @param[in] ciphertext the ciphertext.
  */
-BFE_VISIBLE void bfe_ciphertext_write_bin(uint8_t* bin, bfe_ciphertext_t* ciphertext);
+BFE_VISIBLE void bfe_ciphertext_write_bin(uint8_t* bin, const bfe_ciphertext_t* ciphertext);
 
 /**
  * Reads a given ciphertext stored as a byte array.
@@ -303,7 +303,7 @@ BFE_VISIBLE unsigned int bfe_secret_key_size_bin(const bfe_secret_key_t* secret_
  * @param[out] bin the secret key byte array.
  * @param[in] secret_key the secret key.
  */
-BFE_VISIBLE void bfe_secret_key_write_bin(uint8_t* bin, bfe_secret_key_t* secret_key);
+BFE_VISIBLE void bfe_secret_key_write_bin(uint8_t* bin, const bfe_secret_key_t* secret_key);
 
 /**
  * Reads a given secret key stored as a byte array.
@@ -327,7 +327,7 @@ BFE_VISIBLE unsigned int bfe_public_key_size_bin(void);
  * @param[out] bin the public key byte array.
  * @param[in] public_key the public key.
  */
-BFE_VISIBLE void bfe_public_key_write_bin(uint8_t* bin, bfe_public_key_t* public_key);
+BFE_VISIBLE void bfe_public_key_write_bin(uint8_t* bin, const bfe_public_key_t* public_key);
 
 /**
  * Reads a given public key stored as a byte array.
