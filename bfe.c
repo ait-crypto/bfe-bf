@@ -6,6 +6,7 @@
 #include "include/err_codes.h"
 #include "util.h"
 
+#include <stdbool.h>
 #include <config.h>
 
 #define EP_SIZE (1 + 2 * RLC_FP_BYTES)
@@ -173,22 +174,28 @@ static int ibe_decrypt(uint8_t* message, ep_t g1r, const uint8_t* Kxored, size_t
   return status;
 }
 
-__attribute__((constructor)) static void init_relic(void) {
-  if (core_init() != RLC_OK) {
-    core_clean();
-  } else {
-    ep_param_set_any_pairf();
+static bool core_init_run = false;
 
-    bn_t order;
-    bn_new(order);
-    ep_curve_get_ord(order);
-    order_size = bn_size_bin(order);
-    bn_free(order);
+__attribute__((constructor)) static void init_relic(void) {
+  if (!core_get()) {
+    core_init();
+    core_init_run = true;
   }
+
+  ep_param_set_any_pairf();
+
+  bn_t order;
+  bn_new(order);
+  ep_curve_get_ord(order);
+  order_size = bn_size_bin(order);
+  bn_free(order);
 }
 
 __attribute__((destructor)) static void clean_relic(void) {
-  core_clean();
+  if (core_init_run) {
+    core_init_run = false;
+    core_clean();
+  }
 }
 
 int bfe_init_secret_key(bfe_secret_key_t* secret_key) {
