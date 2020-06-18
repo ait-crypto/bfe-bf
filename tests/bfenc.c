@@ -50,7 +50,7 @@ Ensure(BFE, encrypt_decrypt_serialized) {
   assert_true(!bfe_encaps(&ciphertext, K, &pk));
 
   const size_t csize = bfe_ciphertext_size_bin(&ciphertext);
-  uint8_t* bin = malloc(csize);
+  uint8_t* bin       = malloc(csize);
   assert_true(bin != NULL);
 
   bfe_ciphertext_write_bin(bin, &ciphertext);

@@ -172,12 +172,12 @@
 #include "macros.h"
 #include "types.h"
 
-#include <stdint.h>
 #include <relic/relic.h>
+#include <stdint.h>
 
 typedef enum {
-  BFE_SUCCESS  = 0, /**< All operations were successful */
-  BFE_ERROR = 1, /**< An error occurred */
+  BFE_SUCCESS             = 0, /**< All operations were successful */
+  BFE_ERROR               = 1, /**< An error occurred */
   BFE_ERROR_INVALID_PARAM = 2, /**< An invalid parameter was given */
   BFE_ERROR_KEY_PUNCTURED = 3, /**< The key was already punctured */
 } bfe_error_t;

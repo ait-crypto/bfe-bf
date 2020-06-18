@@ -7,7 +7,7 @@
 #include "bitset.h"
 #include "bloomfilter.h"
 
-static const double log_2 = log(2);
+static const double log_2  = log(2);
 static const double log_22 = log(2) * log(2);
 
 static unsigned int get_needed_size(unsigned int n, double false_positive_prob) {

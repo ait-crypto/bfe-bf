@@ -4,8 +4,8 @@
 #include "bitset.h"
 #include "bloomfilter.h"
 
-#include <stdbool.h>
 #include <config.h>
+#include <stdbool.h>
 
 #define EP_SIZE (1 + 2 * RLC_FP_BYTES)
 #define EP2_SIZE (1 + 4 * RLC_FP_BYTES)
@@ -389,7 +389,7 @@ void bfe_puncture(bfe_secret_key_t* secret_key, bfe_ciphertext_t* ciphertext) {
 static int bfe_ciphertext_cmp(const bfe_ciphertext_t* ciphertext1,
                               const bfe_ciphertext_t* ciphertext2) {
   if (ep_cmp(ciphertext1->u, ciphertext2->u) != RLC_EQ ||
-          ciphertext1->v_size != ciphertext2->v_size) {
+      ciphertext1->v_size != ciphertext2->v_size) {
     return 1;
   }
 
