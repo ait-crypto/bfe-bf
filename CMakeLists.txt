@@ -58,15 +58,6 @@ add_library(bfe SHARED
             FIPS202-opt64/KeccakP-1600-opt64.c
             FIPS202-opt64/KeccakSpongeWidth1600.c)
 
-# only for tests
-add_library(bfe_static STATIC
-            bloomfilter.c
-            bfe.c
-            crypto_api.c
-            FIPS202-opt64/KeccakHash.c
-            FIPS202-opt64/KeccakP-1600-opt64.c
-            FIPS202-opt64/KeccakSpongeWidth1600.c)
-
 set_target_properties(bfe PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(bfe PROPERTIES C_VISIBILITY_PRESET hidden)
 if (LTO_SUPPORTED)
@@ -76,16 +67,11 @@ endif()
 configure_file(bfe.pc.in bfe.pc @ONLY)
 
 target_link_libraries(bfe PUBLIC ${RELIC_LIBRARY})
-target_link_libraries(bfe_static PUBLIC ${RELIC_LIBRARY})
 target_link_libraries(bfe PRIVATE m)
-target_link_libraries(bfe_static PRIVATE m)
 target_include_directories(bfe PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_include_directories(bfe_static PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
-target_include_directories(bfe_static PUBLIC ${RELIC_INCLUDE_DIR})
 if(OpenMP_C_FOUND)
   target_link_libraries(bfe PRIVATE OpenMP::OpenMP_C)
-  target_link_libraries(bfe_static PRIVATE OpenMP::OpenMP_C)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
