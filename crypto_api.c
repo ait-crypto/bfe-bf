@@ -1,7 +1,6 @@
 #include "include/crypto_api.h"
 
 #include "include/bfe.h"
-#include "include/err_codes.h"
 
 #include <string.h>
 

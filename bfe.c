@@ -3,7 +3,6 @@
 #include "FIPS202-opt64/KeccakHash.h"
 #include "bitset.h"
 #include "bloomfilter.h"
-#include "include/err_codes.h"
 #include "util.h"
 
 #include <stdbool.h>
