@@ -28,11 +28,9 @@ make
 License
 -------
 
-The code is licensed under the CC0 license and was developed by AIT Austrian Institute of Technolgy
-and Graz University of Technology as part of IoT4CPS. The IoT4CPS project is partially funded by the
-"ICT of the Future" Program of the FFG and the BMVIT. The bloom filter implementation was originall
-written by Marin Krmpotić and was released to the public domain. It was heavily modified for
-integration into the BFE library.
+The code is licensed under the CC0 license and was written by Sebastian Ramacher (AIT Austrian
+Institute of Technolgy) as part of [IoT4CPS](https://iot4cps.at). The IoT4CPS project is partially
+funded by the "ICT of the Future" Program of the FFG and the BMVIT.
 
 The SHAKE implementation is taken from [eXtended Keccak Code Package](https://github.com/XKCP/XKCP)
 which is also available under the CC0 license.
