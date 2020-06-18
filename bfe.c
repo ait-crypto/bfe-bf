@@ -94,7 +94,7 @@ static void hash_and_xor(uint8_t* dst, size_t len, const uint8_t* input, fp12_t 
   Keccak_HashInitialize_SHAKE256(&shake);
   Keccak_HashUpdate(&shake, domain_G, sizeof(domain_G) * 8);
   Keccak_HashUpdate(&shake, buffer, FP12_SIZE * 8);
-  uint64_t len_le = htole64(len);
+  const uint64_t len_le = htole64(len);
   Keccak_HashUpdate(&shake, (const uint8_t*)&len_le, sizeof(len_le) * 8);
   Keccak_HashFinal(&shake, NULL);
 
