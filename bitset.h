@@ -32,7 +32,7 @@ static inline bitset_t bitset_init(unsigned int size) {
 /**
  * Sets a specific bit of a bitset.
  *
- * @param bitset the gbitset.
+ * @param bitset the bitset.
  * @param index  the index of the bit supposed to be set to 1.
  */
 static inline void bitset_set(bitset_t* bitset, unsigned int index) {
@@ -44,10 +44,24 @@ static inline void bitset_set(bitset_t* bitset, unsigned int index) {
  *
  * @param bitset the bitset.
  * @param index  the index of the bit in question.
- * @return return non-0 if the bit is set, 0 otherwise
+ * @return non-0 if the bit is set, 0 otherwise
  */
 static inline uint64_t bitset_get(const bitset_t* bitset, unsigned int index) {
   return bitset->bits[index / BITSET_WORD_BITS] & (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
+}
+
+/**
+ * Computes the number of set bits of a bitset.
+ *
+ * @param bitset the bitset.
+ * @return number of set bits
+ */
+static inline unsigned int bitset_popcount(const bitset_t* bitset) {
+  unsigned int bits = 0;
+  for (unsigned int idx = 0; idx != BITSET_SIZE(bitset->size); ++idx) {
+    bits += __builtin_popcount(bitset->bits[idx]);
+  }
+  return bits;
 }
 
 /**

@@ -557,12 +557,7 @@ int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* src) {
 }
 
 unsigned int bfe_secret_key_size_bin(const bfe_secret_key_t* secret_key) {
-  unsigned int num_keys = 0;
-  for (unsigned int i = 0; i < secret_key->filter.bitset.size; ++i) {
-    if (bitset_get(&secret_key->filter.bitset, i) == 0) {
-      ++num_keys;
-    }
-  }
+  unsigned int num_keys = secret_key->filter.bitset.size - bitset_popcount(&secret_key->filter.bitset);
 
   return 2 * sizeof(uint32_t) + BITSET_SIZE(secret_key->filter.bitset.size) * sizeof(uint64_t) +
          num_keys * EP2_SIZE;
