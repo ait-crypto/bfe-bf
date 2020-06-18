@@ -54,13 +54,6 @@ void bf_get_bit_positions(unsigned int* positions, const ep_t input, unsigned in
 void bf_add(bloomfilter_t* filter, const ep_t input);
 
 /**
- * Sets all the bits of a bloom filter to FALSE.
- *
- * @param[out] filter the filter to reset.
- */
-void bf_reset(bloomfilter_t* filter);
-
-/**
  * Checks whether the given element is possibly in the filter. Due to possibility of false positives
  * only the false cases are considered to be 100% accurate.
  *

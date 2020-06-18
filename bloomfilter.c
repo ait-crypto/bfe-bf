@@ -8,32 +8,21 @@
 #include "bloomfilter.h"
 
 static const double log_2 = log(2);
+static const double log_22 = log(2) * log(2);
 
-/**
- * Calculates a size of a bloom filter needed to satisfy the given expected number of elements
- * inside the filter with the target false positive probability. No bloom filter is created, this
- * function is made for estimation purposes.
- *
- * @param[in] n the expected number of elements inside the filter.
- * @param[in] false_positive_prob target false positive probability for the filter with the
- * specified number of elements.
- * @return The size a bloom filter with the given parameters would have.
- */
-unsigned int bf_get_needed_size(unsigned int n, double false_positive_prob) {
-  return -floor((n * log(false_positive_prob)) / (log_2 * log_2));
+static unsigned int get_needed_size(unsigned int n, double false_positive_prob) {
+  return -floor((n * log(false_positive_prob)) / log_22);
 }
 
 bloomfilter_t bf_init_fixed(unsigned int size, unsigned int hash_count) {
-  bloomfilter_t bf = {.hash_count = hash_count, .bitset = bitset_init(size)};
-  return bf;
+  return (bloomfilter_t){.hash_count = hash_count, .bitset = bitset_init(size)};
 }
 
 bloomfilter_t bf_init(unsigned int n, double false_positive_prob) {
-  const unsigned int bitset_size = bf_get_needed_size(n, false_positive_prob);
+  const unsigned int bitset_size = get_needed_size(n, false_positive_prob);
 
-  bloomfilter_t bf = {.hash_count = ceil((bitset_size / (double)n) * log_2),
-                      .bitset     = bitset_init(bitset_size)};
-  return bf;
+  return (bloomfilter_t){.hash_count = ceil((bitset_size / (double)n) * log_2),
+                         .bitset     = bitset_init(bitset_size)};
 }
 
 unsigned int bf_get_size(const bloomfilter_t* filter) {
@@ -79,10 +68,6 @@ void bf_add(bloomfilter_t* filter, const ep_t input) {
     unsigned int pos = get_position(i, buffer, buffer_size, bloomfilter_size);
     bitset_set(&filter->bitset, pos);
   }
-}
-
-void bf_reset(bloomfilter_t* filter) {
-  bitset_reset(&filter->bitset);
 }
 
 int bf_maybe_contains(const bloomfilter_t* filter, const ep_t input) {

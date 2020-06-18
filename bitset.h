@@ -15,18 +15,17 @@
  * Creates a bitset with the given number of bits.
  *
  * @param size the number of bits.
- * @return The initialized bitset with all bits set to FALSE.
+ * @return The initialized bitset with all bits set to 0.
  */
 static inline bitset_t bitset_init(unsigned int size) {
-  bitset_t bitset = {.bits = calloc(BITSET_SIZE(size), sizeof(uint64_t)), .size = size};
-  return bitset;
+  return (bitset_t){.bits = calloc(BITSET_SIZE(size), sizeof(uint64_t)), .size = size};
 }
 
 /**
  * Sets a specific bit of a bitset.
  *
  * @param bitset the gbitset.
- * @param index  the index of the bit supposed to be set to TRUE.
+ * @param index  the index of the bit supposed to be set to 1.
  */
 static inline void bitset_set(bitset_t* bitset, unsigned int index) {
   bitset->bits[index / BITSET_WORD_BITS] |= (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
@@ -37,24 +36,14 @@ static inline void bitset_set(bitset_t* bitset, unsigned int index) {
  *
  * @param bitset the bitset.
  * @param index  the index of the bit in question.
- * @return 0 if the bit is FALSE, non-0 if the bit is TRUE.
+ * @return return non-0 if the bit is set, 0 otherwise
  */
 static inline uint64_t bitset_get(const bitset_t* bitset, unsigned int index) {
   return bitset->bits[index / BITSET_WORD_BITS] & (UINT64_C(1) << (index & (BITSET_WORD_BITS - 1)));
 }
 
 /**
- * Sets all bits of a bitset to FALSE.
- *
- * @param bitset the bitset.
- */
-static inline void bitset_reset(bitset_t* bitset) {
-  memset(bitset->bits, 0, BITSET_SIZE(bitset->size) * sizeof(uint64_t));
-}
-
-/**
- * Frees the memory allocated by the bitset. This method has to be called after the bitset is no
- * longer needed to avoid memory leaks.
+ * Frees the memory allocated by the bitset.
  *
  * @param bitset the bitset.
  */
