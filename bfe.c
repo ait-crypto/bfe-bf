@@ -119,6 +119,12 @@ static void hash_R(Keccak_HashInstance* ctx, const uint8_t* key, size_t key_size
   Keccak_HashFinal(ctx, NULL);
 }
 
+static void hash_squeeze_bn(Keccak_HashInstance* ctx, bn_t bn) {
+  uint8_t buffer[MAX_ORDER_SIZE];
+  Keccak_HashSqueeze(ctx, buffer, order_size * 8);
+  bn_read_bin(bn, buffer, order_size);
+}
+
 static int ibe_encrypt(uint8_t* dst, ep_t pkr, const uint8_t* id, size_t id_len,
                        const uint8_t* message, size_t message_len) {
   int status = BFE_SUCCESS;
@@ -346,11 +352,8 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
 
     Keccak_HashInstance shake;
     hash_R(&shake, key_buffer, public_key->key_size);
-
     /* r of (r, K') = R(K) */
-    uint8_t buffer[MAX_ORDER_SIZE];
-    Keccak_HashSqueeze(&shake, buffer, order_size * 8);
-    bn_read_bin(r, buffer, order_size);
+    hash_squeeze_bn(&shake, r);
 
     status = internal_encrypt(ciphertext, public_key, r, key_buffer);
     if (!status) {
@@ -385,11 +388,12 @@ void bfe_puncture(bfe_secret_key_t* secret_key, bfe_ciphertext_t* ciphertext) {
 
 static int bfe_ciphertext_cmp(const bfe_ciphertext_t* ciphertext1,
                               const bfe_ciphertext_t* ciphertext2) {
-  return (ep_cmp(ciphertext1->u, ciphertext2->u) == RLC_EQ &&
-          ciphertext1->v_size == ciphertext2->v_size &&
-          memcmp(ciphertext1->v, ciphertext2->v, ciphertext1->v_size) == 0)
-             ? 0
-             : 1;
+  if (ep_cmp(ciphertext1->u, ciphertext2->u) != RLC_EQ ||
+          ciphertext1->v_size != ciphertext2->v_size) {
+    return 1;
+  }
+
+  return memcmp(ciphertext1->v, ciphertext2->v, ciphertext1->v_size);
 }
 
 int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secret_key_t* secret_key,
@@ -428,15 +432,12 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
 
     Keccak_HashInstance shake;
     hash_R(&shake, key_buffer, public_key->key_size);
-
     /* r of (r, K') = R(K) */
-    uint8_t buffer[MAX_ORDER_SIZE];
-    Keccak_HashSqueeze(&shake, buffer, order_size * 8);
-    bn_read_bin(r, buffer, order_size);
+    hash_squeeze_bn(&shake, r);
 
     status = internal_encrypt(&check_ciphertext, public_key, r, key_buffer);
 
-    if (!status && bfe_ciphertext_cmp(&check_ciphertext, ciphertext) == 0) {
+    if (!status && !bfe_ciphertext_cmp(&check_ciphertext, ciphertext)) {
       /* K' of (r, K') = R(K) */
       Keccak_HashSqueeze(&shake, key, public_key->key_size * 8);
     } else {
