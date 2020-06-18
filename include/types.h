@@ -1,3 +1,11 @@
+/*
+ *  This file is part of the BFE library.
+ *  See the accompanying documentation for complete details.
+ *
+ *  The code is provided under the CC0 license, see LICENSE for more details.
+ *  SPDX-License-Identifier: CC0-1.0
+ */
+
 #ifndef BFE_TYPES_H
 #define BFE_TYPES_H
 
