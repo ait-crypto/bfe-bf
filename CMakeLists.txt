@@ -38,11 +38,7 @@ check_c_compiler_flag_and_add(-Wshadow CC_SUPPORTS_WSHADOW)
 check_c_compiler_flag_and_add(-Werror=implicit-function-declaration CC_SUPPORTS_WERROR_IMPLICIT_FUNCTION_DECLARATION)
 check_c_compiler_flag_and_add(-Werror=vla CC_SUPPORTS_WERROR_VLA)
 
-# check headers
-check_include_files(sys/random.h HAVE_SYS_RANDOM_H)
-
 # check availability of some functions
-check_symbol_exists(getrandom sys/random.h HAVE_GETRANDOM)
 check_symbol_exists(explicit_bzero string.h HAVE_EXPLICIT_BZERO)
 
 check_ipo_supported(RESULT LTO_SUPPORTED)
@@ -58,7 +54,6 @@ add_library(bfe SHARED
             bloomfilter.c
             bfe.c
             crypto_api.c
-            util.c
             FIPS202-opt64/KeccakHash.c
             FIPS202-opt64/KeccakP-1600-opt64.c
             FIPS202-opt64/KeccakSpongeWidth1600.c)
@@ -68,7 +63,6 @@ add_library(bfe_static STATIC
             bloomfilter.c
             bfe.c
             crypto_api.c
-            util.c
             FIPS202-opt64/KeccakHash.c
             FIPS202-opt64/KeccakP-1600-opt64.c
             FIPS202-opt64/KeccakSpongeWidth1600.c)

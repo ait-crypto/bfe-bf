@@ -3,7 +3,6 @@
 #include "FIPS202-opt64/KeccakHash.h"
 #include "bitset.h"
 #include "bloomfilter.h"
-#include "util.h"
 
 #include <stdbool.h>
 #include <config.h>
@@ -336,7 +335,7 @@ static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t
 
 int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key_t* public_key) {
   uint8_t key_buffer[MAX_BFE_KEY_SIZE];
-  random_bytes(key_buffer, public_key->key_size);
+  rand_bytes(key_buffer, public_key->key_size);
 
   int status = BFE_SUCCESS;
   bn_t r;

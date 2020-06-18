@@ -3,11 +3,7 @@
 
 /* from cmake checks */
 
-/* available headers */
-#cmakedefine HAVE_SYS_RANDOM_H
-
 /* available functions */
-#cmakedefine HAVE_GETRANDOM
 #cmakedefine HAVE_EXPLICIT_BZERO
 
 /* from cmake settings */
