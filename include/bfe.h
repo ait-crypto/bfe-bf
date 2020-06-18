@@ -177,9 +177,9 @@
 
 typedef enum {
   BFE_SUCCESS  = 0, /**< All operations were successful */
-  BFE_ERR_GENERAL = 1, /**< An error occurred */
-  BFE_ERR_INVALID_PARAM = 2, /**< An invalid parameter was given */
-  BFE_ERR_KEY_PUNCTURED = 3, /**< The key was already punctured */
+  BFE_ERROR = 1, /**< An error occurred */
+  BFE_ERROR_INVALID_PARAM = 2, /**< An invalid parameter was given */
+  BFE_ERROR_KEY_PUNCTURED = 3, /**< The key was already punctured */
 } bfe_error_t;
 
 /**
@@ -215,7 +215,7 @@ typedef struct {
  * Initialize secret key.
  *
  * @param[out] secret_key the secret key
- * @return BFE_SUCCESS or BFE_ERR_*
+ * @return BFE_SUCCESS or an error code on failure
  */
 BFE_VISIBLE int bfe_init_secret_key(bfe_secret_key_t* secret_key);
 /**
@@ -229,7 +229,7 @@ BFE_VISIBLE void bfe_clear_secret_key(bfe_secret_key_t* secret_key);
  * Initialize public key.
  *
  * @param[out] public_key the public key
- * @return BFE_SUCCESS or BFE_ERR_*
+ * @return BFE_SUCCESS or an error code on failure
  */
 BFE_VISIBLE int bfe_init_public_key(bfe_public_key_t* public_key);
 /**
@@ -247,7 +247,7 @@ BFE_VISIBLE void bfe_clear_public_key(bfe_public_key_t* public_key);
  * @param[in] key_length length of the encapsulated keys
  * @param[in] filter_element_number desired number of elements in the bloom filter
  * @param[in] false_positive_probability desired false positive probability of the bloom filter
- * @return BFE_SUCCESS or BFE_ERR_*.
+ * @return BFE_SUCCESS or an error code on failure.
  */
 BFE_VISIBLE int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key,
                            unsigned int key_length, unsigned int filter_element_number,
@@ -259,7 +259,7 @@ BFE_VISIBLE int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secre
  * @param[out] ciphertext the ciphertext
  * @param[out] K the randomly generated key
  * @param[in] public_key the public key
- * @return BFE_SUCCESS or BFE_ERR_*.
+ * @return BFE_SUCCESS or an error code on failure.
  */
 BFE_VISIBLE int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* K,
                            const bfe_public_key_t* public_key);
@@ -282,7 +282,7 @@ BFE_VISIBLE void bfe_puncture(bfe_secret_key_t* secret_key, bfe_ciphertext_t* ci
  * @param[in] public_key the public key
  * @param[in] secret_key the secret key to be used for decrypting
  * @param[in] ciphertext the ciphertext
- * @return BFE_SUCCESS or BFE_ERR_*.
+ * @return BFE_SUCCESS or an error code on failure.
  */
 BFE_VISIBLE int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key,
                            const bfe_secret_key_t* secret_key, bfe_ciphertext_t* ciphertext);
@@ -292,7 +292,7 @@ BFE_VISIBLE int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key,
  *
  * @param[out] ciphertext the ciphertext
  * @param[in] public_key the pulic key
- * @return BFE_SUCCESS or BFE_ERR_*.
+ * @return BFE_SUCCESS or an error code on failure.
  */
 BFE_VISIBLE int bfe_init_ciphertext(bfe_ciphertext_t* ciphertext,
                                     const bfe_public_key_t* public_key);
@@ -324,7 +324,7 @@ BFE_VISIBLE void bfe_ciphertext_write_bin(uint8_t* bin, const bfe_ciphertext_t* 
  *
  * @param[out] ciphertext the ciphertext
  * @param[in] bin the destination byte array.
- * @return BFE_SUCCESS or BFE_ERR_*.
+ * @return BFE_SUCCESS or an error code on failure.
  */
 BFE_VISIBLE int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* bin);
 
@@ -349,7 +349,7 @@ BFE_VISIBLE void bfe_secret_key_write_bin(uint8_t* bin, const bfe_secret_key_t* 
  *
  * @param[out] secret_key the secret key
  * @param[in] bin the destination byte array.
- * @return BFE_SUCCESS or BFE_ERR_*.
+ * @return BFE_SUCCESS or an error code on failure.
  */
 BFE_VISIBLE int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint8_t* bin);
 
@@ -373,7 +373,7 @@ BFE_VISIBLE void bfe_public_key_write_bin(uint8_t* bin, const bfe_public_key_t* 
  *
  * @param[out] public_key the public key
  * @param[in] bin the destination byte array.
- * @return BFE_SUCCESS or BFE_ERR_*.
+ * @return BFE_SUCCESS or an error code on failure.
  */
 BFE_VISIBLE int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* bin);
 

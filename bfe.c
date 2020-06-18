@@ -55,7 +55,7 @@ static int ibe_keygen(bn_t secret_key, bfe_public_key_t* public_key) {
     ep_mul_gen(public_key->public_key, secret_key);
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
   FINALLY {
     bn_free(order);
@@ -76,7 +76,7 @@ static int ibe_extract(ep2_t extracted_key, const bn_t secret_key, const uint8_t
     ep2_mul(extracted_key, qid, secret_key);
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
   FINALLY {
     ep2_free(qid);
@@ -141,7 +141,7 @@ static int ibe_encrypt(uint8_t* dst, ep_t pkr, const uint8_t* id, size_t id_len,
     hash_and_xor(dst, message_len, message, t);
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
   FINALLY {
     fp12_free(t);
@@ -164,7 +164,7 @@ static int ibe_decrypt(uint8_t* message, ep_t g1r, const uint8_t* Kxored, size_t
     hash_and_xor(message, length, Kxored, t);
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
   FINALLY {
     fp12_free(t);
@@ -228,7 +228,7 @@ int bfe_init_public_key(bfe_public_key_t* public_key) {
     ep_new(public_key->public_key);
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
 
   return status;
@@ -246,7 +246,7 @@ void bfe_clear_public_key(bfe_public_key_t* public_key) {
 int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsigned int key_size,
                unsigned int filter_size, double false_positive_prob) {
   if (key_size > MAX_BFE_KEY_SIZE || order_size > MAX_ORDER_SIZE) {
-    return BFE_ERR_INVALID_PARAM;
+    return BFE_ERROR_INVALID_PARAM;
   }
 
   int status = BFE_SUCCESS;
@@ -254,14 +254,14 @@ int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsig
   bloomfilter_t filter = bf_init(filter_size, false_positive_prob);
   if (filter.hash_count > MAX_BLOOMFILTER_HASH_COUNT) {
     bf_clear(&filter);
-    return BFE_ERR_INVALID_PARAM;
+    return BFE_ERROR_INVALID_PARAM;
   }
 
   const unsigned int bf_size = bf_get_size(&filter);
   secret_key->secret_keys    = calloc(bf_size, sizeof(ep2_t));
   if (!secret_key->secret_keys) {
     bf_clear(&filter);
-    return BFE_ERR_GENERAL;
+    return BFE_ERROR;
   }
 
   public_key->key_size          = key_size;
@@ -288,7 +288,7 @@ int bfe_keygen(bfe_public_key_t* public_key, bfe_secret_key_t* secret_key, unsig
     }
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
   FINALLY {
     bn_free(sk);
@@ -325,7 +325,7 @@ static int internal_encrypt(bfe_ciphertext_t* ciphertext, const bfe_public_key_t
     }
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
   FINALLY {
     ep_free(pkr);
@@ -360,7 +360,7 @@ int bfe_encaps(bfe_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_public_key
     }
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
   FINALLY {
     bn_free(r);
@@ -403,7 +403,7 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
   bf_get_bit_positions(indices, ciphertext->u, secret_key->filter.hash_count,
                        bf_get_size(&secret_key->filter));
 
-  status = BFE_ERR_GENERAL;
+  status = BFE_ERROR;
   for (unsigned int i = 0; i < secret_key->filter.hash_count; ++i) {
     if (bitset_get(&secret_key->filter.bitset, indices[i]) == 0) {
       status = ibe_decrypt(key_buffer, ciphertext->u, &ciphertext->v[i * public_key->key_size],
@@ -415,7 +415,7 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
   }
 
   if (status != BFE_SUCCESS) {
-    return BFE_ERR_KEY_PUNCTURED;
+    return BFE_ERROR_KEY_PUNCTURED;
   }
 
   bfe_ciphertext_t check_ciphertext;
@@ -441,11 +441,11 @@ int bfe_decaps(uint8_t* key, const bfe_public_key_t* public_key, const bfe_secre
       /* K' of (r, K') = R(K) */
       Keccak_HashSqueeze(&shake, key, public_key->key_size * 8);
     } else {
-      status = BFE_ERR_GENERAL;
+      status = BFE_ERROR;
     }
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
   FINALLY {
     bn_free(r);
@@ -467,14 +467,14 @@ static int init_ciphertext(bfe_ciphertext_t* ciphertext, unsigned int hash_count
     ep_new(ciphertext->u);
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
 
   if (!status) {
     ciphertext->v_size = hash_count * key_length;
     ciphertext->v      = calloc(hash_count, key_length);
     if (!ciphertext->v) {
-      status = BFE_ERR_GENERAL;
+      status = BFE_ERROR;
     }
   }
 
@@ -513,7 +513,7 @@ int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* src) {
   const unsigned int v_size = total_size - EP_SIZE - 1 * sizeof(uint32_t);
 
   if (init_ciphertext(ciphertext, 1, v_size)) {
-    return BFE_ERR_GENERAL;
+    return BFE_ERROR;
   }
 
   int status = BFE_SUCCESS;
@@ -523,7 +523,7 @@ int bfe_ciphertext_read_bin(bfe_ciphertext_t* ciphertext, const uint8_t* src) {
     memcpy(ciphertext->v, &src[EP_SIZE], v_size);
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
 
   return status;
@@ -550,7 +550,7 @@ int bfe_public_key_read_bin(bfe_public_key_t* public_key, const uint8_t* src) {
     ep_read_bin(public_key->public_key, src, EP_SIZE);
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
 
   return status;
@@ -605,7 +605,7 @@ int bfe_secret_key_read_bin(bfe_secret_key_t* secret_key, const uint8_t* src) {
     }
   }
   CATCH_ANY {
-    status = BFE_ERR_GENERAL;
+    status = BFE_ERROR;
   }
 
   return status;
