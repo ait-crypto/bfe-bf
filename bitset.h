@@ -1,13 +1,13 @@
 /*
- *  This file is part of the BFE library.
+ *  This file is part of the BFE-BF library.
  *  See the accompanying documentation for complete details.
  *
  *  The code is provided under the CC0 license, see LICENSE for more details.
  *  SPDX-License-Identifier: CC0-1.0
  */
 
-#ifndef BFE_BITSET_H
-#define BFE_BITSET_H
+#ifndef BFE_BF_BITSET_H
+#define BFE_BF_BITSET_H
 
 #include "include/macros.h"
 #include "include/types.h"
@@ -77,4 +77,4 @@ static inline void bitset_clean(bitset_t* bitset) {
   }
 }
 
-#endif // BFE_BITSET_H
+#endif // BFE_BF_BITSET_H

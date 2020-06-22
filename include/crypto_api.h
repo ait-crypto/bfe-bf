@@ -1,13 +1,13 @@
 /*
- *  This file is part of the BFE BF.
+ *  This file is part of the BFE BF library.
  *  See the accompanying documentation for complete details.
  *
  *  The code is provided under the CC0 license, see LICENSE for more details.
  *  SPDX-License-Identifier: CC0-1.0
  */
 
-#ifndef BFE_CRYPTO_API_H
-#define BFE_CRYPTO_API_H
+#ifndef BFE_BF_CRYPTO_API_H
+#define BFE_BF_CRYPTO_API_H
 
 #include "macros.h"
 
@@ -27,7 +27,7 @@
  * @param sk buffer of size \ref CRYPTO_SECRETKEYBYTES to store the secret key
  * @return 0 on success, non-0 otherwise
  */
-BFE_VISIBLE int crypto_kem_keypair(unsigned char* pk, unsigned char* sk);
+BFE_BF_VISIBLE int crypto_kem_keypair(unsigned char* pk, unsigned char* sk);
 /**
  * Encapsulate a new key.
  *
@@ -36,7 +36,7 @@ BFE_VISIBLE int crypto_kem_keypair(unsigned char* pk, unsigned char* sk);
  * @param pk the public key
  * @return 0 on success, non-0 otherwise
  */
-BFE_VISIBLE int crypto_kem_enc(unsigned char* c, unsigned char* k, const unsigned char* pk);
+BFE_BF_VISIBLE int crypto_kem_enc(unsigned char* c, unsigned char* k, const unsigned char* pk);
 /**
  * Decapsulate a ciphertext.
  *
@@ -45,7 +45,7 @@ BFE_VISIBLE int crypto_kem_enc(unsigned char* c, unsigned char* k, const unsigne
  * @param sk the secret key
  * @return 0 on success, non-0 otherwise
  */
-BFE_VISIBLE int crypto_kem_dec(unsigned char* k, const unsigned char* c, const unsigned char* sk);
+BFE_BF_VISIBLE int crypto_kem_dec(unsigned char* k, const unsigned char* c, const unsigned char* sk);
 /**
  * Puncture the secret key with a ciphertext.
  *
@@ -53,6 +53,6 @@ BFE_VISIBLE int crypto_kem_dec(unsigned char* k, const unsigned char* c, const u
  * @param sk the secret key
  * @return 0 on success, non-0 otherwise
  */
-BFE_VISIBLE int crypto_kem_punc(unsigned char* sk, const unsigned char* c);
+BFE_BF_VISIBLE int crypto_kem_punc(unsigned char* sk, const unsigned char* c);
 
 #endif

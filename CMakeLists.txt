@@ -10,14 +10,14 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-project(bfe LANGUAGES C VERSION 1.1 DESCRIPTION "Bloom Filter Encryption library with Boneh-Franklin IBE")
+project(bfe_bf LANGUAGES C VERSION 1.1 DESCRIPTION "Bloom Filter Encryption library with Boneh-Franklin IBE")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # settings
 set(MAX_BLOOMFILTER_HASH_COUNT 16 CACHE STRING "Maximal number of bloom filter hash functions.")
-set(MAX_BFE_KEY_SIZE 32 CACHE STRING "Maximal size of encapsulated key.")
+set(MAX_BFE_BF_KEY_SIZE 32 CACHE STRING "Maximal size of encapsulated key.")
 
 include(GNUInstallDirs)
 include(CheckCCompilerFlag)
@@ -50,45 +50,40 @@ find_package(OpenMP)
 # generate config.h
 configure_file(config.h.in config.h)
 
-add_library(bfe SHARED
+add_library(bfe_bf SHARED
             bloomfilter.c
-            bfe.c
+            bfe_bf.c
             crypto_api.c
             FIPS202-opt64/KeccakHash.c
             FIPS202-opt64/KeccakP-1600-opt64.c
             FIPS202-opt64/KeccakSpongeWidth1600.c)
 
-set_target_properties(bfe PROPERTIES VERSION ${PROJECT_VERSION})
-set_target_properties(bfe PROPERTIES C_VISIBILITY_PRESET hidden)
+set_target_properties(bfe_bf PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(bfe_bf PROPERTIES C_VISIBILITY_PRESET hidden)
 if (LTO_SUPPORTED)
-  set_target_properties(bfe PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+  set_target_properties(bfe_bf PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
-configure_file(bfe.pc.in bfe.pc @ONLY)
+configure_file(bfe-bf.pc.in bfe-bf.pc @ONLY)
 
-target_link_libraries(bfe PUBLIC ${RELIC_LIBRARY})
-target_link_libraries(bfe PRIVATE m)
-target_include_directories(bfe PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_include_directories(bfe PUBLIC ${RELIC_INCLUDE_DIR})
+target_link_libraries(bfe_bf PUBLIC ${RELIC_LIBRARY})
+target_link_libraries(bfe_bf PRIVATE m)
+target_include_directories(bfe_bf PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${RELIC_INCLUDE_DIR})
 if(OpenMP_C_FOUND)
-  target_link_libraries(bfe PRIVATE OpenMP::OpenMP_C)
+  target_link_libraries(bfe_bf PRIVATE OpenMP::OpenMP_C)
 endif()
 
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
-  target_link_options(bfe PRIVATE LINKER:-z,relro LINKER:-z,now)
-endif()
-
-install(TARGETS bfe
-        EXPORT bfe-targets
+install(TARGETS bfe_bf
+        EXPORT bfe-bf-targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES ${CMAKE_BINARY_DIR}/bfe.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/bfe)
-install(EXPORT bfe-targets
-        NAMESPACE bfe::
-        FILE bfe-config.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bfe)
+install(FILES ${CMAKE_BINARY_DIR}/bfe-bf.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/bfe-bf)
+install(EXPORT bfe-bf-targets
+        NAMESPACE bfe_bf::
+        FILE bfe-bf-config.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bfe-bf)
 
 if(DOXYGEN_FOUND)
   set(DOXYGEN_RECURSIVE NO)
@@ -96,7 +91,7 @@ if(DOXYGEN_FOUND)
   set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
   set(DOXYGEN_TYPEDEF_HIDES_STRUCT YES)
   set(DOXYGEN_SOURCE_BROWSER YES)
-  set(DOXYGEN_PREDEFINED "BFE_VISIBLE=")
+  set(DOXYGEN_PREDEFINED "BFE_BF_VISIBLE=")
   set(DOXYGEN_ENABLE_PREPROCESSING YES)
   set(DOXYGEN_MACRO_EXPANSION YES)
   set(DOXYGEN_EXPAND_ONLY_PREDEF YES)
@@ -105,7 +100,7 @@ endif()
 
 # benchmarks
 add_executable(bench bench.c)
-target_link_libraries(bench PRIVATE bfe ${RELIC_LIBRARY})
+target_link_libraries(bench PRIVATE bfe_bf ${RELIC_LIBRARY})
 
 # testing
 enable_testing()

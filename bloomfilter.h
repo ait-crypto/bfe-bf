@@ -1,13 +1,13 @@
 /*
- *  This file is part of the BFE library.
+ *  This file is part of the BFE-BF library.
  *  See the accompanying documentation for complete details.
  *
  *  The code is provided under the CC0 license, see LICENSE for more details.
  *  SPDX-License-Identifier: CC0-1.0
  */
 
-#ifndef BFE_BLOOMFILTER_H
-#define BFE_BLOOMFILTER_H
+#ifndef BFE_BF_BLOOMFILTER_H
+#define BFE_BF_BLOOMFILTER_H
 
 #include "include/types.h"
 
@@ -79,4 +79,4 @@ int bf_maybe_contains(const bloomfilter_t* filter, const ep_t input);
  */
 void bf_clear(bloomfilter_t* filter);
 
-#endif // BFE_BLOOMFILTER_H
+#endif // BFE_BF_BLOOMFILTER_H
