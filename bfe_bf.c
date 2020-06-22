@@ -495,13 +495,13 @@ void bfe_bf_clear_ciphertext(bfe_bf_ciphertext_t* ciphertext) {
   }
 }
 
-unsigned int bfe_bf_ciphertext_size_bin(const bfe_bf_ciphertext_t* ciphertext) {
+unsigned int bfe_bf_ciphertext_size(const bfe_bf_ciphertext_t* ciphertext) {
   return 1 * sizeof(uint32_t) + EP_SIZE + ciphertext->v_size;
 }
 
-void bfe_bf_ciphertext_write_bin(uint8_t* dst, const bfe_bf_ciphertext_t* ciphertext) {
+void bfe_bf_serialize(uint8_t* dst, const bfe_bf_ciphertext_t* ciphertext) {
   const uint32_t u_size     = EP_SIZE;
-  const uint32_t total_size = bfe_bf_ciphertext_size_bin(ciphertext);
+  const uint32_t total_size = bfe_bf_ciphertext_size(ciphertext);
 
   write_u32(&dst, total_size);
 
@@ -509,7 +509,7 @@ void bfe_bf_ciphertext_write_bin(uint8_t* dst, const bfe_bf_ciphertext_t* cipher
   memcpy(&dst[u_size], ciphertext->v, ciphertext->v_size);
 }
 
-int bfe_bf_ciphertext_read_bin(bfe_bf_ciphertext_t* ciphertext, const uint8_t* src) {
+int bfe_bf_deserialize(bfe_bf_ciphertext_t* ciphertext, const uint8_t* src) {
   const uint32_t total_size = read_u32(&src);
   const unsigned int v_size = total_size - EP_SIZE - 1 * sizeof(uint32_t);
 
@@ -530,18 +530,18 @@ int bfe_bf_ciphertext_read_bin(bfe_bf_ciphertext_t* ciphertext, const uint8_t* s
   return status;
 }
 
-unsigned int bfe_bf_public_key_size_bin(void) {
+unsigned int bfe_bf_public_key_size(void) {
   return 3 * sizeof(uint32_t) + EP_SIZE;
 }
 
-void bfe_bf_public_key_write_bin(uint8_t* dst, const bfe_bf_public_key_t* public_key) {
+void bfe_bf_public_serialize(uint8_t* dst, const bfe_bf_public_key_t* public_key) {
   write_u32(&dst, public_key->filter_hash_count);
   write_u32(&dst, public_key->filter_size);
   write_u32(&dst, public_key->key_size);
   ep_write_bin(dst, EP_SIZE, public_key->public_key, 0);
 }
 
-int bfe_bf_public_key_read_bin(bfe_bf_public_key_t* public_key, const uint8_t* src) {
+int bfe_bf_public_deserialize(bfe_bf_public_key_t* public_key, const uint8_t* src) {
   public_key->filter_hash_count = read_u32(&src);
   public_key->filter_size       = read_u32(&src);
   public_key->key_size          = read_u32(&src);
@@ -557,7 +557,7 @@ int bfe_bf_public_key_read_bin(bfe_bf_public_key_t* public_key, const uint8_t* s
   return status;
 }
 
-unsigned int bfe_bf_secret_key_size_bin(const bfe_bf_secret_key_t* secret_key) {
+unsigned int bfe_bf_secret_key_size(const bfe_bf_secret_key_t* secret_key) {
   unsigned int num_keys =
       secret_key->filter.bitset.size - bitset_popcount(&secret_key->filter.bitset);
 
@@ -565,7 +565,7 @@ unsigned int bfe_bf_secret_key_size_bin(const bfe_bf_secret_key_t* secret_key) {
          num_keys * EP2_SIZE;
 }
 
-void bfe_bf_secret_key_write_bin(uint8_t* dst, const bfe_bf_secret_key_t* secret_key) {
+void bfe_bf_secret_serialize(uint8_t* dst, const bfe_bf_secret_key_t* secret_key) {
   write_u32(&dst, secret_key->filter.hash_count);
   write_u32(&dst, secret_key->filter.bitset.size);
   for (unsigned int i = 0; i < BITSET_SIZE(secret_key->filter.bitset.size); ++i) {
@@ -580,7 +580,7 @@ void bfe_bf_secret_key_write_bin(uint8_t* dst, const bfe_bf_secret_key_t* secret
   }
 }
 
-int bfe_bf_secret_key_read_bin(bfe_bf_secret_key_t* secret_key, const uint8_t* src) {
+int bfe_bf_secret_deserialize(bfe_bf_secret_key_t* secret_key, const uint8_t* src) {
   const unsigned int hash_count  = read_u32(&src);
   const unsigned int filter_size = read_u32(&src);
 

@@ -32,12 +32,12 @@
  *  }
  *
  *  // serialize public key
- *  uint8_t serialized_pk[bfe_bf_public_key_size_bin()];
- *  bfe_bf_public_key_write_bin(serialized_pk, &pk);
+ *  uint8_t serialized_pk[bfe_bf_public_key_size()];
+ *  bfe_bf_public_serialize(serialized_pk, &pk);
  *
  *  // serialize secret key
- *  uint8_t* serialized_sk = malloc(bfe_bf_secret_key_size_bin(&sk));
- *  bfe_bf_secret_key_write_bin(serialized_sk, &sk);
+ *  uint8_t* serialized_sk = malloc(bfe_bf_secret_key_size(&sk));
+ *  bfe_bf_secret_serialize(serialized_sk, &sk);
  *
  *  // clean up keys
  *  bfe_bf_clear_secret_key(&sk);
@@ -57,7 +57,7 @@
  *  bfe_bf_public_key_t pk;
  *
  *  // deserialize the public key
- *  if (bfe_bf_public_key_read_bin(&pk, serialized_pk)) {
+ *  if (bfe_bf_public_deserialize(&pk, serialized_pk)) {
  *    // handle error
  *  }
  *
@@ -70,9 +70,9 @@
  *  }
  *
  *  // serialize the ciphertext
- *  const size_t csize = bfe_bf_ciphertext_size_bin(&ciphertext);
+ *  const size_t csize = bfe_bf_ciphertext_size(&ciphertext);
  *  uint8_t serialized_ct[csize];
- *  bfe_bf_ciphertext_write_bin(serialized_ct, &ciphertext);
+ *  bfe_bf_serialize(serialized_ct, &ciphertext);
  *
  *  // clean up
  *  bfe_bf_clear_ciphertext(&ciphertext);
@@ -89,19 +89,19 @@
  *
  *  // deserialize the secret key
  *  bfe_bf_secret_key_t sk;
- *  if (bfe_bf_secret_key_read_bin(&sk, serialized_sk)) {
+ *  if (bfe_bf_secret_deserialize(&sk, serialized_sk)) {
  *    // handle error
  *  }
  *
  *  // deserialize the public key
  *  bfe_bf_public_key_t pk;
- *  if (bfe_bf_public_key_read_bin(&pk, serialized_pk)) {
+ *  if (bfe_bf_public_deserialize(&pk, serialized_pk)) {
  *    // handle error
  *  }
  *
  *  // deserialize the ciphertext
  *  bfe_bf_ciphertext_t ciphertext;
- *  if (bfe_bf_ciphertext_read_bin(&ciphertext, serialized_ct)) {
+ *  if (bfe_bf_deserialize(&ciphertext, serialized_ct)) {
  *    // handle error
  *  }
  *
@@ -113,7 +113,7 @@
  *
  *  // puncture secret key and serialized it again
  *  bfe_bf_puncture(&sk, &ciphertext);
- *  bfe_bf_secret_key_write_bin(seralized_sk, &sk);
+ *  bfe_bf_secret_serialize(seralized_sk, &sk);
  *
  *  // clean up
  *  bfe_bf_clear_ciphertext(&ciphertext);
@@ -319,7 +319,7 @@ BFE_BF_VISIBLE void bfe_bf_clear_ciphertext(bfe_bf_ciphertext_t* ciphertext);
  * @param[in] ciphertext the ciphertext.
  * @return Number of bytes needed to store the ciphertext.
  */
-BFE_BF_VISIBLE unsigned int bfe_bf_ciphertext_size_bin(const bfe_bf_ciphertext_t* ciphertext);
+BFE_BF_VISIBLE unsigned int bfe_bf_ciphertext_size(const bfe_bf_ciphertext_t* ciphertext);
 
 /**
  * Writes a given ciphertext to a byte array.
@@ -327,8 +327,7 @@ BFE_BF_VISIBLE unsigned int bfe_bf_ciphertext_size_bin(const bfe_bf_ciphertext_t
  * @param[out] bin the ciphertext byte array.
  * @param[in] ciphertext the ciphertext.
  */
-BFE_BF_VISIBLE void bfe_bf_ciphertext_write_bin(uint8_t* bin,
-                                                const bfe_bf_ciphertext_t* ciphertext);
+BFE_BF_VISIBLE void bfe_bf_serialize(uint8_t* bin, const bfe_bf_ciphertext_t* ciphertext);
 
 /**
  * Reads a given ciphertext stored as a byte array.
@@ -337,7 +336,7 @@ BFE_BF_VISIBLE void bfe_bf_ciphertext_write_bin(uint8_t* bin,
  * @param[in] bin the destination byte array.
  * @return BFE_BF_SUCCESS or an error code on failure.
  */
-BFE_BF_VISIBLE int bfe_bf_ciphertext_read_bin(bfe_bf_ciphertext_t* ciphertext, const uint8_t* bin);
+BFE_BF_VISIBLE int bfe_bf_deserialize(bfe_bf_ciphertext_t* ciphertext, const uint8_t* bin);
 
 /**
  * Calculates number of bytes needed to store a given secret key.
@@ -345,7 +344,7 @@ BFE_BF_VISIBLE int bfe_bf_ciphertext_read_bin(bfe_bf_ciphertext_t* ciphertext, c
  * @param[in] secret_key the secret key.
  * @return Number of bytes needed to store the secret key.
  */
-BFE_BF_VISIBLE unsigned int bfe_bf_secret_key_size_bin(const bfe_bf_secret_key_t* secret_key);
+BFE_BF_VISIBLE unsigned int bfe_bf_secret_key_size(const bfe_bf_secret_key_t* secret_key);
 
 /**
  * Writes a given secret key to a byte array.
@@ -353,8 +352,7 @@ BFE_BF_VISIBLE unsigned int bfe_bf_secret_key_size_bin(const bfe_bf_secret_key_t
  * @param[out] bin the secret key byte array.
  * @param[in] secret_key the secret key.
  */
-BFE_BF_VISIBLE void bfe_bf_secret_key_write_bin(uint8_t* bin,
-                                                const bfe_bf_secret_key_t* secret_key);
+BFE_BF_VISIBLE void bfe_bf_secret_serialize(uint8_t* bin, const bfe_bf_secret_key_t* secret_key);
 
 /**
  * Reads a given secret key stored as a byte array.
@@ -363,14 +361,14 @@ BFE_BF_VISIBLE void bfe_bf_secret_key_write_bin(uint8_t* bin,
  * @param[in] bin the destination byte array.
  * @return BFE_BF_SUCCESS or an error code on failure.
  */
-BFE_BF_VISIBLE int bfe_bf_secret_key_read_bin(bfe_bf_secret_key_t* secret_key, const uint8_t* bin);
+BFE_BF_VISIBLE int bfe_bf_secret_deserialize(bfe_bf_secret_key_t* secret_key, const uint8_t* bin);
 
 /**
  * Calculates number of bytes needed to store a given public key.
  *
  * @return Number of bytes needed to store the public key.
  */
-BFE_BF_VISIBLE unsigned int bfe_bf_public_key_size_bin(void);
+BFE_BF_VISIBLE unsigned int bfe_bf_public_key_size(void);
 
 /**
  * Writes a given public key to a byte array.
@@ -378,8 +376,7 @@ BFE_BF_VISIBLE unsigned int bfe_bf_public_key_size_bin(void);
  * @param[out] bin the public key byte array.
  * @param[in] public_key the public key.
  */
-BFE_BF_VISIBLE void bfe_bf_public_key_write_bin(uint8_t* bin,
-                                                const bfe_bf_public_key_t* public_key);
+BFE_BF_VISIBLE void bfe_bf_public_serialize(uint8_t* bin, const bfe_bf_public_key_t* public_key);
 
 /**
  * Reads a given public key stored as a byte array.
@@ -388,6 +385,6 @@ BFE_BF_VISIBLE void bfe_bf_public_key_write_bin(uint8_t* bin,
  * @param[in] bin the destination byte array.
  * @return BFE_BF_SUCCESS or an error code on failure.
  */
-BFE_BF_VISIBLE int bfe_bf_public_key_read_bin(bfe_bf_public_key_t* public_key, const uint8_t* bin);
+BFE_BF_VISIBLE int bfe_bf_public_deserialize(bfe_bf_public_key_t* public_key, const uint8_t* bin);
 
 #endif // BFE_BF_BFE_BF_H

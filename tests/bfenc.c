@@ -49,12 +49,12 @@ Ensure(BFE_BF, encrypt_decrypt_serialized) {
   assert_true(!bfe_bf_init_ciphertext(&ciphertext, &pk));
   assert_true(!bfe_bf_encaps(&ciphertext, K, &pk));
 
-  const size_t csize = bfe_bf_ciphertext_size_bin(&ciphertext);
+  const size_t csize = bfe_bf_ciphertext_size(&ciphertext);
   uint8_t* bin       = malloc(csize);
   assert_true(bin != NULL);
 
-  bfe_bf_ciphertext_write_bin(bin, &ciphertext);
-  assert_true(!bfe_bf_ciphertext_read_bin(&deserialized_ciphertext, bin));
+  bfe_bf_serialize(bin, &ciphertext);
+  assert_true(!bfe_bf_deserialize(&deserialized_ciphertext, bin));
 
   assert_true(!bfe_bf_decaps(decrypted, &pk, &sk, &deserialized_ciphertext));
   assert_true(!memcmp(K, decrypted, KEY_SIZE));
@@ -105,14 +105,14 @@ Ensure(BFE_BF, keys_serialized) {
   bfe_bf_ciphertext_t ciphertext;
   assert_true(!bfe_bf_init_ciphertext(&ciphertext, &pk));
 
-  uint8_t* pk_bin = malloc(bfe_bf_public_key_size_bin());
-  bfe_bf_public_key_write_bin(pk_bin, &pk);
-  assert_true(!bfe_bf_public_key_read_bin(&deserialized_pk, pk_bin));
+  uint8_t* pk_bin = malloc(bfe_bf_public_key_size());
+  bfe_bf_public_serialize(pk_bin, &pk);
+  assert_true(!bfe_bf_public_deserialize(&deserialized_pk, pk_bin));
   free(pk_bin);
 
-  uint8_t* sk_bin = malloc(bfe_bf_secret_key_size_bin(&sk));
-  bfe_bf_secret_key_write_bin(sk_bin, &sk);
-  assert_true(!bfe_bf_secret_key_read_bin(&deserialized_sk, sk_bin));
+  uint8_t* sk_bin = malloc(bfe_bf_secret_key_size(&sk));
+  bfe_bf_secret_serialize(sk_bin, &sk);
+  assert_true(!bfe_bf_secret_deserialize(&deserialized_sk, sk_bin));
   free(sk_bin);
 
   uint8_t K[KEY_SIZE], decrypted[KEY_SIZE];
