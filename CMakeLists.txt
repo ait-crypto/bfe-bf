@@ -10,7 +10,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-project(bfe_bf LANGUAGES C VERSION 1.1 DESCRIPTION "Bloom Filter Encryption library with Boneh-Franklin IBE")
+project(bfe_bf LANGUAGES C VERSION 2.0 DESCRIPTION "Bloom Filter Encryption library with Boneh-Franklin IBE")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
