@@ -1,5 +1,5 @@
 /*
- *  This file is part of the BFE library.
+ *  This file is part of the BFE BF.
  *  See the accompanying documentation for complete details.
  *
  *  The code is provided under the CC0 license, see LICENSE for more details.
@@ -12,11 +12,11 @@
 #include "macros.h"
 
 /** Size of the public key */
-#define CRYPTO_PUBLICKEYBYTES ((3 * 4) + (1 + 2 * 48))
+#define CRYPTO_PUBLICKEYBYTES 109
 /** Size of the secret key */
-#define CRYPTO_SECRETKEYBYTES ((2 * 4) + 65536 + 524288 * (1 + 4 * 48))
+#define CRYPTO_SECRETKEYBYTES 1460773757
 /** Size of the ciphertext */
-#define CRYPTO_CIPHERTEXTBYTES ((1 * 4) + (1 + 2 * 48) + (32 * 11))
+#define CRYPTO_CIPHERTEXTBYTES 453
 /** Size of the encapsulated key */
 #define CRYPTO_BYTES 32
 
