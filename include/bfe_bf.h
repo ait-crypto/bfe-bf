@@ -258,8 +258,8 @@ BFE_BF_VISIBLE void bfe_bf_clear_public_key(bfe_bf_public_key_t* public_key);
  * @return BFE_BF_SUCCESS or an error code on failure.
  */
 BFE_BF_VISIBLE int bfe_bf_keygen(bfe_bf_public_key_t* public_key, bfe_bf_secret_key_t* secret_key,
-                           unsigned int key_length, unsigned int filter_element_number,
-                           double false_positive_probability);
+                                 unsigned int key_length, unsigned int filter_element_number,
+                                 double false_positive_probability);
 
 /**
  * Generates a random key K and encapsulates it.
@@ -270,7 +270,7 @@ BFE_BF_VISIBLE int bfe_bf_keygen(bfe_bf_public_key_t* public_key, bfe_bf_secret_
  * @return BFE_BF_SUCCESS or an error code on failure.
  */
 BFE_BF_VISIBLE int bfe_bf_encaps(bfe_bf_ciphertext_t* ciphertext, uint8_t* K,
-                           const bfe_bf_public_key_t* public_key);
+                                 const bfe_bf_public_key_t* public_key);
 
 /**
  * Punctures a secret key for the given ciphertext. After this action the secret key will not be
@@ -280,7 +280,8 @@ BFE_BF_VISIBLE int bfe_bf_encaps(bfe_bf_ciphertext_t* ciphertext, uint8_t* K,
  * @param[out] secret_key the secret key to be punctured
  * @param[in] ciphertext ciphertext for which the secret key is being punctured
  */
-BFE_BF_VISIBLE void bfe_bf_puncture(bfe_bf_secret_key_t* secret_key, bfe_bf_ciphertext_t* ciphertext);
+BFE_BF_VISIBLE void bfe_bf_puncture(bfe_bf_secret_key_t* secret_key,
+                                    bfe_bf_ciphertext_t* ciphertext);
 
 /**
  * Decapsulates a given ciphertext. The secret key should not be already punctured with the same
@@ -293,7 +294,8 @@ BFE_BF_VISIBLE void bfe_bf_puncture(bfe_bf_secret_key_t* secret_key, bfe_bf_ciph
  * @return BFE_BF_SUCCESS or an error code on failure.
  */
 BFE_BF_VISIBLE int bfe_bf_decaps(uint8_t* key, const bfe_bf_public_key_t* public_key,
-                           const bfe_bf_secret_key_t* secret_key, bfe_bf_ciphertext_t* ciphertext);
+                                 const bfe_bf_secret_key_t* secret_key,
+                                 bfe_bf_ciphertext_t* ciphertext);
 
 /**
  * Init the ciphertext.
@@ -303,7 +305,7 @@ BFE_BF_VISIBLE int bfe_bf_decaps(uint8_t* key, const bfe_bf_public_key_t* public
  * @return BFE_BF_SUCCESS or an error code on failure.
  */
 BFE_BF_VISIBLE int bfe_bf_init_ciphertext(bfe_bf_ciphertext_t* ciphertext,
-                                    const bfe_bf_public_key_t* public_key);
+                                          const bfe_bf_public_key_t* public_key);
 /**
  * Clear the ciphertext.
  *
@@ -325,7 +327,8 @@ BFE_BF_VISIBLE unsigned int bfe_bf_ciphertext_size_bin(const bfe_bf_ciphertext_t
  * @param[out] bin the ciphertext byte array.
  * @param[in] ciphertext the ciphertext.
  */
-BFE_BF_VISIBLE void bfe_bf_ciphertext_write_bin(uint8_t* bin, const bfe_bf_ciphertext_t* ciphertext);
+BFE_BF_VISIBLE void bfe_bf_ciphertext_write_bin(uint8_t* bin,
+                                                const bfe_bf_ciphertext_t* ciphertext);
 
 /**
  * Reads a given ciphertext stored as a byte array.
@@ -350,7 +353,8 @@ BFE_BF_VISIBLE unsigned int bfe_bf_secret_key_size_bin(const bfe_bf_secret_key_t
  * @param[out] bin the secret key byte array.
  * @param[in] secret_key the secret key.
  */
-BFE_BF_VISIBLE void bfe_bf_secret_key_write_bin(uint8_t* bin, const bfe_bf_secret_key_t* secret_key);
+BFE_BF_VISIBLE void bfe_bf_secret_key_write_bin(uint8_t* bin,
+                                                const bfe_bf_secret_key_t* secret_key);
 
 /**
  * Reads a given secret key stored as a byte array.
@@ -374,7 +378,8 @@ BFE_BF_VISIBLE unsigned int bfe_bf_public_key_size_bin(void);
  * @param[out] bin the public key byte array.
  * @param[in] public_key the public key.
  */
-BFE_BF_VISIBLE void bfe_bf_public_key_write_bin(uint8_t* bin, const bfe_bf_public_key_t* public_key);
+BFE_BF_VISIBLE void bfe_bf_public_key_write_bin(uint8_t* bin,
+                                                const bfe_bf_public_key_t* public_key);
 
 /**
  * Reads a given public key stored as a byte array.

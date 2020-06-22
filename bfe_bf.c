@@ -248,8 +248,8 @@ void bfe_bf_clear_public_key(bfe_bf_public_key_t* public_key) {
   }
 }
 
-int bfe_bf_keygen(bfe_bf_public_key_t* public_key, bfe_bf_secret_key_t* secret_key, unsigned int key_size,
-               unsigned int filter_size, double false_positive_prob) {
+int bfe_bf_keygen(bfe_bf_public_key_t* public_key, bfe_bf_secret_key_t* secret_key,
+                  unsigned int key_size, unsigned int filter_size, double false_positive_prob) {
   if (key_size > MAX_BFE_BF_KEY_SIZE || order_size > MAX_ORDER_SIZE) {
     return BFE_BF_ERROR_INVALID_PARAM;
   }
@@ -339,7 +339,8 @@ static int internal_encrypt(bfe_bf_ciphertext_t* ciphertext, const bfe_bf_public
   return status;
 }
 
-int bfe_bf_encaps(bfe_bf_ciphertext_t* ciphertext, uint8_t* Kout, const bfe_bf_public_key_t* public_key) {
+int bfe_bf_encaps(bfe_bf_ciphertext_t* ciphertext, uint8_t* Kout,
+                  const bfe_bf_public_key_t* public_key) {
   uint8_t key_buffer[MAX_BFE_BF_KEY_SIZE];
   rand_bytes(key_buffer, public_key->key_size);
 
@@ -387,7 +388,7 @@ void bfe_bf_puncture(bfe_bf_secret_key_t* secret_key, bfe_bf_ciphertext_t* ciphe
 }
 
 static int bfe_bf_ciphertext_cmp(const bfe_bf_ciphertext_t* ciphertext1,
-                              const bfe_bf_ciphertext_t* ciphertext2) {
+                                 const bfe_bf_ciphertext_t* ciphertext2) {
   if (ep_cmp(ciphertext1->u, ciphertext2->u) != RLC_EQ ||
       ciphertext1->v_size != ciphertext2->v_size) {
     return 1;
@@ -396,8 +397,8 @@ static int bfe_bf_ciphertext_cmp(const bfe_bf_ciphertext_t* ciphertext1,
   return memcmp(ciphertext1->v, ciphertext2->v, ciphertext1->v_size);
 }
 
-int bfe_bf_decaps(uint8_t* key, const bfe_bf_public_key_t* public_key, const bfe_bf_secret_key_t* secret_key,
-               bfe_bf_ciphertext_t* ciphertext) {
+int bfe_bf_decaps(uint8_t* key, const bfe_bf_public_key_t* public_key,
+                  const bfe_bf_secret_key_t* secret_key, bfe_bf_ciphertext_t* ciphertext) {
   int status = BFE_BF_SUCCESS;
 
   uint8_t key_buffer[MAX_BFE_BF_KEY_SIZE];
@@ -557,7 +558,8 @@ int bfe_bf_public_key_read_bin(bfe_bf_public_key_t* public_key, const uint8_t* s
 }
 
 unsigned int bfe_bf_secret_key_size_bin(const bfe_bf_secret_key_t* secret_key) {
-  unsigned int num_keys = secret_key->filter.bitset.size - bitset_popcount(&secret_key->filter.bitset);
+  unsigned int num_keys =
+      secret_key->filter.bitset.size - bitset_popcount(&secret_key->filter.bitset);
 
   return 2 * sizeof(uint32_t) + BITSET_SIZE(secret_key->filter.bitset.size) * sizeof(uint64_t) +
          num_keys * EP2_SIZE;

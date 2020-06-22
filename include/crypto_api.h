@@ -45,7 +45,8 @@ BFE_BF_VISIBLE int crypto_kem_enc(unsigned char* c, unsigned char* k, const unsi
  * @param sk the secret key
  * @return 0 on success, non-0 otherwise
  */
-BFE_BF_VISIBLE int crypto_kem_dec(unsigned char* k, const unsigned char* c, const unsigned char* sk);
+BFE_BF_VISIBLE int crypto_kem_dec(unsigned char* k, const unsigned char* c,
+                                  const unsigned char* sk);
 /**
  * Puncture the secret key with a ciphertext.
  *
